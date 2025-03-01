@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starliste</title>
+
+<style>
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif; /* Updated font family */
+}
+
+body {
+    color: #FFD700; /* Gold text color */
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    position: relative;
+}
+
+.label {
+    color: black;
+}
+
+
+h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #FFD700; /* Gold color */
+}
+
+.main_manue {
+    text-align: center;
+    padding-bottom: 20px;
+    color: #f2f2f2; /* Gold color */
+}
+
+.container {
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black for the container background */
+    padding: 20px;
+    border: 2px solid #FFD700; /* Gold border */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 70%;
+    margin: 0 auto;
+    width: 100%;
+    position: absolute;
+    top: 50px;
+}
+
+.rows {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3); /* Gold border */
+    justify-content: center;
+}
+
+.rows:nth-child(even) {
+    background-color: rgba(255, 215, 0, 0.1); /* Slight gold background for alternating rows */
+}
+
+.cell_r {
+    font-size: 25px;
+    text-align: center;
+    width: 45%;
+    color: #eaeaea; /* Lighter text for readability */
+}
+
+.cell_r h2, .cell_r p {
+    font-size: 20px;
+    margin: 1%;
+    text-align: center;
+    color: #dbdbdb; /* Gold color */
+}
+
+.matchup {
+    color: #FFD700; /* Gold color */
+    font-size: 2.3rem;
+    font-weight: bold;
+    padding: 2px;
+}
+
+
+</style>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="main_manue" id="main_title">Startliste: {{ title }}</h1>
+        
+        <hr>
+
+        <div id="startlist-container" class="table-wrapper">
+            {% set ns = namespace(count=1) %}
+            {% for pair in results %}
+                {% for entry in pair %}
+                {% if loop.index % 2 != 0 %}
+                    <div class="rows">
+                {% endif %}
+                
+                {% if loop.index % 2 != 0 %}
+                    <div class="cell_r">
+                        <h2>{{ entry[1] }} {{ entry[2] }} [{{ entry[0] }}]</h2>
+                        <p>{{ entry[4] }}</p>
+                    </div>
+                {% endif %}
+
+
+                {% if loop.index % 2 != 0 %}
+                    <div class="matchup"><p>{{ ns.count }}</p></div>
+                    {% set ns.count = ns.count + 1 %}
+                {% endif %}
+
+                {% if loop.index % 2 == 0 %}
+                    <div class="cell_r">
+                        <h2>{{ entry[1] }} {{ entry[2] }} [{{ entry[0] }}] </h2>
+                        <p>{{ entry[4] }}</p>
+                    </div>
+                {% endif %}
+
+            
+                {% if loop.index % 2 == 0 %}
+                    </div>
+                {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+    </div>
+</body>
+</html>

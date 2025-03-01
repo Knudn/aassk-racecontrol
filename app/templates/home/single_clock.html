@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clickable Divs</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <style>
+    .row {
+    justify-content: center; /* Center the columns horizontally */
+    }
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .container {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+        display: flex; /* Ensure this is set to make flex-direction and align-items effective */
+        }
+
+    .driver-container {
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .box {
+      border: 1px solid #343a40;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+      width: 300px;
+      background-color: #007bff;
+      color: #fff;
+      transition: background-color 0.3s ease;
+    }
+
+    .box:hover {
+      background-color: #0069d9;
+    }
+
+    .box_middle {
+      border: 1px solid #343a40;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+      background-color: #28a745;
+      color: #fff;
+      transition: background-color 0.3s ease;
+    }
+
+    .box_middle:hover {
+      background-color: #218838;
+    }
+
+    .timer {
+      font-size: 1.5rem;
+      margin: 10px 0;
+      text-align: center;
+      color: #343a40;
+    }
+
+    .driver_name {
+      text-align: center;
+      padding-bottom: 5px;
+      color: #343a40;
+    }
+
+    .snowmobile {
+      text-align: center;
+      padding-bottom: 5px;
+      color: #6c757d;
+    }
+
+    .main_title {
+      text-align: center;
+      padding-bottom: 10px;
+      color: #343a40;
+    }
+
+    .border {
+      text-align: center;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .timestamp-entry {
+      margin-top: 10px;
+      background-color: #f2f2f2;
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .timestamp-part {
+      width: 60px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .table {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    @media (max-width: 767px) {
+      .table thead {
+        display: none;
+      }
+
+      .table tr {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .table td {
+        display: block;
+        text-align: right;
+        padding: 5px 10px;
+      }
+
+      .table td:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main_title">
+    <h1 id="main_title">TITLE</h1>
+  </div>
+
+  <div class="border">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="driver-container">
+            <div class="driver_name" id="driver_1_name">DRIVER 1</div>
+            <div class="snowmobile" id="snowmobile_1">DRIVER 1</div>
+            <div class="box" vola_button="1" onclick="sendFixedTimestamp(1)">Start - 01</div>
+            <div class="timer" id="timer1">TIMER</div>
+            <div class="box" vola_button="3" onclick="sendFixedTimestamp(3)">Finish - 01</div>
+            <div id="finish1TimestampContainer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <table class="table table-bordered" id="userTable">
+            <thead>
+              <tr>
+                <th scope="col">First</th>
+                <th scope="col">Last</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', function() {
+    console.log('Connected to the server');
+    socket.emit('join', { username: 'John', room: 'room1' });
+});
+
+socket.on('response', function(dataString) {
+    drivers_cache_new = []
+    data = JSON.parse(dataString)
+    update_content(data)
+
+});
+
+
+function update_content(data) {
+  table_data = "";
+  const container = document.getElementById('userTable');
+  container.innerHTML = "";
+
+  count = 0;
+  data.forEach(item => {
+    if (item.race_config != undefined) {
+      if (init_mode != 'undefined') {
+        if (init_mode != item["race_config"].MODE) {
+          location.reload();
+        }
+        console.log(item["race_config"].MODE);
+      }
+    }
+    if (item.race_config == undefined) {
+      count += 1;
+      if (item.drivers[0].active == true) {
+        driver_name = item.drivers[0].first_name + " " + item.drivers[0].last_name + " [" + item.drivers[0].id + "]";
+        driver_snowmobile = item.drivers[0].vehicle;
+
+        document.getElementById('driver_1_name').innerHTML = driver_name;
+        document.getElementById('snowmobile_1').innerHTML = driver_snowmobile;
+
+        if (item.drivers[0].time_info.FINISHTIME == 0) {
+          driver_time = "0.000";
+        } else {
+          driver_time = item.drivers[0].time_info.FINISHTIME / 1000;
+        }
+
+        if (item.drivers[0].status == 1 && item.drivers[0].time_info.FINISHTIME > 1) {
+          bg_color = "#63FF4A";
+        } else if (item.drivers[0].status == 2 && item.drivers[0].time_info.FINISHTIME > 1) {
+          bg_color = "#FF3838";
+        } else {
+          bg_color = "#FFFFFF";
+        }
+
+        table_entry = `
+          <tr>
+            <td style="background-color: ${bg_color};">${driver_name} - ${driver_time}</td>
+          </tr>
+        `;
+        table_data += table_entry;
+        console.log(item);
+        old_driver_name = driver_name;
+      }
+    } else {
+      title = item.race_config.TITLE_2;
+      document.getElementById('main_title').innerHTML = title;
+    }
+  });
+  container.innerHTML += table_data;
+}
+
+function add_websocket_live_timer() {
+  const ws = new WebSocket("ws://" + document.domain + ":4444/");
+  console.log(ws);
+
+  function update_live_data(newData) {
+    document.getElementById('timer1').innerHTML = newData.Driver1.time;
+  }
+
+  ws.onmessage = function (event) {
+    var arr = JSON.parse(event.data);
+    setTimeout(() => {
+      update_live_data(arr);
+    }, 1);
+  };
+}
+
+function add_websocket_live_timer() {
+    const ws = new WebSocket("ws://"+document.domain+":4444/");
+    console.log(ws)
+    var x;
+    var arr = [];
+
+    function update_live_data(newData) {
+        document.getElementById('timer1').innerHTML = newData.Driver1.time;
+    }
+    
+    ws.onmessage = function(event){
+        var arr = JSON.parse(event.data);
+        setTimeout(() => {
+
+            update_live_data(arr);
+
+
+        }, 1);
+    };
+}
+
+function generateTimestamp(index) {
+
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+
+    return `0000_0000_0${index}_${hours}:${minutes}:${seconds}.${milliseconds}_00000`;
+}
+
+
+async function load_driver_data() {
+  try {
+    const response = await fetch('/api/get_current_startlist_w_data');
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  
+                  data = await response.json();
+                  init_mode = data[0]["race_config"].MODE
+                  data.forEach(item => {
+                    if (item.race_config == undefined) {
+                      if (item.drivers[0].active == true) { 
+                      old_driver_name  = item.drivers[0].first_name + " " + item.drivers[0].last_name + " [" + item.drivers[0].id +  "]"
+                    }
+                    }
+                  })
+
+                  update_content(data)
+    } catch (error) {
+      console.error('There was a problem with your fetch operation:', error);
+      data = null; 
+    }
+
+}
+load_driver_data()
+add_websocket_live_timer()
+
+function sendFixedTimestamp(index) {
+  const timestamp = generateTimestamp(index);
+  data = { "timestamp": timestamp, "button": index };
+  console.log(data);
+
+  if (index === 3) {
+    displayTimestamp(index, formatTimestampForDisplay(timestamp));
+  }
+
+  $.ajax({
+    url: '/api/submit_timestamp_clock',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    success: function (response) {
+      console.log('Success:', response);
+    },
+    error: function (xhr, status, error) {
+      console.log('Error:', xhr, status, error);
+    }
+  });
+}
+
+
+function formatTimestampForDisplay(timestamp) {
+    // Extract hours, minutes, seconds, and milliseconds
+    const parts = timestamp.match(/(\d{2}):(\d{2}):(\d{2}).(\d{3})/);
+    // Return in the desired format if the regex match is successful
+    if (parts) {
+        return `${parts[1]} ${parts[2]} ${parts[3]}.${parts[4]}`;
+    } else {
+        return "Invalid Timestamp";
+    }
+}
+
+function displayTimestamp(index, formattedTimestamp) {
+  const containerId = "finish1TimestampContainer";
+  const container = document.getElementById(containerId);
+
+  const entryDiv = document.createElement('div');
+  entryDiv.classList.add('timestamp-entry');
+  entryDiv.innerHTML = `
+    <input type="text" value="${formattedTimestamp.split(' ')[0]}" class="timestamp-part">
+    <input type="text" value="${formattedTimestamp.split(' ')[1]}" class="timestamp-part">
+    <input type="text" value="${formattedTimestamp.split(' ')[2]}" class="timestamp-part">
+    <button onclick="resendTimestamp(${index}, this.parentElement)">Resend</button>
+  `;
+  container.appendChild(entryDiv);
+}
+
+function resendTimestamp(index, timestampDiv) {
+  const inputs = timestampDiv.querySelectorAll('.timestamp-part');
+  const hours = inputs[0].value.padStart(2, '0');
+  const minutes = inputs[1].value.padStart(2, '0');
+  const seconds = inputs[2].value.split('.')[0].padStart(2, '0');
+  const milliseconds = inputs[2].value.split('.')[1].padStart(3, '0');
+  const timestamp = `0000_0000_0${index}_${hours}:${minutes}:${seconds}.${milliseconds}_00000`;
+
+  data = { "timestamp": timestamp, "button": index };
+  console.log("Resending", data);
+
+  $.ajax({
+    url: '/api/submit_timestamp_clock',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    success: function (response) {
+      console.log('Resend Success:', response);
+    },
+    error: function (xhr, status, error) {
+      console.log('Resend Error:', xhr, status, error);
+    }
+  });
+}
+
+</script>
+</body>
+</html>

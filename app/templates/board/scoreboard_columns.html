@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body, h1, th, td {
+      font-family: 'Open Sans', sans-serif;
+    }
+    .container {
+      width: 100%;
+      margin: 0;
+    }
+    .main-content {
+      display: flex;
+      justify-content: space-between;
+    }
+    .column {
+      flex: 1;
+      margin-right: 20px;
+      background: #f8f8f8;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .column:last-child {
+      margin-right: 0;
+    }
+    .center_content {
+      width: 100%;
+    }
+    thead th {
+      background-color: #0078d7;
+      color: #ffffff;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #dfdfdf;
+    }
+    td, th {
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    h1 {
+      color: #d70000;
+      text-align: center;
+      margin: inherit;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      overflow-y: hidden;
+      margin-bottom: 15px;
+    }
+    table {
+      table-layout: auto;
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+    }
+    td, th {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media screen and (max-width: 600px) {
+      td, th {
+        padding: 5px;
+        font-size: 0.8em;
+      }
+      .hide-on-small {
+        display: none;
+      }
+    }
+  </style>
+
+  <script>
+    function getNumberOfColumns() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('columns') || 2; 
+    }
+
+    function getRefreshInterval() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return Number(urlParams.get('timer')) * 1000 || 5000;
+    }
+
+    function createColumns(numberOfColumns) {
+      const container = $('.main-content');
+      container.empty(); 
+
+      for (let i = 0; i < numberOfColumns; i++) {
+        container.append(`<div class="column" id="column-${i}"></div>`);
+      }
+    }
+
+    function fetchAndDisplayDataForColumn(columnIndex, col) {
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          url: '/api/get_current_startlist_w_data_loop?finished=true&latest=true',
+          type: 'GET',
+          xhrFields: {
+            withCredentials: true
+          },
+          dataType: 'json',
+          timeout: 10000,
+          success: function(data) {
+            displayDataInColumn(columnIndex, data, col);
+            resolve();
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Error fetching data for column', columnIndex, ':', textStatus, errorThrown);
+            reject();
+          }
+        });
+      });
+    }
+
+    function displayDataInColumn(columnIndex, data, col) {
+      var column = $(`#column-${columnIndex}`);
+      var html = '<div class="center_content table-responsive">';
+      var allDrivers = [];
+
+      data.forEach(item => {
+        if (item.drivers) {
+          allDrivers = allDrivers.concat(item.drivers);
+        }
+      });
+
+      console.log(allDrivers)
+      console.log(allDrivers.length, data[0]["race_config"]["TITLE_2"])
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const showFinishTimeAboveZero = urlParams.get('f_only')?.toLowerCase() === 'true';
+
+      if (!showFinishTimeAboveZero) {
+        allDrivers = allDrivers.filter(driver => driver.time_info.FINISHTIME > 0);
+      }
+
+      allDrivers.sort((a, b) => a.time_info.FINISHTIME - b.time_info.FINISHTIME);
+
+      if (allDrivers.length > 0) {
+        var title = data[0]["race_config"]["TITLE_2"];
+        var heat = data[0]["race_config"]["HEAT"];
+        var heats = data[0]["race_config"]["HEATS"];
+        var title_font_size = title.length > 31 ? 25 : 30;
+        var padding_size = allDrivers.length > 23 ? 0 : 8;
+
+        html += `<h1 style=font-size:${title_font_size}px;>${title} ${heat}/${heats}</h1>`;
+        html += '<hr>';
+
+        html += '<table><thead><tr>';
+        html += `<th style="padding:8px;">Position</th>`;
+
+        if (col < 3) {
+          html += '<th>Driver</th>';
+          html += '<th>Club</th>';
+        }
+
+        html += '<th>Vehicle</th>';
+        html += '<th>Finish Time</th>';
+        html += '</tr></thead><tbody>';
+
+        allDrivers.forEach((driver, index) => {
+          html += '<tr>';
+          html += `<td style="padding:${padding_size}px;">${index + 1}</td>`;
+          html += `<td>${driver.first_name} ${driver.last_name}</td>`;
+          if (col < 3) {
+            html += `<td>${driver.club}</td>`;
+            html += `<td>${driver.vehicle}</td>`;
+          }
+          html += `<td>${(driver.time_info.FINISHTIME / 1000).toFixed(2)} seconds</td>`;
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+      } else {
+        html += '<p>No data available</p>';
+      }
+
+      html += '</div>';
+      column.html(html);
+    }
+
+    async function fetchDataForAllColumns(numberOfColumns) {
+      for (let i = 0; i < numberOfColumns; i++) {
+        await fetchAndDisplayDataForColumn(i, numberOfColumns);
+      }
+    }
+
+    $(document).ready(function() {
+      const numberOfColumns = getNumberOfColumns();
+    createColumns(numberOfColumns);
+
+    // Call fetchDataForAllColumns immediately to load content without delay
+    fetchDataForAllColumns(numberOfColumns);
+
+    // Then set up the interval
+    const refreshInterval = getRefreshInterval();
+    setInterval(() => {
+      fetchDataForAllColumns(numberOfColumns);
+    }, refreshInterval);
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="main-content">
+    </div>
+  </div>
+</body>
+</html>

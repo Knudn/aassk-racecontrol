@@ -1,0 +1,67 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<div class="container-fluid mt-3">
+    <div id="raceHeader" class="row">
+        <!-- Race Title will be inserted here -->
+    </div>
+    <div id="drivers" class="row">
+        <!-- Driver information will be dynamically inserted here -->
+    </div>
+</div>
+
+<script>
+// Function to call the API and render the data
+function fetchRaceData() {
+    $.ajax({
+        url: 'http://192.168.1.50:7777/api/get_current_startlist_w_data',
+        method: 'GET',
+        success: function(data) {
+            // Assuming the first object in the array contains race config
+            var raceConfig = data[0].race_config;
+            $('#raceHeader').html(`<h2 class="col-12 text-center">${raceConfig.TITLE_1} - ${raceConfig.TITLE_2}</h2>`);
+
+            // Loop through the drivers and append them to the page
+            data.forEach(race => {
+                if (race.drivers && race.drivers.length) {
+                    race.drivers.forEach(driver => {
+                        var driverHtml = `
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${driver.first_name} ${driver.last_name}</h5>
+                                        <p class="card-text">${driver.club}</p>
+                                        <p class="card-text">Vehicle: ${driver.vehicle}</p>
+                                        <p class="card-text">Finish Time: ${driver.time_info.FINISHTIME}</p>
+                                        <button class="btn btn-primary retry">Retry</button>
+                                        <button class="btn btn-secondary release-retry">Release Retry</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        $('#drivers').append(driverHtml);
+                    });
+                }
+            });
+        },
+        error: function(error) {
+            console.log("Error fetching race data:", error);
+        }
+    });
+}
+
+$(document).ready(function() {
+    fetchRaceData();
+});
+
+// Event listener for Retry button click (Toggle class example)
+$(document).on('click', '.retry', function() {
+    $(this).toggleClass('btn-success');
+});
+</script>
+
+{% endblock %}

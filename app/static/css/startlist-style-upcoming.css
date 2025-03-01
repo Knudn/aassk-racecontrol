@@ -1,0 +1,175 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif
+    }
+    body {
+    background-color: #f2f2f2;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+    }
+    h1 {
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 30px;
+    }
+    
+    .main-content {
+        display: flex;
+        align-items: stretch;
+    }
+    
+    .left-content, .right-content {
+        width: 50%;
+        /* Add more styling as needed */
+    }
+    
+    .vertical-line {
+        border-left: 3px solid #000; /* Change color as needed */
+        /* If you need some spacing around the line */
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+    #main_title_upcoming, #main_title {
+        margin: 10px;
+    }
+
+    .main_manue {
+    text-align: center;
+    font-size: 40px;
+    padding-bottom: 20px;
+    }
+
+
+    .container {
+    max-width: 98%;
+    margin: 0 auto;
+    }
+
+    .table-wrapper_active {
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid green;
+    }
+
+    .rows {
+    display: flex;
+    border-bottom: 1px solid;
+    }
+    .cell_r, .cell_r_active, .cell_r_dsq, .cell_r_dsq_active {
+    font-size: 20px;
+    text-align: center;
+    width: 45%;
+    }
+
+
+    .cell_r_dsq, .cell_r_dsq_active {
+    text-decoration: line-through;
+    color: rgb(104, 104, 104);
+    }
+
+    .cell_r h1 {
+    font-size: 30px;
+    margin: 1%;
+    }
+
+    .cell_r  h2 {
+    font-size: 20px;
+    margin: 1%;
+    }
+
+
+    .cell_r_dsq h2 {
+    font-size: 20px;
+    margin: 1%;
+    }
+
+    .cell_r p {
+    font-size: 20px;
+    margin: 1%;
+    text-align: center;
+
+    }
+
+    .cell_r_dsq p {
+    font-size: 20px;
+    margin: 1%;
+    text-align: center;
+
+    }
+    .cell p {
+    font-size: 15px;
+    text-align: center;
+    }
+    .table-wrapper_none_active {
+    margin: 0 auto;
+    border-radius: 4px;
+        border: 1px solid;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    position: relative;
+    }
+    .rows {
+    display: flex;
+    justify-content: center;
+    }
+    .rows:nth-child(even) {
+    background-color: #e3e3e3;
+    }
+    .cell {
+    display: table-cell;
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+    width: 45%;
+    }
+    .matchup {
+    color: #333;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 2px;
+    }
+    .matchup_active {
+        color: #333;
+        font-size: 2rem;
+        font-weight: bold;
+        padding: 10px;
+        }
+.table-wrapper_finished {
+    margin: 10px;
+}
+
+.finished-driver-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+    font-size: 0.9em; /* smaller font size */
+}
+
+.finished-driver-row.winner {
+    background-color: #c8e6c9; /* light green */
+}
+
+.finished-driver-row.looser {
+    background-color: #ffcdd2; /* light red */
+}
+
+.finished-matchup {
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    background-color: #e0e0e0; /* light gray */
+    margin-top: 5px;
+}
+
+#finished_drivers {
+    border: 1px solid #ddd;
+    margin-top: 15px;
+    padding: 10px;
+}

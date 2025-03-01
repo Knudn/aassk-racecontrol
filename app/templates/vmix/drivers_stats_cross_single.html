@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #FFD700; /* Gold text color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+
+        .leaderboard {
+            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black for the leaderboard background */
+            padding: 20px;
+            border: 2px solid #FFD700; /* Gold border */
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex; /* Use flexbox to align tables side by side */
+            justify-content: space-around; /* Space out the tables */
+            flex-wrap: wrap;
+            position: absolute;
+            top: 100px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #FFD700; /* Gold color */
+            margin-bottom: 20px;
+            margin-top: 0px;
+            width: 100%; /* Make sure the title spans the full width */
+        }
+
+        .results-table {
+            width: 45%; /* Adjust table width to fit side by side */
+            border-collapse: collapse;
+            margin: 10px; /* Optional: adds some space around tables */
+        }
+
+        .results-table th, .results-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            font-size: 18px;
+        }
+
+        .results-table th {
+            background-color: #444; /* Darker background for headers */
+            color: #FFD700; /* Gold color */
+        }
+
+        .results-table td {
+            color: #eaeaea; /* Lighter text for readability */
+            background-color: transparent; /* Ensure cells are transparent */
+        }
+
+        .results-table tr:nth-child(even) {
+            background-color: rgba(255, 215, 0, 0.1); /* Slight gold background for alternating rows */
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+<script>
+var urlParams = new URLSearchParams(window.location.search);
+var timer = urlParams.get('timer')
+if (timer != null) {
+    timer = timer * 1000
+
+    setTimeout(function(){
+    window.location.reload(1);
+    }, timer);
+    }
+
+</script>
+</head>
+<body>
+
+
+    {% if results2 != [] %}
+    <div class="leaderboard">
+    {% else %}
+    <div class="leaderboard" style="scale: 1.3;">
+    {% endif %}
+        <h2>{{ title }}</h2>
+    
+        {% if results2 != [] %}
+        <table class="results-table">
+        {% else %}
+        <table class="results-table" style="width: 100%;">
+        {% endif %}
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fører</th>
+                    <th>Kjøretøy</th>
+                    <th>Bestetid</th>
+                    <th>Poeng</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in results %}
+                <tr>
+                    <td>{{ driver["number"] }}</td>
+                    <td>{{ driver["first_name"] }} {{ driver["last_name"] }}</td>
+                    <td>{{ driver["snowmobile"] }}</td>
+                    <td>{{ driver["finishtime"] }}</td>
+                    <td>{{ driver["points"] }}</td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    
+        {% if results2 != [] %}
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fører</th>
+                    <th>Kjøretøy</th>
+                    <th>Bestetid</th>
+                    <th>Poeng</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in results2 %}
+                <tr>
+                    <td>{{ driver["number"] }}</td> <!-- Assuming you want to continue numbering from the previous table -->
+                    <td>{{ driver["first_name"] }} {{ driver["last_name"] }}</td>
+                    <td>{{ driver["snowmobile"] }}</td>
+                    <td>{{ driver["finishtime"] }}</td>
+                    <td>{{ driver["points"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    
+    </body>
+    </html>

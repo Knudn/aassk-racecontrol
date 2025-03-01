@@ -1,0 +1,28 @@
+.doubleElimination {
+    border: 2px solid green !important;
+  }
+
+  body.render .turnament-bracket .bracket .round:before {
+    position: absolute;
+    display: block;
+    top: 0;
+    right: 10px;
+    font-size: 25px;
+    text-align: right;
+}
+
+
+h1 {font-size: 50px;}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}

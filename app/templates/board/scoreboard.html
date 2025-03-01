@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      color: #333;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .finished_drivers {
+      padding: 10px;
+    }
+
+    h1 {
+      font-family: 'Formula1-Bold', sans-serif;
+      color: #f00;
+      text-align: center;
+      margin: 0;
+      padding: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      font-family: 'Formula1-Regular', sans-serif;
+      font-size: 18px;
+      color: #fff;
+      background-color: #f00;
+      border-top: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      text-transform: uppercase;
+    }
+    td.driver {
+      font-weight: bold;
+    }
+    td.gold {
+      color: #FFD700;
+    }
+    td.silver {
+      color: #C0C0C0;
+    }
+    td.bronze {
+      color: #CD7F32;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .dnf-table {
+      margin-top: 40px;
+    }
+    .dnf-table th {
+      background-color: #333;
+      color: #fff;
+      font-size: 16px;
+      font-weight: normal;
+    }
+    .dnf-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-size: 14px;
+    }
+    .dnf-table td.driver {
+      font-weight: bold;
+    }
+    .dnf-table td.reason {
+      font-style: italic;
+    }
+    .center_content {
+      margin: auto;
+      padding: 20px;
+      width: 80%;
+    }
+
+  </style>
+  <script>
+
+$(document).ready(function() {
+  update_screen()
+})
+
+
+function update_screen() {
+    $.ajax({
+        url: '/api/get_current_startlist_w_data',
+        type: 'GET',
+        dataType: 'json', // assuming the server responds with JSON
+        timeout: 10000, // 10 seconds timeout
+        success: function(data) {
+            displayData(data);
+            
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Error fetching data:', textStatus, errorThrown);
+        }
+    });
+
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const useWebSocket = urlParams.get('websocket')?.toLowerCase() === 'true';
+  // f_only is true when you want to show drivers with FINISHTIME > 0
+  const showFinishTimeAboveZero = urlParams.get('f_only')?.toLowerCase() === 'true';
+  
+  function displayData(data) {
+    
+      var allDrivers = [];
+
+      // Combine all drivers into one array
+      data.forEach(item => {
+        if (item.drivers) {
+          allDrivers = allDrivers.concat(item.drivers);
+        }
+      });
+
+      // Filter drivers with FINISHTIME > 0 if f_only is true
+      if ( ! showFinishTimeAboveZero) {
+        allDrivers = allDrivers.filter(driver => driver.time_info.FINISHTIME > 0);
+      }
+
+      // Sort all drivers by FINISHTIME
+      allDrivers.sort((a, b) => a.time_info.FINISHTIME - b.time_info.FINISHTIME);
+
+    var html = '';
+    allDrivers.forEach((driver, index) => {
+      html += '<tr>';
+      html += `<td>${index + 1}</td>`;
+      html += `<td>${driver.first_name} ${driver.last_name}</td>`;
+      html += `<td>${driver.club}</td>`;
+      html += `<td>${driver.vehicle}</td>`;
+      // Convert FINISHTIME from milliseconds to seconds
+      html += `<td>${(driver.time_info.FINISHTIME / 1000).toFixed(2)}</td>`;
+      html += '</tr>';
+    });
+    
+    title = data[0]["race_config"]["TITLE_2"]
+    heat = data[0]["race_config"]["HEAT"]
+    heats = data[0]["race_config"]["HEATS"]
+    document.getElementById('main_title').innerHTML = '<h1>' + `${title}` + ` ${heat}/${heats}` + '</h1>';
+    $('tbody').html(html);
+  }
+}
+
+
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="main-content">
+        <div class="left-content">
+          <div class="main">
+            <div class="center_content">
+              <h1 id="main_title"></h1>
+              <hr>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Position</th>
+                    <th>Driver</th>
+                    <th>Club</th>
+                    <th>Vehicle</th>
+                    <th>Finish Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Data will be populated from the API here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="vertical-line"></div>
+
+
+        <div class="right-content">
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

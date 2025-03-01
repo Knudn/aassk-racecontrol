@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Brackets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="dist/img/icons/favicon.ico" rel="icon" type="image/x-icon"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="dist/img/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="dist/img/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="dist/img/icons/favicon-16x16.png">
+  <link rel="manifest" href="dist/img/icons/site.webmanifest">
+  <link rel="mask-icon" href="dist/img/icons/safari-pinned-tab.svg" color="#494949">
+  <meta name="msapplication-TileColor" content="#00aba9">
+  <meta name="msapplication-TileImage" content="dist/img/icons/mstile-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  <script src="{{url_for('static', filename='js/ladder/vendor.js')}}"></script>
+  <script src="{{url_for('static', filename='js/ladder/custom.js')}}"></script>
+  <link rel="stylesheet" href="{{url_for('static', filename='css/ladder/app.css')}}">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/ladder/custom.css')}}">
+
+
+
+  <script type="text/javascript">
+
+    $(function () {
+      var demos = ['doubleElimination']
+      $.each(demos, function (i, d) {
+        var demo = $('div#' + d)
+        $('<div class="demo animated fadeIn slow"></div>').appendTo(demo)
+      })
+    })
+  </script>
+
+
+</head>
+
+<body class="render">
+  <div id="main_title">
+    
+  </div>
+  <div class="turnament-bracket">
+  <div id="doubleElimination" class="graph-block"></div>
+</div>
+
+<script type="text/javascript">
+  function saveFn(data, userData) {
+    var json = jQuery.toJSON(data)
+    $('#saveOutput').text(JSON.stringify(data, null, 2))
+  }
+
+  function edit_fn(container, data, place, time, doneCb) {
+    var input = $('<input type="text">')
+    input.val(data ? data.flag + ':' + data.name : '')
+    container.html(input)
+    input.focus()
+    input.blur(function () {
+      var inputValue = input.val()
+      if (inputValue.length === 0) {
+        doneCb(null); // Drop the team and replace with BYE
+      } else {
+        var flagAndName = inputValue.split(':') // Expects correct input
+        doneCb({flag: flagAndName[0], name: flagAndName[1]})
+      }
+    })
+  }
+
+  function render_fn(container, data, score, state) {
+    switch (state) {
+      case "empty-bye":
+        container.append("No team")
+        return;
+      case "empty-tbd":
+        container.append("Upcoming")
+        return;
+
+      case "entry-no-score":
+      case "entry-default-win":
+      case "entry-complete":
+        container.append(data.name).append();
+        return;
+    }
+  }
+
+  function driver_order_setting(timedata) {
+    var driver_order_object = {}; // Changed to an object
+
+    for (const key in timedata) {
+        if (timedata.hasOwnProperty(key)) {
+            const dataArray = timedata[key];
+            dataArray.forEach(entry => {
+                if (!driver_order_object.hasOwnProperty(key)) {
+                    driver_order_object[key] = []; // Initialize an array for this key
+                }
+                driver_order_object[key].push(entry); // Push to the correct object key
+            });
+        }
+    }
+    return driver_order_object
+}
+
+  function transformData(originalData) {
+    let teams = [];
+    let results = [];
+    let driver_pair_order = driver_order_setting(originalData.Timedata)
+    let exit_loop = false
+    let skip_entry = false
+    let finale = []
+    let semi_finale = []
+
+    var heat_count = Math.ceil(Math.log2(originalData.Timedata["1"].length));
+
+    // Check if the required data exists and is in the correct format
+    if (originalData && originalData.Timedata && Array.isArray(originalData.Timedata["1"])) {
+        document.getElementById('main_title').innerHTML = "<h1 id=main_title_title>" + originalData["event_data"][0] + "</h1>";
+        for (let i = 0; i < originalData.Timedata["1"].length; i += 2) {
+
+            if (i + 1 < originalData.Timedata["1"].length) {
+                // Create a pair with the current and next team
+                let pair = [
+                    { "name": originalData.Timedata["1"][i][1] + " " + originalData.Timedata["1"][i][2], "flag": "no" },
+                    { "name": originalData.Timedata["1"][i + 1][1] + " " + originalData.Timedata["1"][i + 1][2], "flag": "no" }
+                ];
+                teams.push(pair);
+            } else {
+                // If there's no pair (odd number of teams), add the last team alone
+                let single = { "name": originalData.Timedata["1"][i][1], "flag": "no" };
+                teams.push([single]);
+            }
+        }
+    } else {
+        console.error('Data is not available or in an unexpected format');
+    }
+    const isEven = num => num % 2 === 0;
+    full_loc_array = []
+    count = 0
+
+    for (let key in originalData.Timedata) {
+        med_loc_array = []
+        if (originalData.Timedata.hasOwnProperty(key)) {
+            
+            let dataArray = originalData.Timedata[key];
+            if (key == 1) { 
+              num = key
+            } else {
+              num = (key - 1)
+            }
+
+            for (let driver_o in driver_pair_order[num]) {
+              
+              for (let i = 0; i < dataArray.length; i += 1) {
+
+
+                    if (typeof new_loc_array == 'undefined') {
+                          new_loc_array = []
+                        }
+                    
+                    if (heat_count == key) {
+                      let finale_pair = []
+                      let semi_finale_pair = []
+
+                      let tmp_finale_pair = []
+                      let tmp_semi_finale = []
+
+
+                      count += 1
+                      let tmp_key = (key -1)
+                      if (driver_pair_order[(tmp_key)][0][7] > driver_pair_order[(tmp_key)][1][7] && driver_pair_order[(tmp_key)][1][6] == 0) {
+                        tmp_semi_finale.push(driver_pair_order[(tmp_key)][0])
+                        tmp_finale_pair.push(driver_pair_order[(tmp_key)][1])
+                      } else {
+                        tmp_semi_finale.push(driver_pair_order[(tmp_key)][1])
+                        tmp_finale_pair.push(driver_pair_order[(tmp_key)][0])
+                      }
+
+                      if (driver_pair_order[(tmp_key)][2][7] > driver_pair_order[(tmp_key)][3][7] && driver_pair_order[(tmp_key)][3][6] == 0) {
+                        tmp_semi_finale.push(driver_pair_order[(tmp_key)][2])
+                        tmp_finale_pair.push(driver_pair_order[(tmp_key)][3])
+                      } else {
+                        tmp_semi_finale.push(driver_pair_order[(tmp_key)][3])
+                        tmp_finale_pair.push(driver_pair_order[(tmp_key)][2])
+                      }
+
+                      for (let b in driver_pair_order[(tmp_key)]) {
+
+                        for (let g in tmp_finale_pair) {
+                          if (tmp_finale_pair[g][7] == driver_pair_order[(tmp_key)][b][7]) {
+                            for (let h in driver_pair_order[(key)]) {
+                              if (driver_pair_order[key][h][0] == tmp_finale_pair[g][0]) {
+                                if (driver_pair_order[key][h][6] == 1) {
+                                  finale_pair.push(11111111)
+                                } else if (driver_pair_order[key][h][6] == 2) {
+                                  finale_pair.push(22222222)
+                                } else if (driver_pair_order[key][h][6] == 3) {
+                                  finale_pair.push(33333333)
+                                } else {
+                                  finale_pair.push(driver_pair_order[key][h][7])
+                                }
+                              }
+                            }
+                          }
+                        }
+
+                        for (let g in tmp_semi_finale) {
+                          if (tmp_semi_finale[g][7] == driver_pair_order[(tmp_key)][b][7]) {
+                            for (let h in driver_pair_order[(key)]) {
+                              if (driver_pair_order[key][h][0] == tmp_semi_finale[g][0]) {
+                                if (driver_pair_order[key][h][6] == 1) {
+                                  semi_finale_pair.push(11111111)
+                                } else if (driver_pair_order[key][h][6] == 2) {
+                                  semi_finale_pair.push(22222222)
+                                } else if (driver_pair_order[key][h][6] == 3) {
+                                  semi_finale_pair.push(33333333)
+                                } else {
+                                  semi_finale_pair.push(driver_pair_order[key][h][7])
+                                }
+                                
+                              }
+                            }
+                          }
+                        }
+                    }
+                    
+
+                    med_loc_array.push(finale_pair)
+                    med_loc_array.push(semi_finale_pair)
+                    
+                      exit_loop = true;
+                      break
+
+                    } else if (driver_pair_order[num][driver_o][0] == dataArray[i][0] && heat_count != key) {
+                        count += 1
+
+                        if (dataArray[i][6] == 1) {
+                          entry = 11111111
+                        } else if (dataArray[i][6] == 2) {
+                          entry = 22222222
+
+                        } else if (dataArray[i][6] == 3)
+                          entry = 33333333
+
+                        else {
+                          entry = dataArray[i][7]
+                          }
+                        new_loc_array.push(entry)
+
+                        if (count == 2) {
+                          count = 0
+                          
+                          med_loc_array.push(new_loc_array)
+                          new_loc_array = []
+                          break;
+                        }
+               } 
+          }
+          if (exit_loop == true) {break}
+      }
+        }
+        full_loc_array.push(med_loc_array)
+    }
+    results = full_loc_array
+    data = {teams, results}
+    return data
+
+}
+
+
+$(function () {
+
+    // Function to update content
+    function updateContent() {
+      $.getJSON("/api/get_specific_event_data_loop", function (data) {
+        var new_data = transformData(data);
+
+        // Determine the layout based on the number of drivers
+        var drivers_num = new_data["teams"].length * 2;
+        var teamWidth = 300;
+        var scoreWidth = 60;
+        var matchMargin = 100;
+        var roundMargin = 100;
+
+        if (drivers_num === 4) {
+          $('div#doubleElimination .demo').css('padding-left', '30%');
+        } else if (drivers_num === 8) {
+          $('div#doubleElimination .demo').css('padding-left', '15%');
+        } else if (drivers_num === 16) {
+          matchMargin = 60;
+          roundMargin = 60;
+          $('div#doubleElimination .demo').css('padding-left', '10%');
+        } else if (drivers_num == 32) {
+        teamWidth = 250
+        scoreWidth = 60
+        matchMargin = 15
+        roundMargin = 80
+        $('div#doubleElimination .demo').css('padding-left', '1%');
+        document.getElementById('main_title_title').style.marginBottom = '4px';
+        document.getElementById('main_title_title').style.marginTop = '4px';
+        var elements = document.querySelectorAll('body.render .turnament-bracket');
+        elements.forEach(function(element) {
+            element.style.padding = '1px';
+        }); 
+
+      } 
+
+        window.br = $('div#doubleElimination .demo').bracket({
+          dir: 'lr',
+          teamWidth: teamWidth,
+          scoreWidth: scoreWidth,
+          matchMargin: matchMargin,
+          roundMargin: roundMargin,
+          centerConnectors: true,
+          init: new_data,
+          decorator: {
+            edit: edit_fn,
+            render: render_fn
+          }
+        });
+      });
+    }
+
+    // Initial call to updateContent
+    updateContent();
+
+    // Set interval to call updateContent every 5 seconds
+    let urlParams = new URLSearchParams(window.location.search);
+    let timer = urlParams.get('timer');
+
+    if (timer) {
+      timer = timer * 1000
+    } else {
+      timer = 15000
+    }
+    setInterval(updateContent, timer);
+  });
+
+</script>
+
+</body>
+</html>

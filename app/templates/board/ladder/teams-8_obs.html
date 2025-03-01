@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+
+  <script type="text/javascript" src="{{ url_for('static', filename = '/js/jquery.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = '/js/vendor.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+  <link rel="stylesheet" href="/static/css/{{ cssfile }}">
+
+  <script type="text/javascript">
+
+    $(function () {
+      var contentWrapper = $('.content-wrapper');
+      contentWrapper.addClass('animated fadeIn slow');
+    });
+    
+  </script>
+
+  <script type="text/javascript">
+
+var teamWidth = {{ team_width }};
+var scoreWidth = {{ score_width }};
+var matchMargin = {{ match_margin }};
+var roundMargin = {{ round_margin }};
+var scale_new = {{ scale }};
+
+    var oldJsonLength = 0;
+    $.getJSON("http://192.168.1.50:4433/api-ladder/0", function (data) {
+      oldJsonLength = JSON.stringify(data.teams);
+      setInterval(updateContent, 2000);
+    });
+
+    
+    function updateContent() {
+      $.getJSON("http://192.168.1.50:4433/api-ladder/0", function (data) {
+        var newJsonNames = JSON.stringify(data.teams);
+        if (newJsonNames !== oldJsonLength) {
+          location.reload();
+          return; 
+        } else {
+          oldJsonLength = newJsonNames;
+        }
+        
+        var bracketContainer = $('div#doubleElimination');
+        var hasContent = bracketContainer.children().length > 0;
+        bracketContainer.empty();
+        $('<div class="demo"></div>').appendTo(bracketContainer);
+        
+        $('div#doubleElimination .demo').bracket({
+          dir: 'lr',
+          teamWidth: teamWidth,
+          scoreWidth: scoreWidth,
+          matchMargin: matchMargin,
+          roundMargin: roundMargin,
+          centerConnectors: true,
+          init: data,
+          decorator: {
+            edit: edit_fn,
+            render: render_fn
+          }
+        });
+
+        var r, m, matches;
+        var rounds = $('.round');
+        for (r = 0; r < rounds.length; r++) {
+          matches = rounds.eq(r).find('.match');
+          if (data.results[r]) {
+            for (m = 0; m < matches.length; m++) {
+              matches.eq(m).find('.teamContainer').prepend('<div class="match-label"><div class="match-location"></div></div>');
+            }
+          }
+        }
+        addClassForRoundsNumber(rounds.length);
+        if (hasContent) {
+          bracketContainer.fadeIn();
+        } else {
+          bracketContainer.css({display: 'block'});
+        }
+      });
+    }
+  
+  
+    function edit_fn(container, data, place, time, doneCb) {
+      var input = $('<input type="text">')
+      input.val(data ? data.flag + ':' + data.name : '')
+      container.html(input)
+      input.focus()
+      input.blur(function () {
+        var inputValue = input.val()
+        if (inputValue.length === 0) {
+          doneCb(null); // Drop the team and replace with BYE
+        } else {
+          var flagAndName = inputValue.split(':') // Expects correct input
+          doneCb({ flag: flagAndName[0], name: flagAndName[1] })
+        }
+      })
+    }
+  
+    function render_fn(container, data, score, state) {
+      switch (state) {
+        case "empty-bye":
+          container.append("No team");
+          return;
+        case "empty-tbd":
+          container.append("Upcoming");
+          return;
+        case "entry-no-score":
+        case "entry-default-win":
+        case "entry-complete":
+          container.append('').append(data.name).append();
+          return;
+        case "active":
+          console.log("True")
+          container.addClass("active");
+          container.append('').append(data.name).append();
+          return;
+        default:
+          return;
+      }
+    }
+  
+    function addClassForRoundsNumber(roundsNumber) {
+      var body = $('body');
+      body.removeClass('three-rounds four-rounds five-rounds six-rounds seven-rounds');
+      switch (roundsNumber) {
+        case 3:
+          body.addClass('three-rounds');
+          break;
+        case 4:
+          body.addClass('four-rounds');
+          break;
+        case 5:
+          body.addClass('five-rounds');
+          break;
+        case 6:
+          body.addClass('six-rounds');
+          break;
+        case 7:
+          body.addClass('seven-rounds');
+          break;
+      }
+    }
+    updateContent()
+  </script>
+    <style>
+      body.render .turnament-bracket .bracket .round:before {
+    display: none;
+    }
+    h1 {display:none;}
+    </style>
+</head>
+
+<body class="render">
+  <div class="content-wrapper" >
+    <div class="centered-content" style="padding-top: {{ padding_top }}px;">
+      <div class="turnament-bracket", style="transform: scale({{ scale }})">
+        <div id="doubleElimination" class="graph-block"></div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

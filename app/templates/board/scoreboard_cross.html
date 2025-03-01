@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333; /* Dark text color */
+            background-color: #fff; /* White background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            font-size: large;
+        }
+
+        .leaderboard {
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            position: absolute;
+            top: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333; /* Dark text color */
+            margin-bottom: 20px;
+            margin-top: 0px;
+            width: 100%;
+        }
+
+        .results-table {
+            width: 45%;
+            border-collapse: collapse;
+            margin: 10px;
+        }
+
+        .results-table th, .results-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd; /* Light gray border */
+            font-size: 18px;
+        }
+
+        .results-table th {
+            background-color: #eee; /* Lighter gray for headers */
+            color: #333; /* Dark text color */
+        }
+
+        .results-table td {
+            color: #555; /* Darker text for readability */
+            background-color: transparent;
+        }
+
+        .results-table tr:nth-child(even) {
+            background-color: #f2f2f2; /* Very light gray background for alternating rows */
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+        socket.on('response', function() {
+          location.reload()
+
+        });
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var timer = urlParams.get('timer')
+    if (timer == null) {
+        timer = 10000
+    } else {
+        timer = timer * 1000
+    }
+    console.log(timer)
+    setTimeout(function(){
+       window.location.reload(1);
+    }, timer);
+    
+</script>
+</head>
+<body>
+    {% if results2 != [] %}
+    <div class="leaderboard">
+    {% else %}
+    <div class="leaderboard" style="scale: 1;">
+    {% endif %}
+        <h2>{{ title }}</h2>
+    
+        {% if results2 != [] %}
+        <table class="results-table">
+        {% else %}
+        <table class="results-table" style="width: 100%;">
+        {% endif %}
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fører</th>
+                    <th>Kjøretøy</th>
+                    <th>Bestetid</th>
+                    <th>Poeng</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in results %}
+                <tr>
+                    <td>{{ driver["number"] }}</td>
+                    <td>{{ driver["first_name"] }} {{ driver["last_name"] }}</td>
+                    <td>{{ driver["snowmobile"] }}</td>
+                    <td>{{ driver["finishtime"] }}</td>
+                    <td>{{ driver["points"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+        {% if results2 != [] %}
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fører</th>
+                    <th>Kjøretøy</th>
+                    <th>Bestetid</th>
+                    <th>Poeng</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in results2 %}
+                <tr>
+                    <td>{{ driver["number"] }}</td>
+                    <td>{{ driver["first_name"] }} {{ driver["last_name"] }}</td>
+                    <td>{{ driver["snowmobile"] }}</td>
+                    <td>{{ driver["finishtime"] }}</td>
+                    <td>{{ driver["points"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+</body>
+</html>

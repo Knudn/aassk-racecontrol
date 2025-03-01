@@ -1,0 +1,234 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<style>
+    /* Base styles */
+    .table-responsive {
+        margin-bottom: 20px;
+    }
+    
+    /* Loading overlay styles */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<h3>Global Config</h3>
+
+<form method="post" id="configForm">
+    {{ form.hidden_tag() }}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for config in global_config %}
+                <tr>
+                    <td>Session Name</td>
+                    <td><input type="text" class="form-control" name="session_name" value="{{ config.session_name }}"></td>
+                </tr>
+                <tr>
+                    <td>Project Directory</td>
+                    <td><input type="text" class="form-control" name="project_dir" value="{{ config.project_dir }}"></td>
+                </tr>
+                <tr>
+                    <td>Database location</td>
+                    <td><input type="text" class="form-control" name="db_location" value="{{ config.db_location }}"></td>
+                </tr>
+                <tr>
+                    <td>Use Intermediate Directory</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="use_intermediate" id="use_intermediate" {% if config.use_intermediate %}checked{% endif %} onclick="toggleIntermediatePath();">
+                            <i class="form-text text-muted">Intermediate location should be used to hinder database locks</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Intermediate Directory Path</td>
+                    <td><input type="text" class="form-control" name="intermediate_path" id="intermediate_path" value="{{ config.intermediate_path }}" {% if not config.use_intermediate %}disabled{% endif %}></td>
+                </tr>
+                <tr>
+                    <td>Autocommit</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="autocommit" id="autocommit" {% if config.autocommit %}checked{% endif %}>
+                            <i class="form-text text-muted">Automatically commit changes</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Event Directory</td>
+                    <td><input type="text" class="form-control" name="event_dir" value="{{ config.event_dir }}"></td>
+                </tr>
+                <tr>
+                    <td>Whitelist Filter</td>
+                    <td><input type="text" class="form-control" name="wl_title" value="{{ config.wl_title }}" placeholder="Optional"></td>
+                </tr>
+                <tr>
+                    <td>Exclude Filter</td>
+                    <td><input type="text" class="form-control" name="exclude_title" value="{{ config.exclude_title }}" placeholder="Optional"></td>
+                </tr>
+                <tr>
+                    <td>Use whitelist?</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="wl_bool" {% if config.wl_bool %}checked{% endif %}>
+                            <i class="form-text text-muted">Whitelisting based on the title of the event (should be used)</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Keep event order?</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="keep_previous_sort" {% if config.keep_previous_sort %}checked{% endif %}>
+                            <i class="form-text text-muted">This will make it so the order of the event stay unchanged after reload.</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Keep qualification criteria?</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="keep_qualification" {% if config.keep_qualification %}checked{% endif %}>
+                            <i class="form-text text-muted">This will keep the qualification from previous session, configure <a href="/admin/kvali_criteria">HERE</a></i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Snowcross/Watercross?</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="cross" id="cross_checkbox" {% if config.cross %}checked{% endif %} onclick="toggleCrossWhitelist();">
+                            <i class="form-text text-muted">If enabled, make sure you have configured the <a href="/admin/cross_config" class="your-optional-class-for-styling">cross profile</a> <b>before</b> reloading</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Cross Whitelist</td>
+                    <td><input type="text" class="form-control" name="wl_cross_title" id="wl_cross_title" value="{{ config.wl_cross_title }}" placeholder="Additional filter (Optional)"></td>
+                </tr>
+                <tr>
+                    <td>Enable Sorting</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enable_sorting" name="enable_sorting" {% if config.enable_sorting %}checked{% endif %} onclick="toggleSortingFields();">
+                            <i class="form-text text-muted">Enable custom sorting</i>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="search_string1" style="{% if not config.enable_sorting %}display: none{% endif %}">
+                    <td>Search String 1</td>
+                    <td><input type="text" class="form-control" name="search_string1" value="{{ config.search_string1 }}"></td>
+                </tr>
+                <tr id="search_string2" style="{% if not config.enable_sorting %}display: none{% endif %}">
+                    <td>Search String 2</td>
+                    <td><input type="text" class="form-control" name="search_string2" value="{{ config.search_string2 }}"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+    <input type="submit" name="reload" value="Reload" class="btn btn-warning" onclick="return confirmAction()">
+    <input type="submit" name="update" value="Update" class="btn btn-success">
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCrossWhitelist();
+        toggleIntermediatePath();
+        toggleSortingFields();
+
+        // Add form submission handler
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            // Check if the clicked button was the reload button
+            if (e.submitter && e.submitter.name === 'reload') {
+                showLoadingSpinner();
+            }
+        });
+    });
+
+    function showLoadingSpinner() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function toggleSortingFields() {
+        var checkBox = document.getElementById("enable_sorting");
+        var search1 = document.getElementById("search_string1");
+        var search2 = document.getElementById("search_string2");
+
+        if (checkBox.checked == true) {
+            search1.style.display = "table-row";
+            search2.style.display = "table-row";
+        } else {
+            search1.style.display = "none";
+            search2.style.display = "none";
+        }
+    }
+
+    function confirmAction() {
+        if (confirm("ALL CURRENT RACE DATA WILL BE RELOADED")) {
+            showLoadingSpinner();
+            return true;
+        }
+        return false;
+    }
+
+    function toggleModal() {
+        var modal = document.getElementById("crossProfileModal");
+        modal.style.display = modal.style.display === "none" ? "block" : "none";
+    }
+
+    function closeModal() {
+        toggleModal();
+    }
+
+    function toggleCrossWhitelist() {
+        var crossCheckbox = document.getElementById("cross_checkbox");
+        var wlCrossTitleInput = document.getElementById("wl_cross_title");
+        wlCrossTitleInput.disabled = !crossCheckbox.checked;
+    }
+
+    function toggleIntermediatePath() {
+        var useIntermediateCheckbox = document.getElementById("use_intermediate");
+        var intermediatePathInput = document.getElementById("intermediate_path");
+        intermediatePathInput.disabled = !useIntermediateCheckbox.checked;
+    }
+</script>
+
+{% endblock %}

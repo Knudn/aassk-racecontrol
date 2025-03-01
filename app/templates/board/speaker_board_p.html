@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Race Commentary Information</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">    
+
+
+<script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+
+  <style>
+    .qualify-line {
+        text-align: center;
+        padding: 1px;
+        position: relative;
+        color: aqua;
+    }
+
+    .qualify-line::before,
+    .qualify-line::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 3px;
+        background-color: #1170ff;
+    }
+
+    .qualify-line::before {
+        left: 0;
+    }
+
+    .qualify-line::after {
+        right: 0;
+    }
+
+    .qualify-text {
+        display: inline-block;
+        padding: 0 0.75rem;
+        background-color: white;
+        position: relative;
+        z-index: 1;
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    body, html {
+      overflow-x: hidden;
+      max-width: 100vw;
+      font-size: 14px;
+    }
+
+    /* Button styles */
+    .custom-btn {
+      padding: 10px 15px;
+      font-size: 12px;
+    }
+
+    .custom-icon {
+      font-size: 1.5em;
+    }
+
+    /* Driver container styles */
+    .driver-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .driver {
+      width: 48%;
+      border-top: 1px solid black;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .driver-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .drivername {
+      font-size: x-large;
+    }
+
+    /* Middle container styles */
+    .middle-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-width: 10px;
+    }
+
+
+    /* Header styles */
+    .header_title {
+      text-align: center;
+    }
+
+    /* Status styles */
+    .winner {
+      background-color: rgba(37, 255, 37, 0.658);
+      color: rgb(0, 0, 0);
+    }
+
+    .loser {
+      background-color: rgba(255, 48, 48, 0.623);
+      color: rgb(0, 0, 0);
+    }
+
+    /* Driver status styles */
+    #driver_status {
+      width: 98%;
+    }
+
+    /* Modal styles */
+    .modal-dialog {
+      width: auto;
+      max-width: 100%;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    /* Tab styles */
+    .nav-tabs .nav-item {
+      width: 50%;
+      text-align: center;
+    }
+
+    .nav-tabs .nav-link {
+      border-radius: 0;
+    }
+
+    /* Top driver bar styles */
+    #top_driver_bar {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #top_driver_bar span {
+      display: inline-block;
+      vertical-align: middle;
+      padding: 0 2%;
+    }
+
+    .strikethrough {
+      text-decoration: line-through;
+    }
+  </style>
+
+
+
+  </style>
+</head>
+<body>
+    
+    <div class="alert alert-info" role="alert" style="margin-bottom: 0px; padding:10px;">
+        <h2 class="header_title"></h2>
+      </div>
+      
+    <div class="alert alert-warning" role="alert" style="padding:5px; font-size: 15px;" id="top_driver_bar">
+        <span id="currentHeat"></span>
+        <span id="eventTitle"></span>
+        <span id="dayTitle"></span>
+    </div>
+    
+      </div>
+      <div id="alert_msg">
+
+        </div>
+
+    <div class="driver-container">
+        <div id="left-driver" class="driver">
+            <div id="left-results" class="left-results"></div>
+        </div>
+    
+        <div class="middle-container">
+            <div>
+                <h1 class="heat_num" style="font-size: 30px">1/1</h1>
+                </div>
+            <br>
+            <button type="button" class="btn btn-primary" id="loadDataButton" data-bs-toggle="modal" data-bs-target="#eventsModal">
+
+                <span id="boot-icon" class="bi bi-list-check" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+
+            </button>
+            <br>
+            <button type="button" class="btn btn-primary" id="top_driver_button" data-bs-toggle="modal" data-bs-target="#top_driver_button_model" style="margin-bottom: 15px;">
+
+                <span id="boot-icon" class="bi bi-stopwatch" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+
+            </button>
+            
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mockDataModal">
+                <span id="boot-icon" class="bi bi-arrow-clockwise" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+            </button>
+
+        </div>
+    
+        <div id="right-driver" class="driver">
+            <div id="right-retry-table" class="right-retry-table-class"></div>
+        </div>
+    </div>
+
+
+<!-- Mock Data Modal -->
+<div class="modal fade" id="mockDataModal" tabindex="-1" role="dialog" aria-labelledby="mockDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mockDataModalLabel">Kjør på nytt tabell</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Driver Name</th>
+                            <th>Title</th>
+                            <th>CID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>    
+<!-- EVENT ORDER MODEL -->
+<div class="modal fade" id="eventsModal" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="width: 80%;">
+      <div class="modal-content">
+        <div class="modal-header" style="text-align: center;">
+          <h5 class="modal-title" id="eventsModalLabel" >Event Rekkefølge</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Event</th>
+                <th scope="col">Heat</th>
+                
+              </tr>
+            </thead>
+            <tbody id="eventTableBody">
+              <!-- Event data will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- TOP DRIVERS -->
+<div class="modal fade" id="top_driver_button_model" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document"> <!-- Use modal-lg for larger modal -->
+      <div class="modal-content" style="align-items: center;">
+        <div class="modal-header" style="text-align: center;">
+          <h5 class="modal-title" id="eventsModalLabel" >Bestetid - top 10</h5>
+        </div>
+    <!-- Centered Tabs -->
+    <div class="container">
+        <ul class="nav nav-tabs row">
+            <li class="nav-item col">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab1">TITLE_1_TITLE_2_HEAT</a>
+            </li>
+            <li class="nav-item col">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab2">TITLE_1_TITLE_2</a>
+            </li>
+            <li class="nav-item col">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab3">TITLE_1</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab1">
+                <!-- Table for Tab 1 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tab2">
+                <!-- Table for Tab 2 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Heat</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tab3">
+                <!-- Table for Tab 1 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">Heat</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+    
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+    h_server_url = "{{ SpeakerPageConfig_json.h_server_url }}"
+    kvaliCriteria = JSON.parse('{{ kvali_criteria | safe }}');
+</script>
+
+<script>
+
+let title_name = []
+
+function add_websocket_live_timer() {
+    const ws = new WebSocket("ws://192.168.1.50:4444/");
+    var x;
+    var arr = [];
+
+    function update_live_data(newData) {
+        document.getElementsByClassName("T1")[0].innerHTML = newData.Driver1.time;
+        document.getElementsByClassName("T2")[0].innerHTML = newData.Driver2.time;
+    }
+    
+    ws.onmessage = function(event){
+        var arr = JSON.parse(event.data);
+        setTimeout(() => {
+            update_live_data(arr);
+        }, 1);
+    };
+}
+document.getElementById('loadDataButton').addEventListener('click', function() {
+    fetch('/api/get_event_order')
+        .then(response => response.json())
+        .then(data => {
+            const eventTableBody = document.getElementById('eventTableBody');
+            eventTableBody.innerHTML = '';
+            data.forEach(event => {
+                const tableRow = document.createElement('tr');
+
+                if(event.Enabled === 0) {
+                    tableRow.classList.add('table-secondary', 'strikethrough');
+                }
+
+                if (event.Active) {
+                    active = "style=background:aquamarine"
+                } else {
+                    active = ""
+                }
+
+                const orderTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Order}</td>`;
+                const eventTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Event}</td>`;
+                const heatTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''} " ${active}>${event.Heat}</td>`;
+                
+                tableRow.innerHTML = orderTd + eventTd + heatTd;
+
+                eventTableBody.appendChild(tableRow);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+});
+
+table_entry_count = 0
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('top_driver_button').addEventListener('click', function() {
+        fetch(`/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=10&unique_names=true`)
+
+        .then(response => response.json())
+        .then(data => {
+
+            
+            document.querySelectorAll('.tab-pane').forEach((tabPane, index) => {
+                tabPane.querySelector('table tbody').innerHTML = '';
+                const tabLink = document.querySelector(`.nav-tabs .nav-item:nth-child(${index + 1}) a`);
+                if (tabLink) {
+                    tabLink.textContent = 'Loading...'; // Temporary title
+                }
+            });
+            const recordCount = {
+                tab1: 0,
+                tab2: 0,
+                tab3: 0
+            };
+
+            Object.keys(data).forEach(key => {
+
+                const event = data[key];
+                let tableBody, tabTitle;
+                
+
+                if (key.includes('title_1+title_2+heat_') && recordCount.tab1 < 10) {
+                    tableBody = document.querySelector('#tab1 table tbody') ;
+                    tabTitle = "Heat " + event.heat;
+                    tab = 1
+                    recordCount.tab1++;
+                } else if (key.includes('title_1+title_2_')&& recordCount.tab2 < 10 ) {
+                    tableBody = document.querySelector('#tab2 table tbody');
+                    tabTitle = event.title_2;
+                    tab = 2
+                    recordCount.tab2++;
+                } else if (key.includes('title_1_')&& recordCount.tab3 < 10 ) {
+                    tableBody = document.querySelector('#tab3 table tbody');
+                    tabTitle = event.title_1;
+                    tab = 3
+                    recordCount.tab3++;
+                } else {
+                    return
+                }
+
+                const tabLink = document.querySelector(`.nav-tabs .nav-item:nth-child(${key.includes('title_1+title_2+heat_') ? 1 : key.includes('title_1+title_2_') ? 2 : 3}) a`);
+                if (tabLink) {
+                    tabLink.textContent = tabTitle;
+                }
+                let time_data = (event.finishtime / 1000).toFixed(3) + " sec";
+                table_entry_count += 1
+
+                const row = document.createElement('tr');
+                if (tab == 1) {
+                    row.innerHTML = `
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                } else if (tab == 2) {
+                    row.innerHTML = `
+                        <td>${event.heat}</td>
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                } else if (tab == 3) {
+                    row.innerHTML = `
+                        <td>${event.title_2}</td>
+                        <td>${event.heat}</td>
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                }
+
+                // Append the row to the table body
+                if (tableBody) {
+                    tableBody.appendChild(row);
+                } else {
+                    console.error('Table body not found for selector:', key);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+
+});
+
+  </script>
+  
+  <script>
+
+    var x;
+    var arr = [];
+
+    function updateContent(newData) {
+        document.getElementsByClassName("T1")[0].innerHTML = newData.Driver1.time;
+        document.getElementsByClassName("T2")[0].innerHTML = newData.Driver2.time;
+        var D1_name = newData.Driver1.name
+        var D2_name = newData.Driver2.name
+    }
+    
+
+
+  </script>
+
+  <script>
+    //Save changes inserted to model
+    $(document).ready(function() {
+        $('#saveChanges').click(function() {
+            // Collect the new settings data
+            var isCheckboxChecked = $('#matching_parallel').prop('checked');
+            var h_server_url = $('#h_server_url')[0].value
+            var settingsData = {
+                matchingParallel: isCheckboxChecked,
+                h_server_url:h_server_url
+            };
+    
+            $.ajax({
+                url: '/board/speaker',  
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(settingsData),
+                success: function(response) {
+                    // Handle success response
+                    console.log('Settings updated:', response);
+                    // Reload the page
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response
+                    console.error('Update failed:', status, error);
+                }
+            });
+        });
+    });
+
+    </script>
+    <script>
+        {% if SpeakerPageConfig_json.matching_parallel == True %}
+            let parallel_only = true;
+        {% else %}
+            let parallel_only = false;
+        {% endif %}
+    </script>
+
+  <script>
+
+    function validate_mode(data) {
+
+        current_mode = data[0]["race_config"]["MODE"]
+
+        if (current_mode != old_mode) {
+            location.reload()
+        } 
+
+        old_mode = data[0]["race_config"]["MODE"]
+
+        
+    }
+
+    var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+
+    let driverPairs = [];
+    let currentPairIndex = 0;
+
+    let array_checksum = ""
+    var old_results = ""
+
+    
+    $(document).ready(function() {
+        // API call to fetch initial data
+        $.ajax({
+            url: '/api/get_current_startlist_w_data', // API URL
+            type: 'GET',
+            success: function(data) {
+                old_mode = data[0]["race_config"]["MODE"]
+                validate_mode(data)
+                document.getElementsByClassName("header_title")[0].innerHTML = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
+                let title_name = [data[0]["race_config"]["TITLE_1"], data[0]["race_config"]["TITLE_2"], data[0]["race_config"]["HEAT"]]
+                displayActiveDrivers(data, title_name);
+                display_startlist(data);
+                display_results(data);
+
+                if (data[1] == undefined) {
+                    insert_alert("NO DRIVERS! (JOSTEIN STRESSER SANNSYNELIGVIS MED Å SETTE OPP STARTLISTENE)")
+                } else {
+                    insert_alert("clean")
+                }
+                
+
+                old_results = MD5(JSON.stringify(data));
+            },
+            error: function() {
+                console.log('Error fetching data from API');
+            }
+        });
+
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        console.log(location.port)
+
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            
+
+            socket.emit('join', { username: 'John', room: 'room1' });
+
+        });
+        add_websocket_live_timer()
+
+        socket.on('response', function(dataString) {
+            
+            const data = JSON.parse(dataString);
+            new_title = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
+            
+            if (!data[0]["drivers"]) {
+//                location.reload()
+            }
+            var new_result = MD5(JSON.stringify(dataString)); 
+            if (!(new_result == old_results)) {
+
+                title_name = [data[0]["race_config"]["TITLE_1"], data[0]["race_config"]["TITLE_2"], data[0]["race_config"]["HEAT"]]
+                document.getElementsByClassName("header_title")[0].innerHTML = new_title;
+                displayActiveDrivers(data, title_name);
+                validate_mode(data)
+                display_startlist(data);
+                display_results(data)
+                old_results = new_result
+            } else {
+                console.log("Nope dude")
+            }
+        });
+
+        const socket_retry = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket_retry.on('connect', function() {
+            console.log('Connected to the server');
+            socket_retry.emit('join', { username: 'socket_retry', room: 'socket_retry' });
+        });
+        
+        socket_retry.on('response', function(dataString) {
+            console.log(dataString)
+            const data = JSON.parse(dataString);
+            retry_entry_table(data)
+            //display_retry_entries(data);
+        });
+        // Function to display active drivers
+        let driverPairs = [];
+
+let currentPairIndex = 0;
+
+async function displayActiveDrivers(data, title_name) {
+    // Store all driver pairs
+    driverPairs = data.filter(item => item.drivers);
+
+    // Find the index of the first pair with an active driver
+    currentPairIndex = driverPairs.findIndex(pair => pair.drivers.some(driver => driver.active));
+
+    if (currentPairIndex === -1) {
+        // If no active drivers are found, default to the first pair
+        currentPairIndex = 0;
+    }
+
+    // Call to update the display with the current pair
+    await updateDriverDisplay(title_name);
+}
+
+
+
+let driver_names = []
+
+
+
+async function updateDriverDisplay(title_name) {
+    if (driverPairs[currentPairIndex] && driverPairs[currentPairIndex].drivers) {
+        const drivers = driverPairs[currentPairIndex].drivers;
+        document.getElementsByClassName("heat_num")[0].innerHTML = (currentPairIndex + 1)+"/"+driverPairs.length;
+        active_session = (driverPairs.findIndex(pair => pair.drivers.some(driver => driver.active)) + 1)
+        if (active_session == (currentPairIndex + 1)) {
+            document.getElementsByClassName("heat_num")[0].style.color = "red";
+        } else {
+            document.getElementsByClassName("heat_num")[0].style.color = "black";
+        }
+        const leftDriver = drivers[0] || {};
+        const rightDriver = drivers[1] || {};
+
+        const left_driver_name = (leftDriver.first_name + " " + leftDriver.last_name) || '';
+        const right_driver_name = (rightDriver.first_name + " " + rightDriver.last_name) || '';
+
+        if (driver_names.length = 2) {
+            driver_names = []
+        }
+        driver_names.push(left_driver_name)
+        driver_names.push(right_driver_name)
+
+
+        $('#left-driver').html(websocket_driver_data(leftDriver, 1));
+        $('#right-driver').html(websocket_driver_data(rightDriver, 2));
+        try {
+            try {
+            const top_speed_data = await get_top_driver_header(title_name);
+            display_get_top_driver_header(top_speed_data)
+            const retry_entries_data = await get_retry_entries(title_name);
+            retry_entry_table(retry_entries_data)
+            
+        } catch (error) {
+                console.log('Error getting top speeds for current:', error)
+            }
+
+            //const retry_entries = await get_retry_entries("retry");
+            //$('#left-driver').append(display_retry_entries(retry_entries));
+
+        } catch (error) {
+            console.error('Error updating driver display:', error);
+        }
+    }
+}
+
+function get_top_driver_header(title_name) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=1&unique_names=true`,
+            type: 'GET',
+            success: function(data) {
+                resolve(data);
+            },
+            error: function() {
+                reject('Error fetching snowmobile models');
+            }
+        });
+    });
+}
+
+function get_retry_entries(title_name) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/retry_entries`,
+            type: 'GET',
+            success: function(data) {
+                resolve(data);
+            },
+            error: function() {
+                reject('Error fetching snowmobile models');
+            }
+        });
+    });
+}
+
+
+
+function milliseconds_to_sec(ms) {
+    return (ms / 1000).toFixed(3)
+}
+
+function insert_alert(msg) {
+    if (msg == "clean") {
+        var alert_div = document.getElementById('alert_msg');
+        alert_div.innerHTML = "";
+    } else {
+        alert_msg = `
+        <div style="text-align: center;" class="alert alert-danger" role="alert">
+            ${msg}
+        </div>
+            `
+        var alert_div = document.getElementById('alert_msg');
+        alert_div.innerHTML = alert_msg;
+    }
+
+
+}
+
+function display_get_top_driver_header(data) {
+    let heat = data["title_1+title_2+heat_0"]
+    let event = data["title_1+title_2_0"]
+    let day = data["title_1_0"]
+    
+    if (heat != undefined) {
+        document.getElementById('currentHeat').innerHTML = `<strong>Current Heat:</strong> ${heat.first_name} ${heat.last_name} - ${milliseconds_to_sec(heat.finishtime)}`;
+    } else {
+        document.getElementById('currentHeat').innerHTML = `<strong>Heat:</strong> Not started`;
+    }
+    if (event != undefined) {
+        document.getElementById('eventTitle').innerHTML = `<strong>${event.title_2}:</strong> ${event.first_name} ${event.last_name} - ${milliseconds_to_sec(event.finishtime)}`;
+    } else {
+        document.getElementById('eventTitle').innerHTML = `<strong>EVENT:</strong> Not started`
+    }
+
+    if (day != undefined) {
+        document.getElementById('dayTitle').innerHTML = `<strong>${day.title_1}:</strong> ${day.first_name} ${day.last_name} - ${milliseconds_to_sec(day.finishtime)}`;
+    } else {
+        document.getElementById('dayTitle').innerHTML = `<strong>DAY:</strong> Not started`;
+    }
+}
+
+
+    // Function to format driver information
+    function websocket_driver_data(driver,num) {
+        if (!driver.first_name) {
+            return '<p>No active driver</p>';
+        }
+        var finishTime = (driver.time_info && driver.time_info.FINISHTIME > 0) 
+                            ? (driver.time_info.FINISHTIME / 1000).toFixed(2) + ' seconds' 
+                            : 'N/A';
+
+        let finish_time_sec= (driver.time_info.FINISHTIME / 1000).toFixed(3) + " Sec";
+        var table_color = "" 
+        if (driver.status == "0") {
+            var status = "Ikke Fullført" 
+            table_color = "bg-info p-2 text-dark bg-opacity-25"
+
+        } else if (driver.status == "1") {
+            var status = "Vinner"
+            table_color = "bg-success p-2 text-dark bg-opacity-25"
+        }
+        else if (driver.status == "2") {
+            var status = "Taper"
+            table_color = "bg-danger p-2 text-dark bg-opacity-25"
+        }
+        if (driver.time_info.PENELTY == "0") {
+            var penelty = "" 
+        } else if (driver.time_info.PENELTY == "2") {
+            var penelty = "DNF" 
+            table_color = table_color + " border-warning "
+        } else if (driver.time_info.PENELTY == "1") {
+            var penelty = "DNS" 
+            table_color = table_color + " border-primary "
+        } else if (driver.time_info.PENELTY == "3") {
+                var penelty = "DSQ" 
+                table_color = table_color + " border-secondary "
+        }
+        
+
+
+        return `<div class="driver-info">
+                    <div id=drivername>
+                    <h3 class=active_drivers>${driver.first_name} ${driver.last_name}</h3>
+                    <h4 class="T${num}">0</h4>
+                    </div>
+                    <div class="driver-details">
+                    </div>
+                </div>
+                <div id="driver_status" class="border border-5 ${table_color} rounded">
+                    <div style="text-align: center;">
+                        <h3>${penelty}</h3>
+                    </div>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td colspan="2">${driver.club}</td>
+                                <td>${driver.vehicle}</td>
+                                <td>${finish_time_sec}</td>
+                                <td>${status}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr width="80%" color="green" />`; 
+    }
+    
+});
+
+function display_retry_entries(entries) {
+    const tableBody = document.querySelector('#mockDataModal .modal-body table tbody');
+    tableBody.innerHTML = ''; // Clear the existing table rows
+
+    // Convert entry driver names to lowercase for case-insensitive comparison
+    const entryDriverNamesLower = entries.map(entry => entry.driver_name.toLowerCase());
+
+    // Prepare driver containers and their default T text elements
+    const driverContainersInfo = [
+        { containerId: 'left-driver', tClass: '.T1' },
+        { containerId: 'right-driver', tClass: '.T2' }
+    ];
+
+    driverContainersInfo.forEach(info => {
+        const container = document.getElementById(info.containerId);
+        const tEl = container.querySelector(info.tClass);
+
+        // Reset T text to default state for all drivers first
+        if (tEl) {
+            tEl.textContent = '0'; // Default state
+            tEl.style.color = ''; // Reset color to default
+        }
+
+        // Find the driver name element within the container
+        const driverNameEl = container.querySelector('.active_drivers');
+        if (driverNameEl) {
+            const driverNameLower = driverNameEl.textContent.trim().toLowerCase();
+
+            // Mark as "RETRY" if the driver's name is in the entry list
+            if (entryDriverNamesLower.includes(driverNameLower)) {
+                if (tEl) {
+                    tEl.style.color = 'red';
+                }
+            }
+        }
+    });
+
+    // Populate the modal table with the current entries
+    entries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.driver_name}</td>
+            <td>${entry.title}</td>
+            <td>${entry.CID}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function display_startlist(data) {
+  // First check if div exists and remove it
+  const existingDiv = document.getElementById('right-startlist');
+  if (existingDiv) {
+      existingDiv.remove();
+  }
+
+  const newDiv = document.createElement('div');
+  newDiv.id = 'right-startlist';
+  newDiv.className = 'right-startlist-class';
+  newDiv.style = "width: 90%;";
+  
+  let html = `
+   <div> <h4 style="text-align: center;"> Startliste </h4> </div>
+      <table class="table table-sm mb-0">
+          <tbody>`;
+  
+  for (let i = 1; i < data.length; i++) {
+      const race = data[i];
+      const driver1 = race.drivers[0];
+      const driver2 = race.drivers[1];
+
+      if (driver1.active == true || driver2.active == true) {
+           active_class = "badge bg-danger"
+      } else {
+           active_class = "badge bg-secondary"
+      }
+      
+      html += `
+          <tr class="align-middle">
+              <td style="width: 5%">
+                  <button class="btn btn-warning btn-sm" onclick="addRetry(${driver1.id})" style="font-size: 0.7rem;">
+                      FLYTT
+                  </button>
+              </td>
+              <td class="text-end pe-3" style="width: 37%">
+                  <div class="text-truncate" style="font-size: 0.95rem;">
+                      ${driver1.first_name} ${driver1.last_name}
+                  </div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${driver1.vehicle}</div>
+              </td>
+              <td class="text-center px-0" style="width: 5%">
+                  <span class="${active_class}" style="font-size: 0.8rem background-color: red;">${race.race_id}</span>
+              </td>
+              <td class="text-start ps-3" style="width: 37%">
+                  <div class="text-truncate" style="font-size: 0.95rem;">
+                      ${driver2.first_name} ${driver2.last_name}
+                  </div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${driver2.vehicle}</div>
+              </td>
+              <td style="width: 5%">
+                  <button class="btn btn-warning btn-sm" onclick="addRetry(${driver2.id})" style="font-size: 0.7rem;">
+                      FLYTT
+                  </button>
+              </td>
+          </tr>`;
+  }
+
+  html += `
+          </tbody>
+      </table>`;
+
+  newDiv.innerHTML = html;
+  const parentDiv = document.getElementById('right-driver');
+  parentDiv.appendChild(newDiv);
+}
+
+function addRetry(cid) {
+   $.ajax({
+       url: '/api/retry_entries',
+       type: 'POST',
+       contentType: 'application/json',
+       data: JSON.stringify({
+           cid: cid.toString(),
+           method: "add"
+       }),
+       success: function(response) {
+           console.log('Driver added to retry successfully');
+       },
+       error: function(xhr, status, error) {
+           console.error('Error adding driver to retry:', error);
+       }
+   });
+}
+
+function display_results(data) {      
+    const newDiv = document.createElement('div');
+    newDiv.id = 'left-results';
+    newDiv.className = 'left-results-class';
+    newDiv.style = "width: 90%;";
+
+    const isQualification = data[0]?.race_config?.TITLE_2?.includes('Kvalifisering');
+    const eventTitle = data[0]?.race_config?.TITLE_2;
+    const eventTitle_full = data[0]?.race_config?.TITLE_1 + " " + data[0]?.race_config?.TITLE_2
+    
+
+
+    function sortDrivers(drivers) {
+        return drivers.sort((a, b) => {
+            const penaltyA = a.time_info.PENELTY;
+            const penaltyB = b.time_info.PENELTY;
+            const finishTimeA = a.time_info.FINISHTIME;
+            const finishTimeB = b.time_info.FINISHTIME;
+
+            // If either has a special penalty (DNS, DNF, DSQ), put them at the bottom
+            if ([1, 2, 3].includes(penaltyA) && ![1, 2, 3].includes(penaltyB)) return 1;
+            if ([1, 2, 3].includes(penaltyB) && ![1, 2, 3].includes(penaltyA)) return -1;
+
+            // If both have special penalties, sort them (DNS, DNF, DSQ order)
+            if ([1, 2, 3].includes(penaltyA) && [1, 2, 3].includes(penaltyB)) {
+                return penaltyA - penaltyB;
+            }
+
+            // For normal times, sort by total time
+            const totalTimeA = finishTimeA + (penaltyA > 3 ? penaltyA : 0);
+            const totalTimeB = finishTimeB + (penaltyB > 3 ? penaltyB : 0);
+            return totalTimeA - totalTimeB;
+        });
+    }
+
+    // Get initial drivers, filtering out those who haven't started
+    let currentDrivers = sortDrivers(
+        data.slice(1).flatMap(race => race.drivers)
+            .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
+    );
+
+    async function handleToggle(event) {
+        try {
+            console.log(encodeURIComponent(eventTitle))
+            if (event.target.checked) {
+                const response = await fetch(`/api/get_current_startlist_w_data?event_comb=${encodeURIComponent(eventTitle_full)}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const combinedData = await response.json();
+
+                const driverBestTimes = new Map();
+
+                combinedData.forEach(eventData => {
+                    eventData.slice(1).flatMap(race => race.drivers)
+                        .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
+                        .forEach(driver => {
+                            const totalTime = driver.time_info.FINISHTIME + 
+                                            (driver.time_info.PENELTY > 3 ? driver.time_info.PENELTY : 0);
+                            const driverId = driver.id;
+                            
+                            if (!driverBestTimes.has(driverId) || 
+                                totalTime < driverBestTimes.get(driverId).time_info.FINISHTIME + 
+                                          (driverBestTimes.get(driverId).time_info.PENELTY > 3 ? 
+                                           driverBestTimes.get(driverId).time_info.PENELTY : 0)) {
+                                driverBestTimes.set(driverId, driver);
+                            }
+                        });
+                });
+
+                currentDrivers = sortDrivers(Array.from(driverBestTimes.values()));
+            } else {
+                // Restore to original data
+                currentDrivers = sortDrivers(
+                    data.slice(1).flatMap(race => race.drivers)
+                        .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
+                );
+            }
+            
+            // Update the display
+            newDiv.innerHTML = createContent(currentDrivers, event.target.checked);
+            
+            // Reattach event listener
+            const newToggle = document.getElementById('seeCombinedToggle');
+            if (newToggle) {
+                newToggle.checked = event.target.checked;
+                newToggle.addEventListener('change', handleToggle);
+            }
+            
+        } catch (error) {
+            console.error('Error fetching combined data:', error);
+            alert('Error loading combined results');
+            newDiv.innerHTML = createContent(currentDrivers, false);
+            
+            const newToggle = document.getElementById('seeCombinedToggle');
+            if (newToggle) {
+                newToggle.checked = false;
+                newToggle.addEventListener('change', handleToggle);
+            }
+        }
+    }
+
+    function createContent(drivers, isChecked = false) {
+        let html = '';
+        kvaliCriteria.forEach(criteria => {
+            if (criteria.event == eventTitle) {
+                    kvali_nr = criteria.kvalinr
+                }
+        })
+        if (isQualification) {
+            html += `
+            <div class="d-flex justify-content-end mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="seeCombinedToggle" ${isChecked ? 'checked' : ''}>
+                    <label class="form-check-label" for="seeCombinedToggle">Bestetid fra Kvalifisering</label>
+                </div>
+            </div>`;
+        }
+
+
+        html += `
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr class="text-muted" style="font-size: 0.8rem;">
+                        <th class="text-center" style="width: 10%">#</th>
+                        <th style="width: 45%">Fører</th>
+                        <th class="text-end" style="width: 15%">Tid</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        drivers.forEach((driver, index) => {
+            const penalty = driver.time_info.PENELTY;
+            if (penalty == 1) {
+                driver.status = "DNS";
+            } else if (penalty == 2) {
+                driver.status = "DNF";
+            } else if (penalty == 3) {
+                driver.status = "DSQ";
+            } else {
+                const finishTime = driver.time_info.FINISHTIME;
+                const totalTime = finishTime + (penalty > 3 ? penalty : 0);
+                driver.status = totalTime > 0 ? (totalTime / 1000).toFixed(3) : '-';
+            }
+
+
+            html += `
+                <tr class="align-middle">
+                    <td class="text-center" style="font-size: 0.9rem;">${index + 1}</td>
+                    <td>
+                        <div class="text-truncate" style="font-size: 0.95rem;">
+                            ${driver.first_name} ${driver.last_name}
+                        </div>
+                    </td>
+                    <td class="text-end fw-bold" style="font-size: 0.9rem;">
+                        ${driver.status}
+                    </td>
+                </tr>`;
+            if (isQualification) {
+            if (index +1 == kvali_nr && isChecked) {
+            html += `<tr>
+                <td colspan="3" class="qualify-line">
+                    <span class="qualify-text">Kvalifisering til Stige/Finale</span>
+                </td>
+            </tr>
+            `
+            }
+        }
+        });
+
+
+        html += `
+                </tbody>
+            </table>`;
+        return html;
+    }
+
+    // Initial render
+    newDiv.innerHTML = createContent(currentDrivers);
+    const parentDiv = document.getElementById('left-driver');
+    parentDiv.appendChild(newDiv);
+
+    // Attach initial event listener
+    if (isQualification) {
+        const toggle = document.getElementById('seeCombinedToggle');
+        if (toggle) {
+            toggle.addEventListener('change', handleToggle);
+        }
+    }
+}
+
+function retry_entry_table(data) {
+    const TABLE_ID = 'right-retry-table';
+    const STARTLIST_ID = 'right-startlist';
+    
+    // Early return if no data
+    if (!data?.length) {
+        $(`#${TABLE_ID}`).remove();
+        return;
+    }
+    
+    // Create or get table container
+    let $tableContainer = $(`#${TABLE_ID}`);
+    
+    if (!$tableContainer.length) {
+        $tableContainer = $('<div>', {
+            id: TABLE_ID,
+            class: 'shadow-sm rounded overflow-hidden',
+            style: 'width: 90%; text-align: center;'
+        });
+        $(`#${STARTLIST_ID}`).before($tableContainer);
+    }
+    
+
+    const tableHTML = `
+    <h4> KJØRE PÅ NY LISTE </h4> 
+        <table class="table table-hover mb-0 border">
+            <thead>
+                <tr class="bg-light">
+                    <th class="px-3 py-2 border-bottom">Number</th>
+                    <th class="px-3 py-2 border-bottom">Driver</th>
+                    <th class="px-3 py-2 border-bottom text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(driver => `
+                    <tr>
+                        <td class="px-3 py-2 align-middle">${driver.CID}</td>
+                        <td class="px-3 py-2 align-middle">${driver.driver_name}</td>
+                        <td class="px-3 py-2 align-middle text-center">
+                            <button 
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="removeDriver(${driver.CID})"
+                                aria-label="Remove ${driver.driver_name}"
+                            >
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    // Update container content
+    $tableContainer.html(tableHTML);
+}
+
+function get_retry_entries() {
+    return new Promise((resolve, reject) => {
+         $.ajax({
+              url: '/api/retry_entries',
+              type: 'GET',
+              success: function(data) {
+                return data;
+              },
+              error: function() {
+                reject('Error fetching retry entries');
+              }
+         });
+    });
+}
+
+function removeDriver(cid) {
+   $.ajax({
+       url: '/api/retry_entries',
+       type: 'POST',
+       contentType: 'application/json',
+       data: JSON.stringify({
+           cid: cid.toString(),
+           method: "remove"
+       }),
+       success: function(response) {
+           console.log('Driver removed successfully');
+       },
+       error: function(xhr, status, error) {
+           console.error('Error removing driver:', error);
+       }
+   });
+}
+</script>
+  
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starliste</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+* {
+    
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f2f2f2;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1 {
+    text-align: center;
+    font-size: 30px;
+}
+h2 {
+    text-align: center;
+    font-size: 20px;
+}
+
+.main-content {
+    display: flex;
+}
+
+.left-content, .right-content {
+    width: 50%;
+    padding: 0 20px; /* Add padding to the left and right */
+}
+
+.vertical-line {
+    border-left: 3px solid #000;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#main_title, #main_title_upcoming {
+    margin: 10px 0;
+    font-size: 40px; /* Adjusted from .main_manue */
+}
+
+.container {
+    max-width: 98%;
+    margin: 0 auto;
+    
+}
+
+.table-wrapper, .table-wrapper_active, .table-wrapper_finished {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #ddd; /* Consistent border for all */
+    display: flex;
+    flex-direction: column;
+    
+}
+
+.rows {
+    display: flex;
+    border-bottom: 1px solid #eaeaea;
+    background-color: #fff; /* Consistent background for all rows */
+    
+}
+
+.cell_r {
+    font-size: 20px;
+    text-align: left; /* Align text to the left like a normal table cell */
+    padding: 10px; /* Adjust padding as needed */
+    color: #333;
+    flex: 1; /* Flex value of 1 will ensure even spacing */
+    box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.1); /* Soft shadow for depth - simulating border-bottom for cells */
+}
+
+.cell_n {
+    font-size: 20px;
+    text-align: left; /* Align text to the left like a normal table cell */
+    padding: 10px; /* Adjust padding as needed */
+    color: #333;
+    flex: 0; /* Flex value of 1 will ensure even spacing */
+    box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.1); /* Soft shadow for depth - simulating border-bottom for cells */
+}
+
+.finished-driver-row {
+    justify-content: space-between;
+    padding: 5px;
+    font-size: 0.9em;
+}
+
+.finished-driver-row.winner {
+    background-color: #c8e6c9;
+}
+
+.finished-driver-row.looser {
+    background-color: #ffcdd2;
+}
+
+.finished-matchup {
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    background-color: #e0e0e0;
+    margin-top: 5px;
+}
+
+.cell_r:not(:last-child) {
+    border-right: 1px solid #eaeaea; /* Border between cells */
+}
+
+/* Adjust the nth-child(even) for rows */
+.rows:nth-child(even) {
+    background-color: #e3e3e3;
+}
+</style>
+<script>
+
+function adjustFontSize() {
+            let entries = document.querySelectorAll('.rows .cell_r');
+            if (entries.length > 17) {
+                entries.forEach(entry => {
+                    entry.style.padding = '4px';
+                });
+            }
+
+            let entries2 = document.querySelectorAll('.rows .cell_n');
+            if (entries2.length > 17) {
+                entries2.forEach(entry => {
+                    entry.style.padding = '4px';
+                });
+            }
+        }
+
+    function updateScoreboard() {
+            $.ajax({
+                url: '/api/get_current_startlist_w_data',
+                type: 'GET',
+                success: function(data) {
+                    first = true
+                    html_data = displayData(data, false, first);
+                    title = data[0]["race_config"]["TITLE_2"]
+                    run = data[0]["race_config"]["HEAT"]
+                    runs = data[0]["race_config"]["HEATS"]
+                    if (data[0]["race_config"]["MODE"] != 0) {
+                        location.reload()
+                    }
+
+                    document.getElementById('main_title').innerHTML = '<h1><span style="color: red;">Nå:</span> ' + title + " " + run + "/" + runs +'</h1>';
+                    $('#startlist-container').html(html_data[1]);
+
+                    
+                    count = 0
+                    data.forEach(race => {
+                        count += 1
+                    })
+
+                    if (count > 15) {
+                        setTimeout(adjustFontSize, 500);
+                    }
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+        function updateScoreboard_upcoming() {
+            $.ajax({
+                url: '/api/get_current_startlist_w_data?upcoming=true',
+                type: 'GET',
+                success: function(data) {
+                    first = false
+                    html_data = displayData(data, true, false);
+                    title = data[0]["race_config"]["TITLE_2"]
+                    run = data[0]["race_config"]["HEAT"]
+                    runs = data[0]["race_config"]["HEATS"]
+                    document.getElementById('main_title_upcoming').innerHTML = '<h1><span style="color: red;">Neste:</span> ' + title + " " + run + "/" + runs +'</h1>';
+
+                    console.log(count)
+                    
+                    $('#startlist-upcoming').html(html_data[1]);
+                    count = 0
+                    data.forEach(race => {
+                        count += 1
+                    })
+                    if (count > 15) {
+                        setTimeout(adjustFontSize, 500);
+                    }
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+        
+    function displayData(data, upcoming, first) {
+    let htmlContent = '';
+    let htmlContent_active = '';
+    count = 0
+    data.forEach(race => {
+        if(race.drivers) {
+            race.drivers.forEach(driver => {
+                let driverClass = 'cell_r';
+                if (driver.active == true && first == true) {
+                    driverHTML = `<div class="rows" style="background-color: #00ff0547;">`;
+                } else {
+                    driverHTML = `<div class="rows">`;
+                }
+                driverHTML += `<div class="cell_n">${count}</div>`;
+
+                driverHTML += `<div class="cell_r">${driver.first_name} ${driver.last_name} [${driver.id}]</div>`;
+                driverHTML += `<div class="cell_r">${driver.vehicle}</div>`;
+                driverHTML += `</div>`; // Close the row for each driver
+                // Append the current driver's HTML to the main content string
+                htmlContent += driverHTML;
+                count += 1
+            });
+        }
+    });
+
+    return [htmlContent_active, htmlContent];
+}
+
+        
+
+    $(document).ready(function() {
+        updateScoreboard();
+        updateScoreboard_upcoming()
+        
+
+    });
+
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+        console.log('Connected to the server');
+        socket.emit('join', { username: 'John', room: 'room1' });
+    });
+
+    socket.on('response', function(dataString) {
+        updateScoreboard();
+        updateScoreboard_upcoming()
+        });
+
+
+
+</script>
+
+
+</head>
+<body>
+
+
+    <div class="container">
+        <h1 id="startliste_title">STARTLISTE</h1>
+        <div class="main-content">
+            <div class="left-content">
+                <h1 class="main_manue" id="main_title">Startliste</h1>
+
+                <div id="startlist-container" class="table-wrapper">
+                    <!-- Data will be displayed here -->
+                </div>
+        
+                <div id="finished_drivers" class="table-wrapper_finished" style="margin-top: 15px;">
+                    <!-- Data will be displayed here -->
+                </div>            
+            </div>
+
+            <div class="vertical-line"></div>
+
+
+            <div class="right-content">
+                <h1 class="main_manue_upcoming" id="main_title_upcoming">Startliste</h1>
+                <div id="startlist-upcoming" class="table-wrapper">
+                    <!-- Data will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

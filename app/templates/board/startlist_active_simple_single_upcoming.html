@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Startliste</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/startlist-style.css') }}">
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+    <style>
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: large;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .dsq {
+            background-color: #fdd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="main_title">Startliste</h1>
+        <div id="startlist-container" style="padding-top: 20px;">
+            <!-- Data will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        function updateScoreboard() {
+            $.ajax({
+                url: '/api/get_current_startlist_w_data',
+                type: 'GET',
+                success: function(data) {
+                    displayData(data);
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+
+        function displayData(data) {
+            count = 0
+            let title = data[0]["race_config"]["TITLE_2"] + " " + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"];
+            document.getElementById('main_title').innerHTML = "Startliste: " + title;
+
+            let htmlContent = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Matchup</th>
+                            <th>Name</th>
+                            <th>Vehicle</th>
+                            <th>Klubb</th>
+                        </tr>
+                    </thead> 
+                <tbody>`;
+
+            data.forEach(race => {
+                if(race.drivers && race.drivers.length > 0) {
+                    count += 1
+                    let driver = race.drivers[0]; // Assuming there's always at least one driver
+                    let driverClass = driver.time_info.PENELTY == 0 ? '' : 'class="dsq"';
+                    if (driver.active == true) {
+                        htmlContent += `<tr ${count} style="background: rgba(76, 175, 80, 0.3)">`
+                    } else {
+                        htmlContent += `<tr ${count}>`
+                    }
+
+                    htmlContent += `<td>${count}</td>`;
+                    htmlContent += `<td>${driver.first_name} ${driver.last_name} [${driver.id}]</td>`;
+                    htmlContent += `<td>${driver.vehicle}</td>`;
+                    htmlContent += `<td>${driver.club}</td>`;
+
+                    htmlContent += '</tr>';
+                }
+            });
+
+            htmlContent += '</tbody></table>';
+            $('#startlist-container').html(htmlContent);
+        }
+
+        $(document).ready(function() {
+            updateScoreboard();
+        });
+
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+
+        socket.on('response', function(dataString) {
+            updateScoreboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<style>
+
+        .center-div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+        h2 {
+            color: #333; 
+            font-size: 2em; 
+            text-align: center;
+        }
+
+</style>
+
+<link href="
+https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.2/dist/css/tabulator.min.css
+" rel="stylesheet">
+
+<script src="
+https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.2/dist/js/tabulator.min.js
+"></script>
+
+    <div class="center-div">
+        {% if returned_event_info == "None" %}
+            <h2>Pick the Event</h2>
+            
+        {% else %}
+            <h2>{{ returned_event_info }}</h2>
+        {% endif %}
+    </div>
+
+<!-- Form with an id for referencing -->
+
+<form id="eventForm" method="POST" action="{{ url_for('admin.admin', tab_name='active_events_driver_data') }}">
+
+    <select id="eventDropdown" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example" name="event_name">
+        <option selected>Open this select menu</option>
+        {% for event in unique_events %}
+            <option value="{{ event[0] }}" data-run="{{ event[1] }}" data-event-file="{{ event[2] }}">{{ event[0] }}</option>
+        {% endfor %}
+    </select>
+
+    <select id="runDropdown" class="form-select form-select-sm" aria-label=".form-select-sm example" name="run">
+        <option selected>Open this select menu</option>
+    </select>
+
+    <input type="hidden" name="event_file" id="eventFileInput" value="">
+
+    <div class="d-grid gap-2">
+        <button class="btn btn-primary" type="submit">Select</button>
+        <!-- Active Events Button -->
+        <button class="btn btn-secondary" type="button" id="activeEventsBtn">Active Event</button>
+    </div>
+
+</form>
+
+<script>
+    // JavaScript to handle the "Active Events" button click
+    document.getElementById('activeEventsBtn').addEventListener('click', function() {
+        // Set the hidden input's value to "active_event"
+        document.getElementById('eventFileInput').value = "active_event";
+
+        // Submit the form
+        document.getElementById('eventForm').submit();
+    });
+</script>
+
+
+
+
+<br>
+<div id="driver-stats-table"></div>
+<br>
+
+<button id="updateData" class="btn btn-secondary">Update</button>
+<button id="refresh_data" class="btn btn-secondary">Reload Event</button>
+
+<script>
+    var table;
+
+    document.addEventListener("DOMContentLoaded", function(){
+
+        table = new Tabulator("#driver-stats-table", {
+            data: {{ sqldata|safe }},
+            layout: "fitColumns",
+            columns: [
+                {title:"CID", field:"CID"},
+                {title:"INTER_1", field:"INTER_1", editor:"input"},
+                {title:"INTER_2", field:"INTER_2", editor:"input"},
+                {title:"INTER_3", field:"INTER_3", editor:"input"},
+                {title:"SPEED", field:"SPEED", editor:"input"},
+                {title:"PENELTY", field:"PENELTY", editor:"input"},
+                {title:"FINISHTIME", field:"FINISHTIME", editor:"input"},
+                {title: "Locked", field: "LOCKED", width: 90, hozAlign: "center", formatter: "tickCross", sorter: "boolean", editor: true},
+            ],
+        });
+
+    
+
+document.getElementById("updateData").addEventListener("click", function() {
+    if (!table) {
+        console.error("Table is not initialized yet.");
+        return;
+    }
+
+    var tableData = table.getData();
+    console.log(tableData)
+    var combinedData = {
+        data: tableData,
+        file: "{{ event_entry_file.file }}",
+        run: "{{ event_entry_file.run }}"
+    };
+
+    var jsonData = JSON.stringify(combinedData);
+
+     fetch("{{ url_for('admin.admin', tab_name='active_events_driver_data') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: jsonData
+    }).then(response => response.json())
+    .then(data => {
+        console.log(data);
+    });
+});
+
+document.getElementById("refresh_data").addEventListener("click", function() {
+    if (!table) {
+        console.error("Table is not initialized yet.");
+        return;
+    }
+
+    var jsonData = {
+        file: "{{ event_entry_file.file }}",
+        run: "{{ event_entry_file.run }}"
+    };
+    
+     fetch("{{ url_for('api.api', tab_name='reload_event') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(jsonData),
+    }).then(response => response.json())
+    .then(data => {
+        console.log(data);
+    });
+});
+
+
+
+
+    });
+
+    const eventDropdown = document.getElementById('eventDropdown');
+    const runDropdown = document.getElementById('runDropdown');
+    const eventFileInput = document.getElementById('eventFileInput');
+
+    eventDropdown.addEventListener('change', function() {
+        const selectedEvent = this.options[this.selectedIndex];
+        const run = selectedEvent.getAttribute('data-run');
+        const eventFile = selectedEvent.getAttribute('data-event-file');
+        
+        eventFileInput.value = eventFile;
+        runDropdown.innerHTML = '';
+        
+        for (let i = 1; i <= run; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = i;
+            runDropdown.add(option);
+        }
+    });
+</script>
+
+{% endblock %}

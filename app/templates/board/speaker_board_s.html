@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Race Commentary Information</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">    
+
+
+<script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+
+  <style>
+.accordion-header, .accordion-button {
+    padding: 0.5rem 0.8rem; /* Adjust padding as needed */
+}
+
+.accordion-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.accordion-title {
+    margin: 0; /* Remove default margin */
+    flex-grow: 1; /* Allows the title to take up available space */
+    text-align: center; /* Center the title text */
+}
+
+.accordion-item {
+    margin-bottom: 0.5rem; /* Less space between items */
+    border: 1px solid #e7e7e7; /* Lighter border */
+}
+
+.accordion-body {
+    padding: 0.5rem 1rem; /* Slimmer padding */
+}
+
+
+    .modal-dialog top_race {
+    width: auto;
+    max-width: 100%; 
+    }
+
+    .table-responsive {
+    overflow-x: auto;
+    }
+
+
+    #driver_status {
+        width: 98%;
+        
+    }
+    .driver-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .driver {
+      width: 48%;
+      border-top: 1px solid black;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+    .driver-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .driver-details {
+      margin-top: 10px;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    .drivername {
+        font-size: x-large;
+    }
+    .race-entry {
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.date-title-group {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.date-group {
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.race-entry {
+    
+    padding: 0px;
+}
+
+.date-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.table {
+    text-align: center;
+}
+
+.driver-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.driver-left, .driver-right {
+    width: 45%;
+    padding: 5px;
+    text-align: center;
+}
+
+.driver-separator {
+    width: 10%;
+    font-weight: bold;
+}
+
+.winner {
+    background-color: rgba(37, 255, 37, 0.658);
+    color: rgb(0, 0, 0);
+}
+
+.loser {
+    background-color: rgba(255, 48, 48, 0.623);
+    color: rgb(0, 0, 0);
+}
+
+.top-driver-match {
+    background-color: aqua;
+}
+
+
+.driver-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.middle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 10px;
+}
+
+.arrow-buttons {
+    margin-top: 5px;
+    padding-left: 50%;
+    padding-right: 50%;
+}
+
+
+#arrow-right {
+    margin-top: 5px;
+}
+
+#settingbutton {
+    margin-top: 5px;
+}
+
+.header_title {
+    text-align: center;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+}
+
+/* Custom CSS to make tabs take full width */
+.nav-tabs .nav-item {
+    width: 50%; /* Adjust this value based on the number of tabs */
+    text-align: center;
+}
+
+.nav-tabs .nav-link {
+    border-radius: 0;
+}
+
+
+#top_driver_bar {
+    display: flex;
+
+    justify-content: space-between; /* Distribute content evenly */
+}
+
+#top_driver_bar span {
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+.custom-icon {
+    font-size: 1.5em; /* Adjust based on the button's font size */
+}
+body, html {
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  max-width: 100vw; /* Prevent width changes */
+  font-size: 14px; /* Adjust base font size to make text smaller */
+}
+.custom-btn {
+    padding: 10px 15px;
+    font-size: 12px;
+
+}
+
+  </style>
+</head>
+<body>
+    
+    <div class="alert alert-info" role="alert" style="margin-bottom: 0px; padding:10px;">
+        <h2 class="header_title"></h2>
+      </div>
+      
+    <div class="alert alert-warning" role="alert" style="padding:5px; font-size: 15px;" id="top_driver_bar">
+        <span id="currentHeat"></span>
+        <span id="eventTitle"></span>
+        <span id="dayTitle"></span>
+    </div>
+    
+      </div>
+
+
+    <div class="driver-container">
+        <div id="left-driver" class="driver">
+            <!-- Left Driver Content -->
+        
+        </div>
+    
+        <div class="middle-container">
+            <div>
+                <h1 class="heat_num" style="font-size: 30px">1/1</h1>
+                </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" id="settingbutton">
+                <span id="boot-icon" class="bi bi-gear" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+            </button>
+            <br>
+            <button type="button" class="btn btn-primary" id="loadDataButton" data-bs-toggle="modal" data-bs-target="#eventsModal">
+
+                <span id="boot-icon" class="bi bi-list-check" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+
+            </button>
+            <br>
+            <button type="button" class="btn btn-primary" id="top_driver_button" data-bs-toggle="modal" data-bs-target="#top_driver_button_model">
+
+                <span id="boot-icon" class="bi bi-stopwatch" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
+
+            </button>
+    
+            <div class="arrow-buttons">
+                <button id="arrow-left" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <button id="arrow-right" class="btn btn-secondary">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+
+            
+        </div>
+    
+        <div id="right-driver" class="driver">
+
+            <!-- Right Driver Content -->
+        </div>
+    </div>
+    
+<!-- EVENT ORDER MODEL -->
+<div class="modal fade" id="eventsModal" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Use modal-lg for larger modal -->
+      <div class="modal-content">
+        <div class="modal-header" style="text-align: center;">
+          <h5 class="modal-title" id="eventsModalLabel" >Event Rekkefølge</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">Order</th>
+                <th scope="col">Event</th>
+                <th scope="col">Heat</th>
+                
+              </tr>
+            </thead>
+            <tbody id="eventTableBody">
+              <!-- Event data will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- TOP DRIVERS -->
+<div class="modal fade" id="top_driver_button_model" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document"> <!-- Use modal-lg for larger modal -->
+      <div class="modal-content" style="align-items: center;">
+        <div class="modal-header" style="text-align: center;">
+          <h5 class="modal-title" id="eventsModalLabel" >Bestetid - top 10</h5>
+        </div>
+    <!-- Centered Tabs -->
+    <div class="container">
+        <ul class="nav nav-tabs row">
+            <li class="nav-item col">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab1">TITLE_1_TITLE_2_HEAT</a>
+            </li>
+            <li class="nav-item col">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab2">TITLE_1_TITLE_2</a>
+            </li>
+            <li class="nav-item col">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab3">TITLE_1</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab1">
+                <!-- Table for Tab 1 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tab2">
+                <!-- Table for Tab 2 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Heat</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tab3">
+                <!-- Table for Tab 1 -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">Heat</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Snowmobile</th>
+                            <th scope="col">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- More rows as needed -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+    
+<!--SETTINGS MODEL -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Speaker page settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </button>
+          
+        </div>
+        <div class="modal-body">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id="">Archive endpoint:</span>
+                </div>
+                <input type="text" class="form-control" value="{{ SpeakerPageConfig_json.h_server_url }}" id="h_server_url">
+              </div>
+              <br>
+            <div class="form-check">
+                {% if SpeakerPageConfig_json.matching_parallel == False %}
+                <input class="form-check-input" type="checkbox" value="True" id="matching_parallel">
+                {% else %}
+                <input class="form-check-input" type="checkbox" value="True" id="matching_parallel" checked>
+                {% endif %}
+                
+                <label class="form-check-label" for="matching_parallel">
+                    Only display matching parallel races
+                </label>
+                </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+            <button type="button" class="btn btn-primary" id="saveChanges">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+    h_server_url = "{{ SpeakerPageConfig_json.h_server_url }}"
+    function milliseconds_to_sec(ms) {
+        return (ms / 1000).toFixed(3)
+    }
+</script>
+  <script>
+
+    const socket_retry = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket_retry.on('connect', function() {
+        console.log('Connected to the server');
+        socket_retry.emit('join', { username: 'socket_retry', room: 'socket_retry' });
+    });
+
+    socket_retry.on('response', function(dataString) {
+        console.log(dataString)
+        const data = JSON.parse(dataString);
+        retry_entry_table(data)
+        //display_retry_entries(data);
+    });
+
+document.getElementById('loadDataButton').addEventListener('click', function() {
+    fetch('/api/get_event_order')
+        .then(response => response.json())
+        .then(data => {
+            const eventTableBody = document.getElementById('eventTableBody');
+            eventTableBody.innerHTML = ''; // Clear previous content
+            data.forEach(event => {
+                const tableRow = document.createElement('tr');
+
+                // Add class to grey out if disabled
+                if(event.Enabled === 0) {
+                    tableRow.classList.add('table-secondary', 'strikethrough');
+                }
+
+                // Set background color if active
+                if (event.Active) {
+                    active = "style=background:aquamarine"
+                } else {
+                    active = ""
+                }
+
+                // Create table data with potential strikethrough
+                const orderTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Order}</td>`;
+                const eventTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Event}</td>`;
+                const heatTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''} " ${active}>${event.Heat}</td>`;
+                
+                // Set innerHTML of the table row
+                tableRow.innerHTML = orderTd + eventTd + heatTd;
+
+                eventTableBody.appendChild(tableRow);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+});
+
+table_entry_count = 0
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('top_driver_button').addEventListener('click', function() {
+        console.log(title_name[0],title_name[1],title_name[2])
+        fetch(`/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=10&unique_names=true`)
+
+        .then(response => response.json())
+        .then(data => {
+
+            
+            // Clear existing data in tables and reset tab titles
+            document.querySelectorAll('.tab-pane').forEach((tabPane, index) => {
+                tabPane.querySelector('table tbody').innerHTML = '';
+                const tabLink = document.querySelector(`.nav-tabs .nav-item:nth-child(${index + 1}) a`);
+                if (tabLink) {
+                    tabLink.textContent = 'Loading...'; // Temporary title
+                }
+            });
+            const recordCount = {
+                tab1: 0,
+                tab2: 0,
+                tab3: 0
+            };
+            // Process each record and append it to the right table
+            Object.keys(data).forEach(key => {
+
+                const event = data[key];
+                let tableBody, tabTitle;
+                
+
+                if (key.includes('title_1+title_2+heat_') && recordCount.tab1 < 10) {
+                    tableBody = document.querySelector('#tab1 table tbody') ;
+                    tabTitle = "Heat " + event.heat;
+                    tab = 1
+                    recordCount.tab1++;
+                } else if (key.includes('title_1+title_2_')&& recordCount.tab2 < 10 ) {
+                    tableBody = document.querySelector('#tab2 table tbody');
+                    tabTitle = event.title_2;
+                    tab = 2
+                    recordCount.tab2++;
+                } else if (key.includes('title_1_')&& recordCount.tab3 < 10 ) {
+                    tableBody = document.querySelector('#tab3 table tbody');
+                    tabTitle = event.title_1;
+                    tab = 3
+                    recordCount.tab3++;
+                } else {
+                    return
+                }
+                // Update tab title
+                const tabLink = document.querySelector(`.nav-tabs .nav-item:nth-child(${key.includes('title_1+title_2+heat_') ? 1 : key.includes('title_1+title_2_') ? 2 : 3}) a`);
+                if (tabLink) {
+                    tabLink.textContent = tabTitle;
+                }
+                let time_data = (event.finishtime / 1000).toFixed(3) + " sec";
+                table_entry_count += 1
+                // Create a row for the event
+                const row = document.createElement('tr');
+                if (tab == 1) {
+                    row.innerHTML = `
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                } else if (tab == 2) {
+                    row.innerHTML = `
+                        <td>${event.heat}</td>
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                } else if (tab == 3) {
+                    row.innerHTML = `
+                        <td>${event.title_2}</td>
+                        <td>${event.heat}</td>
+                        <td>${event.first_name + " " + event.last_name}</td>
+                        <td>${event.snowmobile}</td>
+                        <td>${time_data}</td>
+                    `;
+                }
+
+                // Append the row to the table body
+                if (tableBody) {
+                    tableBody.appendChild(row);
+                } else {
+                    console.error('Table body not found for selector:', key);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+
+});
+
+
+
+
+  </script>
+  
+
+
+  <script>
+    //Save changes inserted to model
+    $(document).ready(function() {
+        $('#saveChanges').click(function() {
+            // Collect the new settings data
+            var isCheckboxChecked = $('#matching_parallel').prop('checked');
+            var h_server_url = $('#h_server_url')[0].value
+            var settingsData = {
+                matchingParallel: isCheckboxChecked,
+                h_server_url:h_server_url
+            };
+    
+            // Send the data to the server
+            $.ajax({
+                url: '/board/speaker',  // Replace with your API endpoint
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(settingsData),
+                success: function(response) {
+                    // Handle success response
+                    console.log('Settings updated:', response);
+                    // Reload the page
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response
+                    console.error('Update failed:', status, error);
+                }
+            });
+        });
+    });
+
+
+
+    </script>
+    
+
+
+    <script>
+        {% if SpeakerPageConfig_json.matching_parallel == True %}
+            let parallel_only = true;
+        {% else %}
+            let parallel_only = false;
+        {% endif %}
+    </script>
+
+
+  <script>
+
+    function validate_mode(data) {
+
+        current_mode = data[0]["race_config"]["MODE"]
+        console.log(current_mode)
+
+        if (current_mode != old_mode) {
+            location.reload()
+        } 
+
+        old_mode = data[0]["race_config"]["MODE"]
+
+        
+    }
+
+    var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+
+    let driverPairs = [];
+    let currentPairIndex = 0;
+
+    let array_checksum = ""
+    var old_results = ""
+    let title_name = []
+    function score_table(data) {
+        //console.log(data)
+        let table = ` <h3> RESULTATLISTE </h3>
+                    <table class="table table-striped table-bordered table-hover">
+                    <thead class="thead-dark">
+
+                    </thead>
+                    <tbody>`;
+
+        let drivers = []
+        for (var key in data) {
+            if (!(data[key]["race_config"])) {
+                console.log(data[key]["drivers"][0])
+                snowmobile = data[key]["drivers"][0]["vehicle"]
+                name = (data[key]["drivers"][0]["first_name"] + " " + data[key]["drivers"][0]["last_name"])
+                penalty = data[key]["drivers"][0]["time_info"]["PENELTY"]
+                time = data[key]["drivers"][0]["time_info"]["FINISHTIME"]
+                cid = data[key]["drivers"][0]["id"]
+
+                drivers.push({"Name":name, "snowmobile":snowmobile, "time":time, "penalty":penalty, "cid":cid})
+            }
+            
+        }
+
+        drivers.sort((a, b) => {
+            if (a.penalty !== 0) return 1;
+            if (b.penalty !== 0) return -1;
+            return a.time - b.time;
+        });
+
+
+        count = 0
+        drivers.forEach(item => {
+            count += 1
+        table += `<tr>
+                    <td>${count}</td>
+                    <td>${item.Name}</td>
+                    <td>${item.snowmobile}</td>
+                    <td>${item.time !== 0 ? milliseconds_to_sec(item.time) : ''}</td>
+                    <td>${item.penalty !== 0 ? 'DNF' : (item.time === 0 ? 'Not Started' : 'Finished')}</td>
+                    <td><button class="btn btn-warning btn-sm" onclick="addRetry(${item.cid})" style="font-size: 0.7rem;">
+                        FLYTT
+                        </button></td>
+                    </tr>`;
+        });
+        table += "</tbody></table>";
+
+        $('#right-driver').html(table);
+
+    }
+
+    function removeDriver(cid) {
+        $.ajax({
+            url: '/api/retry_entries',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                cid: cid.toString(),
+                method: "remove"
+            }),
+            success: function(response) {
+                console.log('Driver removed successfully');
+                // Refresh the retry entries table after successful removal
+                fetchAndUpdateRetryTable();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error removing driver:', error);
+            }
+        });
+    }
+
+    function addRetry(cid) {
+        $.ajax({
+            url: '/api/retry_entries',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                cid: cid.toString(),
+                method: "add"
+            }),
+            success: function(response) {
+                console.log('Driver added to retry successfully');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error adding driver to retry:', error);
+            }
+        });
+        }
+
+    function fetchAndUpdateRetryTable() {
+        $.ajax({
+            url: '/api/retry_entries',
+            type: 'GET',
+            success: function(data) {
+                retry_entry_table(data);
+            },
+            error: function(error) {
+                console.error('Error fetching retry entries:', error);
+            }
+        });
+    }
+
+function retry_entry_table(data) {
+    const TABLE_ID = 'right-retry-table';
+    const DRIVER_ID = 'right-driver';
+    
+    // Early return if no data
+    if (!data?.length) {
+        $(`#${TABLE_ID}`).remove();
+        return;
+    }
+    
+    // Create or get table container
+    let $tableContainer = $(`#${TABLE_ID}`);
+    
+    if (!$tableContainer.length) {
+        $tableContainer = $('<div>', {
+            id: TABLE_ID,
+            class: 'shadow-sm rounded overflow-hidden mt-3',
+            style: 'width: 90%; text-align: center; margin-left: auto; margin-right: auto; padding-bottom: 30px;'
+        });
+        
+        // Get the parent container
+        const $driverContainer = $(`#${DRIVER_ID}`);
+        
+        // If there are existing elements, prepend the table
+        // If empty, append works the same as prepend
+        $driverContainer.prepend($tableContainer);
+    } else {
+        // If table exists but isn't first, move it to first position
+        const $driverContainer = $(`#${DRIVER_ID}`);
+        if ($driverContainer.children().first().attr('id') !== TABLE_ID) {
+            $driverContainer.prepend($tableContainer);
+        }
+    }
+    
+    const tableHTML = `
+        <h4 class="mt-2">KJØRE PÅ NY LISTE</h4>
+        <table class="table table-hover mb-0 border">
+            <thead>
+                <tr class="bg-light">
+                    <th class="px-3 py-2 border-bottom">Number</th>
+                    <th class="px-3 py-2 border-bottom">Driver</th>
+                    <th class="px-3 py-2 border-bottom text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(driver => `
+                    <tr>
+                        <td class="px-3 py-2 align-middle">${driver.CID}</td>
+                        <td class="px-3 py-2 align-middle">${driver.driver_name}</td>
+                        <td class="px-3 py-2 align-middle text-center">
+                            <button 
+                                class="btn btn-outline-danger btn-sm" 
+                                onclick="removeDriver(${driver.CID})" 
+                                aria-label="Remove ${driver.driver_name}">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    $tableContainer.html(tableHTML);
+}
+
+    $(document).ready(function() {
+        // API call to fetch initial data
+        $.ajax({
+            url: '/api/get_current_startlist_w_data', // API URL
+            type: 'GET',
+            success: function(data) {
+                old_mode = data[0]["race_config"]["MODE"]
+                validate_mode(data)
+                displayActiveDrivers(data);
+                score_table(data)
+                
+                document.getElementsByClassName("header_title")[0].innerHTML = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
+                title_name = [data[0]["race_config"]["TITLE_1"], data[0]["race_config"]["TITLE_2"], data[0]["race_config"]["HEAT"]]
+                old_results = MD5(JSON.stringify(data));
+            },
+            error: function() {
+                console.log('Error fetching data from API');
+            }
+        });
+
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+
+        socket.on('response', function(dataString) {
+            const data = JSON.parse(dataString);
+            new_title = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
+            
+            
+            var new_result = MD5(JSON.stringify(dataString)); 
+
+            if (!(new_result == old_results)) {
+                displayActiveDrivers(data);
+                score_table(data)
+                validate_mode(data)
+                title_name = [data[0]["race_config"]["TITLE_1"], data[0]["race_config"]["TITLE_2"], data[0]["race_config"]["HEAT"]]
+                document.getElementsByClassName("header_title")[0].innerHTML = new_title;
+                old_results = new_result
+            } else {
+                console.log("Nope dude")
+            }
+            
+
+            //renderData(data);
+            
+        });
+
+        // Function to display active drivers
+        let driverPairs = [];
+let currentPairIndex = 0;
+
+async function displayActiveDrivers(data) {
+    // Store all driver pairs
+    driverPairs = data.filter(item => item.drivers);
+
+    // Find the index of the first pair with an active driver
+    currentPairIndex = driverPairs.findIndex(pair => pair.drivers.some(driver => driver.active));
+
+    if (currentPairIndex === -1) {
+        // If no active drivers are found, default to the first pair
+        currentPairIndex = 0;
+    }
+
+    // Call to update the display with the current pair
+    await updateDriverDisplay();
+}
+
+document.getElementById('arrow-left').addEventListener('click', function() {
+    if (currentPairIndex > 0) {
+        currentPairIndex--;
+        updateDriverDisplay();
+    }
+});
+
+document.getElementById('arrow-right').addEventListener('click', function() {
+    if (currentPairIndex < driverPairs.length - 1) {
+        currentPairIndex++;
+        updateDriverDisplay();
+    }
+});
+
+let driver_names = []
+
+function append_all_results_right(data) {
+    console.log()
+}
+
+function addRetry(cid) {
+   $.ajax({
+       url: '/api/retry_entries',
+       type: 'POST',
+       contentType: 'application/json',
+       data: JSON.stringify({
+           cid: cid.toString(),
+           method: "add"
+       }),
+       success: function(response) {
+           console.log('Driver added to retry successfully');
+       },
+       error: function(xhr, status, error) {
+           console.error('Error adding driver to retry:', error);
+       }
+   });
+}
+
+async function updateDriverDisplay() {
+    if (driverPairs[currentPairIndex] && driverPairs[currentPairIndex].drivers) {
+        const drivers = driverPairs[currentPairIndex].drivers;
+        document.getElementsByClassName("heat_num")[0].innerHTML = (currentPairIndex + 1)+"/"+driverPairs.length;
+        active_session = (driverPairs.findIndex(pair => pair.drivers.some(driver => driver.active)) + 1)
+        if (active_session == (currentPairIndex + 1)) {
+            // Change the text color
+            document.getElementsByClassName("heat_num")[0].style.color = "red"; // Change 'red' to your desired color
+        } else {
+            // Optional: set a default color if the condition is not met
+            document.getElementsByClassName("heat_num")[0].style.color = "black"; // Change 'black' to your desired default color
+        }
+        const leftDriver = drivers[0] || {};
+        const rightDriver = drivers[1] || {};
+
+        const left_driver_name = (leftDriver.first_name + " " + leftDriver.last_name) || '';
+        const right_driver_name = (rightDriver.first_name + " " + rightDriver.last_name) || '';
+
+        if (driver_names.length = 2) {
+            driver_names = []
+        }
+        driver_names.push(left_driver_name)
+        driver_names.push(right_driver_name)
+
+
+
+        console.log(drivers)
+
+        // Update the HTML content of the driver divs
+        $('#left-driver').html(websocket_driver_data(leftDriver, 1));
+        try {
+            const retry_entries_data = await get_retry_entries(title_name);
+            retry_entry_table(retry_entries_data)
+            
+            try {
+            //TOP TIME
+            const top_speed_data = await get_top_driver_header(title_name);
+            display_get_top_driver_header(top_speed_data)
+            } catch (error) {
+                console.log('Error getting top speeds for current:', error)
+            }
+            // Load and append ladder data
+            //const leftLadderData = await get_ladder_data(left_driver_name);
+            //$('#left-driver').append(display_parallel_history(leftLadderData, left_driver_name, right_driver_name, 1));
+
+
+
+        } catch (error) {
+            console.error('Error updating driver display:', error);
+        }
+    }
+}
+
+
+function get_top_driver_header(title_name) {
+    return new Promise((resolve, reject) => {
+        console.log(`/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=1&unique_names=true`)
+        $.ajax({
+            url: `/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=1&unique_names=true`,
+            type: 'GET',
+            success: function(data) {
+                resolve(data);
+            },
+            error: function() {
+                reject('Error fetching snowmobile models');
+            }
+        });
+    });
+}
+
+
+
+function display_get_top_driver_header(data) {
+    let heat = data["title_1+title_2+heat_0"]
+    let event = data["title_1+title_2_0"]
+    let day = data["title_1_0"]
+    
+    if (heat != undefined) {
+        document.getElementById('currentHeat').innerHTML = `<strong>Current Heat:</strong> ${heat.first_name} ${heat.last_name} - ${milliseconds_to_sec(heat.finishtime)}`;
+    } else {
+        document.getElementById('currentHeat').innerHTML = `<strong>Heat:</strong> Not started`;
+    }
+    if (event != undefined) {
+        document.getElementById('eventTitle').innerHTML = `<strong>${event.title_2}:</strong> ${event.first_name} ${event.last_name} - ${milliseconds_to_sec(event.finishtime)}`;
+    } else {
+        document.getElementById('eventTitle').innerHTML = `<strong>EVENT:</strong> Not started`
+    }
+
+    if (day != undefined) {
+        document.getElementById('dayTitle').innerHTML = `<strong>${day.title_1}:</strong> ${day.first_name} ${day.last_name} - ${milliseconds_to_sec(day.finishtime)}`;
+    } else {
+        document.getElementById('dayTitle').innerHTML = `<strong>DAY:</strong> Not started`;
+    }
+}
+function get_retry_entries(title_name) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/retry_entries`,
+            type: 'GET',
+            success: function(data) {
+                resolve(data);
+            },
+            error: function() {
+                reject('Error fetching snowmobile models');
+            }
+        });
+    });
+}
+
+    // Function to format driver information
+    function websocket_driver_data(driver,num) {
+        if (!driver.first_name) {
+            return '<p>No active driver</p>';
+        }
+        var finishTime = (driver.time_info && driver.time_info.FINISHTIME > 0) 
+                            ? (driver.time_info.FINISHTIME / 1000).toFixed(2) + ' seconds' 
+                            : 'N/A';
+
+        let finish_time_sec= (driver.time_info.FINISHTIME / 1000).toFixed(3) + " Sec";
+        var table_color = "" 
+        if (driver.status == "0") {
+            var status = "Ikke Startet" 
+            table_color = "bg-info p-2 text-dark bg-opacity-25"
+
+        } else if (driver.time_info.FINISHTIME > 0) {
+            var status = "Ferdig"
+            table_color = "bg-success p-2 text-dark bg-opacity-25"
+        }
+
+        if (driver.time_info.PENELTY == "0") {
+            var penelty = "" 
+        } else if (driver.time_info.PENELTY == "2") {
+            var penelty = "DNF" 
+            table_color = table_color + " border-warning "
+        } else if (driver.time_info.PENELTY == "1") {
+            var penelty = "DNS" 
+            table_color = table_color + " border-primary "
+        } else if (driver.time_info.PENELTY == "3") {
+                var penelty = "DSQ" 
+                table_color = table_color + " border-secondary "
+        }
+        
+
+
+        return `<div class="driver-info">
+                    <div id=drivername>
+                    <h3 class=active_drivers>${driver.first_name} ${driver.last_name}</h3>
+                    </div>
+                    <div class="driver-details">
+                    </div>
+                </div>
+                <div id="driver_status" class="border border-5 ${table_color} rounded">
+                    <div style="text-align: center;">
+                        <h3>${penelty}</h3>
+                    </div>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td colspan="2">${driver.club}</td>
+                                <td>${driver.vehicle}</td>
+                                <td>${finish_time_sec}</td>
+                                <td>${status}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr width="80%" color="green" />`; 
+    }
+    
+});
+
+</script>
+  
+</body>
+</html>

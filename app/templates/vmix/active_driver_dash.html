@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    const ws = new WebSocket("ws://{{ip}}:4444/");
+    var x;
+    var arr = [];
+    var currentDrivers = {
+        Driver1: { first_name: "None", last_name: "", snowmobile: "None", time: "0" },
+        Driver2: { first_name: "None", last_name: "", snowmobile: "None", time: "0" }
+    };
+    
+    console.log(ws)
+    
+    function isValidDriverData(data) {
+        // Check if data has the expected structure
+        if (!data || typeof data !== 'object') return false;
+        if (!data.Driver1 || !data.Driver2) return false;
+        
+        // Check if driver data has all required fields
+        const requiredFields = ['first_name', 'last_name', 'snowmobile', 'time'];
+        for (const field of requiredFields) {
+            if (!data.Driver1.hasOwnProperty(field) || !data.Driver2.hasOwnProperty(field)) return false;
+        }
+        
+        // Check if names are valid strings
+        if (typeof data.Driver1.first_name !== 'string' || typeof data.Driver1.last_name !== 'string') return false;
+        if (typeof data.Driver2.first_name !== 'string' || typeof data.Driver2.last_name !== 'string') return false;
+        
+        return true;
+    }
+    
+    function updateContent(newData) {
+        if (!isValidDriverData(newData)) {
+            console.error("Invalid driver data received:", newData);
+            return;
+        }
+        
+        // Check if driver names have changed and apply animation if they have
+        if (newData.Driver1.first_name !== currentDrivers.Driver1.first_name || 
+            newData.Driver1.last_name !== currentDrivers.Driver1.last_name) {
+            animateElement(document.querySelector('.racer.left'));
+        }
+        
+        if (newData.Driver2.first_name !== currentDrivers.Driver2.first_name || 
+            newData.Driver2.last_name !== currentDrivers.Driver2.last_name) {
+            animateElement(document.querySelector('.racer.right'));
+        }
+        
+        // Update current drivers data
+        currentDrivers = JSON.parse(JSON.stringify(newData));
+        
+        // Update display
+        document.getElementsByClassName("driver1")[0].innerHTML = newData.Driver1.first_name + " " + newData.Driver1.last_name;
+        document.getElementsByClassName("driver2")[0].innerHTML = newData.Driver2.first_name + " " + newData.Driver2.last_name;
+        document.getElementsByClassName("time1")[0].innerHTML = newData.Driver1.time;
+        document.getElementsByClassName("time2")[0].innerHTML = newData.Driver2.time;
+        document.getElementsByClassName("sled1")[0].innerHTML = newData.Driver1.snowmobile;
+        document.getElementsByClassName("sled2")[0].innerHTML = newData.Driver2.snowmobile;
+    }
+    
+    function animateElement(element) {
+        element.classList.add('name-change');
+        // Remove the class after animation completes to allow future animations
+        setTimeout(() => {
+            element.classList.remove('name-change');
+        }, 600); // Should match animation duration
+    }
+    
+    ws.onmessage = function(event){
+        try {
+            var arr = JSON.parse(event.data);
+            setTimeout(() => {
+                updateContent(arr);
+            }, 1);
+        } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+        }
+    };
+
+    // The title is no longer needed but we'll keep the fetch in case needed later
+    fetch('http://{{ip}}:4433/api-ladder/1')
+      .then(response => response.text())
+      .then(title => {
+        // Title element is removed
+        console.log("Title fetched:", title);
+      })
+      .catch(error => console.error('Error fetching title:', error));
+
+    // Add fade-in animation when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.querySelector('.race-overlay');
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 300);
+    });
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.race-overlay {
+  width: 600px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  margin-top: 10px;
+}
+
+.race-overlay.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.track-label {
+  color: #ffffff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  border-radius: 2px;
+  position: absolute;
+  top: -18px;
+  font-weight: 500;
+}
+
+.left .track-label {
+  left: 10px;
+  border-left: 2px solid #ff4d4d;
+}
+
+.right .track-label {
+  right: 10px;
+  border-right: 2px solid #4d79ff;
+}
+
+.race-container {
+  display: flex;
+  justify-content: space-between;
+  height: 60px;
+  position: relative;
+  width: 800px;
+}
+
+.racer {
+  display: flex;
+  align-items: center;
+  width: 48%;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 5px 10px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.racer.left {
+  border-left: 3px solid #ff4d4d;
+}
+
+.racer.right {
+  border-right: 3px solid #4d79ff;
+  flex-direction: row-reverse;
+}
+
+/* New name change animation */
+@keyframes nameChangeAnim {
+  0% { transform: scale(1); background-color: rgba(0, 0, 0, 0.6); }
+  50% { transform: scale(1.03); background-color: rgba(40, 40, 40, 0.8); }
+  100% { transform: scale(1); background-color: rgba(0, 0, 0, 0.6); }
+}
+
+.racer.name-change {
+  animation: nameChangeAnim 0.6s ease;
+}
+
+.driver-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.left .driver-info {
+  align-items: flex-start;
+  margin-right: 10px;
+}
+
+.right .driver-info {
+  align-items: flex-end;
+  margin-left: 10px;
+}
+
+.driver {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 350px;
+}
+
+.left .driver {
+  color: #ff4d4d;
+}
+
+.right .driver {
+  color: #4d79ff;
+}
+
+.sled {
+  color: #ccc;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.time-display {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 3px;
+  min-width: 80px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.left .time-display {
+  border-left: 2px solid #ff4d4d;
+}
+
+.right .time-display {
+  border-right: 2px solid #4d79ff;
+}
+
+.vs-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid white;
+  z-index: 2;
+}
+
+.vs {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Simple animations */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.time-display {
+  animation: pulse 2s infinite;
+}
+
+/* Loading animation for drivers when changing */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.driver, .sled, .time-display {
+  animation: fadeIn 0.3s ease-out;
+}
+</style>
+</head>
+<body>
+  <div class="race-overlay">
+    <div class="race-container">
+      <!-- Left Racer -->
+      <div class="racer left">
+        <div class="track-label">Left Track</div>
+        <div class="driver-info">
+          <div class="driver driver1">None</div>
+          <div class="sled sled1">None</div>
+        </div>
+        <div class="time-display time1">0</div>
+      </div>
+      
+      <!-- VS Badge -->
+      <div class="vs-container">
+        <div class="vs">VS</div>
+      </div>
+      
+      <!-- Right Racer -->
+      <div class="racer right">
+        <div class="track-label">Right Track</div>
+        <div class="driver-info">
+          <div class="driver driver2">None</div>
+          <div class="sled sled2">None</div>
+        </div>
+        <div class="time-display time2">0</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

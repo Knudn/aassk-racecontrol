@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starliste</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            color: #FFD700;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem; /* Slightly larger for emphasis */
+            color: #FFD700;
+            margin-bottom: 20px; /* Add some space below the title */
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 80%;
+            width: 50%;
+            overflow: hidden; /* Ensures the container doesn't overflow */
+            position: relative; /* Adjusted for better layout control */
+            margin: 20px auto; /* Center container with margin */
+        }
+
+        .header, .rows {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .header {
+            font-size: 1.2rem;
+            border-bottom: 2px solid #FFD700; /* Make the header stand out */
+        }
+
+        .rows:nth-child(even) {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        .cell_r, .matchup {
+            width: 80%;
+            text-align: left;
+            color: #eaeaea;
+        }
+
+        .cell_r h2, .cell_r p, .matchup p {
+            font-size: 18px;
+            margin: 5px 0;
+            color: #dbdbdb;
+        }
+
+        .matchup {
+            width: 20%;
+            color: #FFD700;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: right;
+        }
+        .count_column {
+            width: 20%; /* Adjust this width as needed */
+            text-align: center; /* Optional: Centers the count numbers if desired */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="main_title">Startliste: {{ title }}</h1>
+
+        <div class="header">
+            <div class="count_column" style="padding-left: 15px;"><h2>#</h2></div>
+            <div class="cell_r"><h2>Navn</h2></div>
+            <div class="cell_r"><h2>Kjøretøy</h2></div>
+            <div class="cell_r"><h2>Klubb</h2></div>
+        </div>
+
+        <div id="startlist-container">
+            {% set ns = namespace(count=1) %}
+            {% for pair in results %}
+                <div class="rows">
+                    <div class="cell_r count_column" style="padding-left: 15px;">
+                        <h2 style="font-size: 20px;">{{ ns.count }}</h2>
+                    </div>
+                    <div class="cell_r">
+                        <h2>{{ pair[1] }} {{ pair[2] }} [{{ pair[0] }}]</h2>
+                    </div>
+                    <div class="cell_r">
+                        <h2>{{ pair[4] }}</h2>
+                    </div>
+                    <div class="cell_r">
+                        <h2>{{ pair[3] }}</h2>
+                    </div>
+                    {% set ns.count = ns.count + 1 %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

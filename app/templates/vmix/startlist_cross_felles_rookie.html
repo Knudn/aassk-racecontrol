@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watercross Startlist Overlay</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: transparent;
+        }
+        .overlay-container {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.842);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            color: #FFFFFF;
+        }
+        .event-title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .event-subtitle {
+            font-size: 35px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.9;
+        }
+        .group-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1400px;
+            gap: 20px;
+        }
+        .group {
+            flex: 1;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .group-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 5px;
+        }
+        .heat-separator {
+            font-size: 16px;
+            text-align: center;
+            margin: 10px 0;
+            color: #FFD700;
+            font-weight: 700;
+        }
+        .driver {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .driver-name {
+            font-size: 16px;
+            font-weight: 400;
+            flex: 1;
+            margin-right: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .driver-vehicle {
+            font-size: 14px;
+            color: #00FFFF;
+            font-weight: 300;
+            text-align: right;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay-container">
+        <h1 id="eventTitle" class="event-title"></h2>
+        <h2 id="eventSubtitle" class="event-subtitle"></h2>
+        <div class="group-container" id="startlistContainer"></div>
+    </div>
+
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        event_file = searchParams.get('event_file');
+
+        $(document).ready(function() {
+            $.getJSON('http://192.168.1.50:7777/api/export?event_file='+event_file, function(data) {
+                $('#eventTitle').text("STARTLISTE");
+                $('#eventSubtitle').text(data[0][0].race_config.TITLE_2);
+
+                const groupHeats = (heats) => {
+                    const groups = [
+                        heats.slice(0, 1),   // Group 1: Heats 1-4
+                        heats.slice(1, 2),   // Group 2: Heats 5-8
+                        heats.slice(2, 3)   // Group 3: Heats 9-12
+                    ];
+                    return groups;
+                };
+
+                const heatsGroups = groupHeats(data);
+
+                heatsGroups.forEach((group, groupIndex) => {
+                    let groupHtml = `
+                        <div class="group">
+                            <div class="group-title">Run ${groupIndex + 1}</div>
+                    `;
+
+                    group.forEach((heat, heatIndex) => {
+                        groupHtml += `
+                            <div class="heat-separator">----- HEAT ${heat[0].race_config.HEAT} -----</div>
+                        `;
+
+                        heat.slice(1).forEach((race) => {
+                            race.drivers.forEach((driver) => {
+                                groupHtml += `
+                                    <div class="driver">
+                                        <span class="driver-name">${driver.first_name} ${driver.last_name}</span>
+                                        <span class="driver-vehicle">${driver.vehicle}</span>
+                                    </div>
+                                `;
+                            });
+                        });
+                    });
+
+                    groupHtml += `</div>`;
+
+                    $('#startlistContainer').append(groupHtml);
+                });
+            }).fail(function() {
+                $('#startlistContainer').html('<p style="text-align: center; color: #FF4500; font-size: 18px;">Failed to load data. Please try again later.</p>');
+            });
+        });
+    </script>
+</body>
+</html>

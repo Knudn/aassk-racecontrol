@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driver Status</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.11.0/NoSleep.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+
+
+    <style>
+        #rankings {
+            margin-top: 20px;
+        }
+
+        .not-started {
+            color: #888;
+        }
+
+        .penalty {
+            color: red;
+        }
+        #overlay {
+            position: fixed; /* Cover the whole page */
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.5); /* Gray out effect */
+            z-index: 2; /* Ensure it's on top */
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center the text horizontally and vertically */
+        }
+
+        #text {
+            color: white;
+            font-size: 24px;
+            z-index: 3;
+        }
+
+        #content {
+            position: relative;
+            z-index: 1; /* Ensure the content is below the overlay */
+        }
+        .driver-div {
+            margin-bottom: 10px;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+
+        /* Style for the additional info div */
+        .additional-info {
+            width: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 10px; 
+            margin-bottom: 10px; 
+            background-color: #ff5555; 
+            color: #333; 
+            text-align: center;
+            height: 180px;
+        }
+
+        .selected {
+            background-color: #0056b3; /* Darker blue for selected, adjust as needed */
+            color: white;
+        }
+
+    </style>
+    <script>
+
+
+
+    drivers_cache = []
+    drivers_cache_new = []
+
+
+    function toggleOverlay() {
+        var overlay = document.getElementById('overlay');
+        if (overlay.style.display === "none") {
+            overlay.style.display = "flex";
+        } else {
+            overlay.style.display = "none";
+        }
+    }
+
+    function appendToTable(driverId, name, snowmobile, time) {
+        var tbody = document.querySelector('#scoreboard tbody');
+
+        var newRow = document.createElement('tr');
+
+        var driverIdCell = document.createElement('td');
+        driverIdCell.textContent = driverId;
+        newRow.appendChild(driverIdCell);
+
+        var nameCell = document.createElement('td');
+        nameCell.textContent = name;
+        newRow.appendChild(nameCell);
+
+        var snowmobileCell = document.createElement('td');
+        snowmobileCell.textContent = snowmobile;
+        newRow.appendChild(snowmobileCell);
+
+        var timeCell = document.createElement('td');
+        timeCell.textContent = time;
+        newRow.appendChild(timeCell);
+
+        tbody.appendChild(newRow);
+    }
+
+
+    function timestampToMicroseconds(timestamp) {
+        // Split the timestamp by 'h', ':', and '.'
+        const [hourStr, minuteStr, secondStr, microStr] = timestamp.split(/h|:|\./);
+        
+        // Convert the time parts to numbers
+        const hours = parseInt(hourStr, 10);
+        const minutes = parseInt(minuteStr, 10);
+        const seconds = parseInt(secondStr, 10);
+        
+        // Pad the microseconds part with zeros to the right, making it 6 digits
+        const paddedMicroStr = microStr.padEnd(6, '0');
+        const microseconds = parseInt(paddedMicroStr, 10);
+
+        // Convert everything to microseconds
+        const microsecondsPerSecond = 1e6;
+        const microsecondsPerMinute = 60 * microsecondsPerSecond;
+        const microsecondsPerHour = 60 * microsecondsPerMinute;
+
+        const totalMicroseconds = hours * microsecondsPerHour
+            + minutes * microsecondsPerMinute
+            + seconds * microsecondsPerSecond
+            + microseconds;
+
+        return totalMicroseconds;
+    }
+
+    function fetchAndFormatTime() {
+        try {
+            // create new Date object from current time
+            let now = new Date();
+
+            console.log(Date(), "date now")
+
+            // get hours, minutes, seconds, and milliseconds
+            let hours = "0" + now.getHours();
+            let minutes = "0" + now.getMinutes();
+            let seconds = "0" + now.getSeconds();
+            let milliseconds = now.getMilliseconds();
+
+            // if milliseconds is less than 100, pad with leading zeros
+            while (milliseconds.toString().length < 6) {
+                milliseconds = "0" + milliseconds;
+            }
+            
+            // construct the formatted string
+            let formatted_time = hours.slice(-2) + 'h' + minutes.slice(-2) + ':' + seconds.slice(-2) + '.' + milliseconds;
+            console.log(formatted_time,"Formated time")
+            return formatted_time;
+        } catch (error) {
+            console.log('Error:', error);
+            throw error;
+        }
+    }
+    
+    function setupEventListeners() {
+
+        $(document).on('click', '.driver-div', function() {
+
+            let clickedDivBaseTime = $(this).attr('data-base-time');
+            
+            fetchAndFormatTime()
+            let new_time = fetchAndFormatTime();
+            let splitChars = ['h', ':', '.'];
+
+            for(let i = 0; i < splitChars.length; i++) {
+                new_time = new_time.split(splitChars[i]).join(' ');
+            }
+
+            let timeList = new_time.split(' ').map(Number);
+            var [hours, minutes, seconds, milliseconds] = new_time.split(' ').map(Number);
+            let t_stamp = `${hours}h${minutes}:${seconds}.${milliseconds}`;
+
+            let current_timestamp = timestampToMicroseconds(t_stamp);
+
+            let final_timestamp = (current_timestamp-clickedDivBaseTime)
+            console.log(final_timestamp,)
+            let g_data = convertMicrosecondsToTime(final_timestamp)
+            console.log(g_data)
+            var id = $(this).data('id');
+            var tableRow = $("<tr></tr>")
+                .data('id', id)
+                .appendTo($("#buffer_" + id))
+                .on("click", function() {
+                    var id = $(this).data('id')
+
+                    // Remove selection from other rows
+                    $("#buffer_" + id).find(".selected").removeClass("selected");
+
+                    // Highlight this row
+                    $(this).addClass("selected");
+                    $("#hours_" + id).val(g_data[0]);
+                    $("#minutes_" + id).val(g_data[1]);
+                    $("#seconds_" + id).val(g_data[2]);
+                    $("#milliseconds_" + id).val(Math.floor(g_data[3]));
+
+                    let data_send = `${g_data[0]}h${g_data[1]}:${g_data[2]}.${g_data[3]}`;
+                    $(this).data('finalTimestamp', data_send);
+            });
+        
+        $("<td></td>").text(`${g_data[1]}:${g_data[2]}.${String(g_data[3]).slice(0, 3)}`).appendTo(tableRow);
+
+
+        
+    });
+
+    $(document).on('click', '.timestamp-button', function() {
+        //toggleOverlay()
+        var driverId = $(this).attr('data-id');
+        var id = $(this).data('id');
+        var base_time = $(this).attr('data-base-time');
+
+        var hours = $('#hours_' + driverId).val();
+        var minutes = $('#minutes_' + driverId).val();
+        var seconds = $('#seconds_' + driverId).val();
+        var milliseconds = $('#milliseconds_' + driverId).val();
+
+        var timestamp = `${hours}h${minutes}:${seconds}.${milliseconds}`;
+        
+        timestamp_post = timestampToMicroseconds(timestamp)
+        console.log(`Submitting timestamp for driver ${driverId}: ${timestamp}`);
+        
+        $.post('/cross/submit_timestamp', {id: id, timestamp: timestamp_post, basetime: base_time}, function(data) {
+            /* Your code here... */
+        });
+    });
+
+    $(document).on('click', '.additional-info', function() {
+        let new_time = fetchAndFormatTime();
+        let splitChars = ['h', ':', '.'];
+        for(let i = 0; i < splitChars.length; i++) {
+                new_time = new_time.split(splitChars[i]).join(' ');
+            }
+        
+        let timeList = new_time.split(' ').map(Number);
+        var [hours, minutes, seconds, milliseconds] = new_time.split(' ').map(Number);
+        let t_stamp = `${hours}h${minutes}:${seconds}.${milliseconds}`;
+        let clickedDivBaseTime = $(this).data('base-time');
+        let current_timestamp = timestampToMicroseconds(t_stamp);
+        let final_timestamp = (current_timestamp-clickedDivBaseTime)
+        let g_data = convertMicrosecondsToTime(final_timestamp)
+        var hours = g_data[0]
+        var minutes = g_data[1]
+        var seconds = g_data[2]
+        var milliseconds = g_data[3]
+        var timestamp = `${hours}h${minutes}:${seconds}.${milliseconds}`;
+        var id = $(this).data('id');
+        timestamp_post = timestampToMicroseconds(timestamp)
+        var base_time = $(this).attr('data-base-time');
+
+        var tableRow = $("<tr></tr>")
+                .data('id', id)
+                .appendTo($("#buffer_" + id))
+                .on("click", function() {
+                    var id = $(this).data('id')
+
+                    // Remove selection from other rows
+                    $("#buffer_" + id).find(".selected").removeClass("selected");
+
+                    // Highlight this row
+                    $(this).addClass("selected");
+                    $("#hours_" + id).val(g_data[0]);
+                    $("#minutes_" + id).val(g_data[1]);
+                    $("#seconds_" + id).val(g_data[2]);
+                    $("#milliseconds_" + id).val(Math.floor(g_data[3]));
+
+                    
+                    let data_send = `${g_data[0]}h${g_data[1]}:${g_data[2]}.${g_data[3]}`;
+                    $(this).data('finalTimestamp', data_send);
+            });
+        
+        $("<td></td>").text(`${g_data[1]}:${g_data[2]}.${String(g_data[3]).slice(0, 3)}`).appendTo(tableRow);
+
+        $.post('/cross/submit_timestamp', {id: id, timestamp: timestamp_post, basetime: base_time}, function(data) {
+            /* Your code here... */
+        });
+    });
+
+
+    $(document).on('click', '.timestamp-list-item', function() {
+        var driverId = $(this).attr('data-driver-id'); 
+        var timestamp = $(this).text(); 
+        
+        var [hours, rest] = timestamp.split('h');
+        var [minutes, seconds] = rest.split(':');
+        var [seconds, milliseconds] = seconds.split('.');
+        $('#hours_' + driverId).val(hours);
+        $('#minutes_' + driverId).val(minutes);
+        $('#seconds_' + driverId).val(seconds);
+        $('#milliseconds_' + driverId).val(milliseconds);
+    });
+}
+
+    </script>
+    <script>
+
+        const use_NTP = new Boolean(false);
+
+        function convertMicrosecondsToTime(microseconds) {
+            microseconds, "Microseconds"
+
+            let totalMilliseconds = microseconds / 1000;
+            let totalSeconds = totalMilliseconds / 1000;
+            let totalMinutes = totalSeconds / 60;
+            let totalHours = totalMinutes / 60;
+
+            let hours = Math.floor(totalHours);
+            let minutes = Math.floor((totalHours - hours) * 60);
+            let seconds = Math.floor((totalMinutes - hours * 60 - minutes) * 60);
+            let milliseconds = ((totalSeconds - hours * 60 * 60 - minutes * 60 - seconds) * 1000);
+            let milliseconds2 = String(milliseconds).split(".")[0]
+
+            let hoursStr = hours.toString().padStart(2, '0');
+            let minutesStr = minutes.toString().padStart(2, '0');
+            let secondsStr = seconds.toString().padStart(2, '0');
+
+            time_string = `${minutes}:${seconds}:${milliseconds2}`
+
+            return [hours, minutes, seconds, milliseconds2];
+        }
+        function timelist_to_string(time) {
+            time_string = `${time[1]}:${time[2]}:${time[3]}`
+            return time_string
+        }
+
+    async function loadDriversData(data_update) {
+        let data;
+        let ignore_entry = "";
+        if (data_update != "None") {
+            data = JSON.parse(data_update);
+        } else {
+            try {
+                const response = await fetch('/api/get_current_startlist_w_data');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                data = await response.json();
+                data.forEach(item => {
+                    if (item.race_config == undefined) {
+                            baseTime = item.drivers[0].time_info.INTER_1
+                            dataId = item.drivers[0].id
+                            console.log('.driver-div[data-id="' + dataId + '"]')
+                            drivers_cache.push(item.drivers[0].id)
+                        }
+                    })
+            } catch (error) {
+                console.error('There was a problem with your fetch operation:', error);
+                data = null; 
+            }
+        }
+        if (!Array.isArray(data)) {
+            console.error('Expected data to be an array, but got:', typeof data);
+            return;
+        }
+
+        if (!data) return;
+
+        const container = document.querySelector('.row');
+
+        data.forEach(item => {
+            if (item.drivers) {
+                item.drivers.forEach(driver => {
+                    let time;
+                    if (driver.time_info && driver.time_info["FINISHTIME"] != 0) {
+                        time = timelist_to_string(convertMicrosecondsToTime((driver.time_info["FINISHTIME"] * 1000)));
+                    } else {
+                        time = "-:-:-";
+                    }
+                    
+                    if (driver.time_info.INTER_1 > 0 && driver.time_info.PENELTY == 0 && driver.time_info.FINISHTIME == 0) {
+                        status = "Started"
+                        bg_color = "blue"
+                    } else if (driver.time_info.FINISHTIME > 0 && driver.time_info.PENELTY == 0) {
+                        status = "Finished"
+                        bg_color = "green"
+                    } else if (driver.time_info.PENELTY == 1) {
+                        status = "DNS"
+                        bg_color = "red"
+                    } else if (driver.time_info.PENELTY == 2) {
+                        status = "DNF"
+                        bg_color = "red"
+                    } else if (driver.time_info.PENELTY == 3) {
+                        status = "DSQ"
+                        bg_color = "red"
+                    } else {
+                        status = "Not started"
+                        bg_color = "gray"
+                    }
+
+
+                    let driverDiv = container.querySelector(`.driver-div[data-id="${driver.id}"]`);
+
+                    if (!driverDiv) {
+                        const isLeftAligned = driver.id % 2 !== 0;
+                        const driverHTML = `
+                            <div class="col-md-6">
+                                <div class="driver-div"  style="background: ${bg_color};" data-id="${driver.id}" data-base-time="${driver.time_info.INTER_1}">
+                                <h1>${driver.id}</h1>
+                                <h6>${driver.first_name} ${driver.last_name} | ${driver.vehicle}</h6>
+                                <h5 class="driver-state">${status}</h5>
+                                <h5 class="driver-time">${time}</h5>
+                            </div>
+                            <div class="additional-info" data-base-time="${driver.time_info.INTER_1}" data-id="${driver.id}">
+                                QUICK SUBMIT
+                            </div>
+                                <table class="table" id="buffer_${driver.id}">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Timestamps</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- timestamps will be added here -->
+                                    </tbody>
+                                </table>
+                                <div class="time-input-group" data-id="${driver.id}">
+                                    <input class="time-input" id="hours_${driver.id}" type="number" min="0" max="23" placeholder="00">
+                                    <span class="time-separator">:</span>
+                                    <input class="time-input" id="minutes_${driver.id}" type="number" min="0" max="59" placeholder="00">
+                                    <span class="time-separator">:</span>
+                                    <input class="time-input" id="seconds_${driver.id}" type="number" min="0" max="59" placeholder="00">
+                                    <span class="time-separator">.</span>
+                                    <input class="time-input" id="milliseconds_${driver.id}" type="number" min="0" max="999" placeholder="000">
+                                    <button class="btn btn-primary timestamp-button" data-id="${driver.id}" data-base-time="${driver.time_info.INTER_1}">Submit</button>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML += driverHTML;
+                        
+ 
+
+                    } else {
+                        // For existing driverDiv, only update necessary text content
+
+                        driverDiv.querySelector('h5.driver-state').textContent = status
+                        driverDiv.querySelector('h5.driver-time').textContent = time;
+                        driverDiv.setAttribute('data-base-time', driver.time_info.INTER_1);
+                        driverDiv.style.background = bg_color;
+
+                        dataId = driver.id
+                        baseTime = driver.time_info.INTER_1
+                        var element = document.querySelector('.driver-div[data-id="' + dataId + '"]');
+                        var quick_submit_element = document.querySelector('.additional-info[data-id="' + dataId + '"]');
+
+                        if (element) {
+                            console.log("Updated basetime")
+                            element.setAttribute('data-base-time', baseTime);
+                            quick_submit_element.setAttribute('data-base-time', baseTime);
+                        } else {
+                            console.log('Element with data-id ' + dataId + ' not found.');
+                        }
+
+                        var button = document.querySelector('button.timestamp-button[data-id="' + dataId + '"]');
+                        if (button) {
+                            button.setAttribute('data-base-time', baseTime);
+                        } else {
+                            console.log('Button with data-id ' + dataId + ' not found.');
+                        }
+
+                    }
+                });
+            } else if (item.race_config) {
+                const title = item.race_config["TITLE_1"] + " " + item.race_config["TITLE_2"];
+                document.getElementById("title").innerHTML = title;
+                if (item.race_config["CROSS"] == false) {
+                    
+                    ignore_entry = `
+                    <div id="overlay">
+                        <div id="text" style="font-size: 50px; ">EVENT NOT CONFIGURED TO BE CROSS</div>
+                    </div>`;
+                    var currentContent = document.getElementById('content').innerHTML;
+                    document.getElementById('content').innerHTML = currentContent + ignore_entry
+                }
+
+             }
+
+            });
+
+          updateRankings(data);  
+        }
+        
+
+        $(document).ready(function() {
+            loadDriversData("None");
+            setupEventListeners();
+        });
+
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+
+        socket.on('response', function(dataString) {
+            drivers_cache_new = []
+            data = JSON.parse(dataString)
+            data.forEach(item => {
+                if (item.race_config == undefined) {
+                    drivers_cache_new.push(item.drivers[0].id)
+                }
+            })
+
+            if (JSON.stringify(drivers_cache) === JSON.stringify(drivers_cache_new)) {
+                    loadDriversData(dataString);   
+                }
+            else {
+                location.reload()
+            }
+            
+        });
+        function updateRankings(data) {
+            const rankingsTable = document.getElementById('rankings-body');
+            rankingsTable.innerHTML = ''; // Clear existing rows
+
+            // Filter and sort drivers
+            const drivers = data.flatMap(item => item.drivers || [])
+                .filter(driver => driver.time_info)
+                .sort((a, b) => {
+                    // Sort by finish time, handling penalties and not started
+                    if (a.time_info.PENELTY !== 0 && b.time_info.PENELTY === 0) return 1;
+                    if (a.time_info.PENELTY === 0 && b.time_info.PENELTY !== 0) return -1;
+                    if (a.time_info.INTER_1 === 0 && b.time_info.INTER_1 !== 0) return 1;
+                    if (a.time_info.INTER_1 !== 0 && b.time_info.INTER_1 === 0) return -1;
+                    return a.time_info.FINISHTIME - b.time_info.FINISHTIME;
+                });
+
+            drivers.forEach((driver, index) => {
+                const row = rankingsTable.insertRow();
+                const rankCell = row.insertCell(0);
+                const nameCell = row.insertCell(1);
+                const timeCell = row.insertCell(2);
+
+                rankCell.textContent = index + 1;
+                nameCell.textContent = `${driver.first_name} ${driver.last_name}`;
+
+                if (driver.time_info.PENELTY !== 0) {
+                    timeCell.textContent = 'Penalty';
+                    row.classList.add('penalty');
+                } else if (driver.time_info.INTER_1 === 0) {
+                    timeCell.textContent = 'Not started';
+                    row.classList.add('not-started');
+                } else {
+                    const time = convertMicrosecondsToTime(driver.time_info.FINISHTIME * 1000);
+                    timeCell.textContent = `${time[1]}:${time[2]}.${time[3]}`;
+                }
+            });
+        }
+    </script>
+
+</head>
+<body>
+
+    <div><h1 id="title" style="text-align: center;">Title</h1></div>
+    <div id="content">
+    <div class="container">
+        <div class="row">
+            <!-- Driver data will be inserted here by the loadDriversData function -->
+        </div>
+    </div>
+    <div class="container">
+        <table class="table" id="scoreboard">
+            <thead>
+                <tr>
+                    <th scope="col">Driver ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Tid</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Points will be added here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="container">
+    <h2>Rankings</h2>
+    <table class="table" id="rankings">
+        <thead>
+            <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Name</th>
+                <th scope="col">Time</th>
+            </tr>
+        </thead>
+        <tbody id="rankings-body">
+            <!-- Rankings will be inserted here -->
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

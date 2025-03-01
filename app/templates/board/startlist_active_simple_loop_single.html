@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starliste</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/startlist-style.css') }}">
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+
+<style>
+        
+
+        * {
+    
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f2f2f2;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1 {
+    text-align: center;
+    font-size: 30px;
+}
+h2 {
+    text-align: center;
+    font-size: 20px;
+}
+
+.main-content {
+    display: flex;
+}
+
+.left-content, .right-content {
+    width: 50%;
+    padding: 0 20px; /* Add padding to the left and right */
+}
+
+.vertical-line {
+    border-left: 3px solid #000;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#main_title, #main_title_upcoming {
+    margin: 10px 0;
+    font-size: 40px; /* Adjusted from .main_manue */
+}
+
+.container {
+    max-width: 98%;
+    margin: 0 auto;
+    
+}
+
+.table-wrapper, .table-wrapper_active, .table-wrapper_finished {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #ddd; /* Consistent border for all */
+    display: flex;
+    flex-direction: column;
+    
+}
+
+.rows {
+    display: flex;
+    border-bottom: 1px solid #eaeaea;
+    background-color: #fff; /* Consistent background for all rows */
+    
+}
+
+.cell_r {
+    font-size: 20px;
+    text-align: left; /* Align text to the left like a normal table cell */
+    padding: 10px; /* Adjust padding as needed */
+    color: #333;
+    flex: 1; /* Flex value of 1 will ensure even spacing */
+    box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.1); /* Soft shadow for depth - simulating border-bottom for cells */
+}
+
+.cell_n {
+    font-size: 20px;
+    text-align: left; /* Align text to the left like a normal table cell */
+    padding: 10px; /* Adjust padding as needed */
+    color: #333;
+    flex: 0; /* Flex value of 1 will ensure even spacing */
+    box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.1); /* Soft shadow for depth - simulating border-bottom for cells */
+}
+
+.finished-driver-row {
+    justify-content: space-between;
+    padding: 5px;
+    font-size: 0.9em;
+}
+
+.finished-driver-row.winner {
+    background-color: #c8e6c9;
+}
+
+.finished-driver-row.looser {
+    background-color: #ffcdd2;
+}
+
+.finished-matchup {
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    background-color: #e0e0e0;
+    margin-top: 5px;
+}
+
+.cell_r:not(:last-child) {
+    border-right: 1px solid #eaeaea; /* Border between cells */
+}
+
+/* Adjust the nth-child(even) for rows */
+.rows:nth-child(even) {
+    background-color: #e3e3e3;
+}
+</style>
+
+<script>
+
+    let urlParams = new URLSearchParams(window.location.search);
+    let heat = urlParams.get('heat');
+    let event_filter = urlParams.get('event_filter');
+    let latest_bool = urlParams.get('latest');
+
+    console.log(heat, event_filter, latest_bool)
+
+    let query_filter = []
+    url = "/api/get_current_startlist_w_data_loop"
+
+    if (heat != null) {
+        query_filter.push({"heat":heat})
+    } 
+    if (event_filter != null) {
+        query_filter.push({"filter": event_filter})
+    } 
+    if (latest_bool != null) {
+        query_filter.push({"latest":latest_bool})
+    }
+    let i = 0;
+    while (i < query_filter.length) {
+        key = Object.keys(query_filter[i])[0]
+        value = query_filter[i][key]
+        if (i == 0) {
+            url += `?${key}=${value}`
+        } else {
+            url += `&${key}=${value}`
+        }
+        i++;
+    }
+    console.log(url)
+
+    function adjustFontSize() {
+            let entries = document.querySelectorAll('.rows .cell_r');
+            
+            entries.forEach(entry => {
+                entry.style.padding = '20px';
+            });
+        
+
+            let entries2 = document.querySelectorAll('.rows .cell_n');
+            
+            entries2.forEach(entry => {
+                entry.style.padding = '20px';
+            });
+            
+        }
+    function updateScoreboard() {
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                    displayData(data);
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+        
+        function displayData(data) {
+
+            let htmlContent = '';
+            let htmlContent_active = '';
+            let htmlContent_finished = '';
+
+            let skip = false
+            title = data[0]["race_config"]["TITLE_2"]
+            run = data[0]["race_config"]["HEAT"]
+            runs = data[0]["race_config"]["HEATS"]
+            document.getElementById('main_title').innerHTML = '<h1>'  + title + " " + run + "/" + runs +'</h1>';
+
+            let finished_driver = []
+            let active_drivers = []
+            let active = false
+            let drivers_amount = data.length - 1
+            count = 0
+                    data.forEach(race => {
+                        count += 1
+                    })
+                    if (count > 10) {
+                        setTimeout(adjustFontSize, 500);
+                    }
+
+            count = 0
+
+            data.forEach(race => {
+                
+                if(race.drivers) {
+                    race.drivers.forEach(driver => {
+                        let driverClass = 'cell_r';
+                        count += 1
+                        let driverHTML = `<div class="rows">`;
+                        
+
+                        driverHTML = `<div class="rows">`;
+                        driverHTML += `<div class="cell_n">${count}</div>`;
+
+                        driverHTML += `<div class="cell_r">${driver.first_name} ${driver.last_name} [${driver.id}]</div>`;
+                        driverHTML += `<div class="cell_r">${driver.vehicle}</div>`;
+                        driverHTML += `</div>`;
+                        htmlContent += driverHTML;
+                        
+                        
+                    });
+                }
+            });
+
+
+            html_new = `
+            <br>
+            `
+            $('#startlist-container_active').html(htmlContent_active);
+            $('#startlist-container').html(htmlContent);
+            //$('#finished_drivers').html(htmlContent_finished);
+
+            }
+        
+
+    $(document).ready(function() {
+        updateScoreboard();
+
+    });
+    
+    let timer = urlParams.get('timer');
+
+    if (timer) {
+      timer = timer * 1000
+    } else {
+      timer = 15000
+    }
+    setInterval(updateScoreboard, timer);
+
+
+
+</script>
+
+
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: red;">Startliste</h1>
+        <h1 class="main_manue" id="main_title">Startliste</h1>
+        <hr>
+        <div id="startlist-container_active" class="table-wrapper_active" style="margin-bottom: 20px;">
+            <!-- Data will be displayed here -->
+        </div>
+        <div id="startlist-container" class="table-wrapper">
+            <!-- Data will be displayed here -->
+        </div>
+
+    </div>
+</body>
+</html>

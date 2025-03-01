@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Startliste</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        h1, h2 {
+            color: #343a40;
+        }
+        h2 {
+            margin-top: 30px;
+        }
+        table {
+            margin-bottom: 50px;
+            background-color: #ffffff;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #343a40;
+            color: #ffffff;
+        }
+        td, th {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container"></div>
+    <script>
+            const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            socket.on('connect', function() {
+                console.log('Connected to the server');
+                socket.emit('join', { username: 'John', room: 'room1' });
+            });
+            socket.on('response', function() {
+            location.reload()
+
+            });
+
+    </script>
+    <script>
+        function get_starting_positions(data) {
+            return fetch('/api/get_start_position_cross', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                return data;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                throw error;
+            });
+        }
+
+        const apiUrl = '/api/get_current_startlist_w_data';
+
+        function extractDriverIds(data) {
+            let driverIds = [];
+            data.forEach(item => {
+                if (item.drivers) {
+                    item.drivers.forEach(driver => {
+                        driverIds.push(driver.first_name + "+" + driver.last_name);
+                    });
+                } else {
+                    event = item["race_config"]["TITLE_2"]
+                }
+            });
+            return [driverIds, event];
+        }
+
+        function createTable(titleText, data, position) {
+            const container = document.querySelector('.container');
+
+            if (!data || data.length === 0) {
+                console.log(`${titleText} has no data.`);
+                return;
+            }
+
+            let title = document.createElement('h2');
+            title.textContent = titleText;
+            container.appendChild(title);
+
+            let table = document.createElement('table');
+            table.className = "table";
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ID</th>
+                        <th>Navn</th>
+                        <th>Klubb</th>
+                        <th>Kjøretøy</th>
+                        <th>Banevalg (1 = Høyre)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+            container.appendChild(table);
+
+
+            let count = 0;
+            data.forEach(item => {
+
+                if (item.drivers) {
+                    item.drivers.forEach(driver => {
+                        count += 1;
+                        let row = document.createElement('tr');
+                        pos_count = 0
+                        position.forEach(item => {
+                            pos_count += 1 
+                            
+                            if (item[0] == driver.first_name + "+" +  driver.last_name) {
+                                start = pos_count
+                            }
+                        }) 
+
+                        if (kval == true) {
+                        row.innerHTML = `
+                            <td>${count}</td>
+                            <td>${driver.id}</td>
+                            <td>${driver.first_name} ${driver.last_name}</td>
+                            <td>${driver.club}</td>
+                            <td>${driver.vehicle}</td>
+                            <td style="padding: 5px; font-size:20px; font-weight: bold;">${count}</td>
+                        `;
+                        } else {
+                        row.innerHTML = `
+                            <td>${count}</td>
+                            <td>${driver.id}</td>
+                            <td>${driver.first_name} ${driver.last_name}</td>
+                            <td>${driver.club}</td>
+                            <td>${driver.vehicle}</td>
+                            <td style="padding: 5px; font-size:20px; font-weight: bold;">${start}</td>
+                        `;   
+                        }
+                        table.querySelector('tbody').appendChild(row);
+
+                    });
+                } else {
+                    let event = item["race_config"]["TITLE_2"];
+                    kval = false; // Assuming you're declaring kval here
+                    if (event.includes("Kvalifisering")) {
+                        console.log("kasdakmlkmkl");
+                        kval = true;
+                    }
+
+                } 
+            });
+        }
+
+        function fetchAndUpdate() {
+            Promise.all([
+                fetch(apiUrl).then(response => response.json()),
+                fetch(`${apiUrl}?upcoming=true`).then(response => response.json())
+            ])
+            .then(([currentData, upcomingData]) => {
+                const [currentDriverIds, currentEvent] = extractDriverIds(currentData);
+                const [upcomingDriverIds, upcomingEvent] = extractDriverIds(upcomingData);
+
+                return Promise.all([
+                    get_starting_positions({driverIds: currentDriverIds, event: currentEvent}).then(currentPositions => ({data: currentData, positions: currentPositions})),
+                    get_starting_positions({driverIds: upcomingDriverIds, event: upcomingEvent}).then(upcomingPositions => ({data: upcomingData, positions: upcomingPositions}))
+                ]);
+            })
+
+            .then(([currentResult, upcomingResult]) => {
+            let curr_title = "Pågående Event: " + currentResult.data[0]["race_config"]["TITLE_2"] + " " + currentResult.data[0]["race_config"]["HEAT"] + "/" + currentResult.data[0]["race_config"]["HEATS"];
+            let up_title = "Kommende Event: " + upcomingResult.data[0]["race_config"]["TITLE_2"] + " " + upcomingResult.data[0]["race_config"]["HEAT"] + "/" + upcomingResult.data[0]["race_config"]["HEATS"];
+
+            createTable(curr_title, currentResult.data, currentResult.positions);
+            createTable(up_title, upcomingResult.data, upcomingResult.positions);
+        })
+            .catch(error => console.error('Error:', error));
+        }
+
+        fetchAndUpdate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watercross Scoreboard Overlay</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: transparent;
+        }
+        .overlay-container {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.842);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            color: #FFFFFF;
+            width: 90%;
+            max-width: 1800px;
+        }
+        .event-title {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .event-subtitle {
+            font-size: 28px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        .heat-container {
+            display: grid;
+            gap: 30px;
+        }
+        .heat-container.four-heats {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+        .heat-container.three-heats {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+        }
+        .heat-container.three-heats .heat:first-child {
+            grid-column: 1 / -1;
+        }
+        .heat-container.three-heats .lower-heats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .heat-container.one-heat {
+            grid-template-columns: 1fr;
+        }
+        .heat {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .heat-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        .driver {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .driver-name {
+            font-size: 24px;
+            font-weight: 400;
+            flex: 1;
+            margin-right: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .driver-points {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFD700;
+            min-width: 40px;
+            text-align: right;
+        }
+        .driver-time {
+            font-size: 20px;
+            color: #00FFFF;
+            font-weight: 300;
+            min-width: 110px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay-container">
+        <h1 id="eventTitle" class="event-title"></h1>
+        <h2 id="eventSubtitle" class="event-subtitle"></h2>
+        <div id="scoreboardContainer"></div>
+    </div>
+
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        title_2 = searchParams.get('title_2');
+
+        function formatTime(seconds) {
+            if (seconds >= 60) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = (seconds % 60).toFixed(3);
+                return `${minutes}:${remainingSeconds.padStart(6, '0')}`;
+            } else {
+                return seconds.toFixed(3);
+            }
+        }
+
+        $(document).ready(function() {
+            // Custom titles for each heat
+
+            const heatTitles = {
+                1: "Fjerdefinale",
+                2: "Tredjefinale",
+                3: "Sekunderfinale",
+                4: "Hovedfinale"
+            };
+
+            $.getJSON('http://192.168.1.50:7777/api/get_timedata_cross/?title_2='+title_2, function(data) {
+                $('#eventTitle').text(data[0].title_1);
+                $('#eventSubtitle').text(data[0].title_2);
+
+                // Determine the number of heats dynamically
+                const heats = [...new Set(data.map(driver => driver.heat))].sort((a, b) => b - a);
+                let scoreboardHtml = '';
+
+                if (heats.length === 1) {
+                    scoreboardHtml = '<div class="heat-container one-heat">';
+                    scoreboardHtml += generateHeatHtml(data, heats[0], {"1": "Main Finale"});
+                    scoreboardHtml += '</div>';
+                } else if (heats.length === 4) {
+                    scoreboardHtml = '<div class="heat-container four-heats">';
+                    scoreboardHtml += generateHeatHtml(data, 4, heatTitles);
+                    scoreboardHtml += generateHeatHtml(data, 3, heatTitles);
+                    scoreboardHtml += generateHeatHtml(data, 2, heatTitles);
+                    scoreboardHtml += generateHeatHtml(data, 1, heatTitles);
+                    scoreboardHtml += '</div>';
+                } else if (heats.length === 3) {
+                    scoreboardHtml = '<div class="heat-container three-heats">';
+                    scoreboardHtml += generateHeatHtml(data, 4, heatTitles);
+                    scoreboardHtml += '<div class="lower-heats">';
+                    scoreboardHtml += generateHeatHtml(data, 3, heatTitles);
+                    scoreboardHtml += generateHeatHtml(data, 2, heatTitles);
+                    scoreboardHtml += '</div></div>';
+                } else {
+                    // Fallback for other numbers of heats
+                    scoreboardHtml = '<div class="heat-container">';
+                    heats.forEach((heatNumber) => {
+                        scoreboardHtml += generateHeatHtml(data, heatNumber, heatTitles);
+                    });
+                    scoreboardHtml += '</div>';
+                }
+
+                $('#scoreboardContainer').html(scoreboardHtml);
+            }).fail(function() {
+                $('#scoreboardContainer').html('<p style="text-align: center; color: #FF4500; font-size: 24px;">Failed to load data. Please try again later.</p>');
+            });
+        });
+
+        function generateHeatHtml(data, heatNumber, heatTitles) {
+            const heatData = data.filter(driver => driver.heat === heatNumber);
+            if (heatData.length === 0) return ''; // Skip if no data for this heat
+            
+            heatData.sort((a, b) => b.points - a.points || a.finishtime - b.finishtime);
+
+            let heatHtml = `
+                <div class="heat">
+                    <div class="heat-title">${heatTitles[heatNumber] || `Heat ${heatNumber}`}</div>
+            `;
+
+            heatData.forEach((driver) => {
+                if (driver.penalty == 1) {
+                    time = "DNS"
+                } else if (driver.penalty == 2) {
+                    time = "DNF"
+                } else if (driver.penalty == 3) {
+                    time = "DSQ"
+                } else {
+                    time = `${formatTime(driver.finishtime)}s`
+                }
+                heatHtml += `
+                    <div class="driver">
+                        <span class="driver-name">${driver.first_name} ${driver.last_name}</span>
+                        <span class="driver-points">${driver.snowmobile}</span>
+                        <span class="driver-time">${time}</span>
+                    </div>
+                `;
+            });
+
+            heatHtml += `</div>`;
+            return heatHtml;
+        }
+    </script>
+</body>
+</html>

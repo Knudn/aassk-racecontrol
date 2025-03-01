@@ -1,0 +1,467 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.13.0/Sortable.min.js"></script>
+
+<style>
+    .drag-handle {
+        cursor: move;
+    }
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+    #example-table {
+        width: 100%;
+        height: 100vh;
+    }
+    .smart-sorting-disabled {
+        color: #aaa; /* Gray out the text */
+        background-color: #f0f0f0; /* Light grey background */
+    }
+    .smart-sorting-disabled * {
+        pointer-events: none; /* Disable all interactions */
+    }
+    .smart-sorting-controls {
+        margin-bottom: 15px;
+    }
+    .smart-sorting-controls input[type="text"] {
+        margin-right: 5px;
+    }
+    .input-group-text.order-number {
+        min-width: 38px;
+    }
+    .draggable-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    .draggable-list .input-group {
+        margin-bottom: 10px;
+        cursor: grab;
+    }
+    .toggle-container {
+        display: flex;
+        align-items: center;
+    }
+    .toggle-label {
+        margin-left: 10px;
+    }
+    .centered-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .add-btn {
+        background-color: #e7e7e7; /* Light grey */
+        border: none;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 16px;
+    }
+    
+</style>
+
+<h2>Event Setup</h2>
+
+<!-- Smart Sorting Section -->
+<div class="card my-3">
+    <div class="card-header">
+        <a class="btn btn-link" data-bs-toggle="collapse" href="#smartSortingSection">
+            Smart Sorting
+        </a>
+    </div>
+    <div id="smartSortingSection" class="collapse">
+        <div class="card-body">
+            <!-- Start of form for Smart Sorting -->
+            <form id="smart-sorting-form" method="post" action="{{ url_for('admin.admin', tab_name='active_events') }}">
+                
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="smartSortingToggle" name="smartSortingEnabled" {{ 'checked' if global_config_new.Smart_Sorting else '' }}>
+
+                    <label class="form-check-label" for="smartSortingToggle">Enable Smart Sorting</label>
+                </div>
+                <input type="hidden" id="eventOrderJson" name="eventOrderJson" value="">
+                <div id="smartSortingOptions" class="smart-sorting-disabled">
+                    <!-- Event Types Section -->
+                    <div id="eventTypesSection">
+                        <h5>Event types</h5>
+                        <ul id="eventTypesList" class="draggable-list">
+                            {% for event_type in event_types %}
+                            <li class="input-group d-flex justify-content-between align-items-center">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text order-number">{{ event_type.order }}</span>
+                                </div>
+                                <input type="text" class="form-control" value="{{ event_type.name }}" name="eventTypeNames[]">
+                                <div class="toggle-container" style="padding-right: 10px; padding-left: 10px;">
+                                    <input type="checkbox" class="form-check-input" {% if event_type.finish_heat %}checked{% endif %} name="finishHeatToggles[]">
+                                    <label class="form-check-label toggle-label">Non-linear heats </label>
+                                </div>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-danger">Remove</button>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="centered-button">
+                        <button type="button" id="addEventType" class="add-btn">+ Add Event Type</button>
+                    </div>
+                    <!-- Event Order Section -->
+                    <div id="eventOrderSection">
+                        <h5>Event order</h5>
+                        <ul id="eventOrderList" class="draggable-list">
+                            {% for order in event_order %}
+                            <li class="input-group d-flex justify-content-between align-items-center">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text order-number">{{ order.order }}</span>
+                                </div>
+                                <input type="text" class="form-control" value="{{ order.name }}" name="eventOrderNames[]">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-danger">Remove</button>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="centered-button">
+                        <button type="button" id="addEventOrder" class="add-btn">+ Add Event Order</button>
+                    </div>
+                    <!-- Submit Button for Smart Sorting -->
+                    <div class="text-center mt-3">
+                        <button type="submit" id="smart-sorting-submit" class="btn btn-primary btn-sm">Update Smart Sorting</button>
+                    </div>
+                    
+                </div>
+            </form>
+            <!-- End of form for Smart Sorting -->
+        </div>
+    </div>
+</div>
+
+
+<div id="example-table" class="ag-theme-alpine"></div>
+
+<!-- AG-Grid CSS & JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-theme-alpine.css" />
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/dist/ag-grid-community.min.noStyle.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var updateButton = document.getElementById("update-button");
+    if (updateButton) {
+        updateButton.addEventListener("click", function () {
+            const rowData = [];
+            gridOptions.api.forEachNode(node => rowData.push(node.data));
+            document.getElementById("table-data").value = JSON.stringify(rowData);
+        });
+    } else {
+        console.error("Element with ID 'update-button' not found.");
+    }
+});
+
+    var tableData = [];
+    
+    {% for event in active_events %}
+        tableData.push({
+            id: {{ event.id }},
+            name: "{{ event.event_name }}",
+            run: {{ event.run }},
+            enable: {{ event.enabled }},
+            sort_order: {{ event.sort_order }}
+        });
+
+    {% endfor %}
+
+
+    var columnDefs = [
+        {
+            headerName: "Drag",
+            width: 40,
+            maxWidth: 40,
+            rowDrag: true,
+            suppressMenu: true,
+            suppressSorting: true,
+            cellClass: 'drag-handle'
+        },
+        { headerName: "ORDER", field: "sort_order", editable: true, flex: 1 ,width: 70,maxWidth: 70},
+        { headerName: "ID", field: "id", editable: true, flex: 1 ,width: 70, maxWidth: 70},
+        {
+            headerName: "Name",
+            field: "name",
+            editable: true,
+            cellStyle: {
+                'white-space': 'nowrap',
+                'overflow': 'hidden',
+                'text-overflow': 'ellipsis'
+            },
+            flex: 2
+        },
+        { headerName: "Run", field: "run", editable: true, flex: 1 },
+        {
+            headerName: "Enabled",
+            field: "enable",
+            cellRenderer: function (params) {
+                return params.value === 1 ? '✔️' : '❌';
+            },
+            cellStyle: { cursor: 'pointer' },
+            onCellClicked: function (params) {
+                const currentValue = params.data.enable;
+                params.node.setDataValue('enable', currentValue === 1 ? 0 : 1);
+            },
+            flex: 1
+        }
+
+    ];
+
+    var gridOptions = {
+        columnDefs: columnDefs,
+        rowData: tableData,
+        rowSelection: 'multiple',
+        rowDragManaged: true,
+        rowDragMultiRow: true,
+        animateRows: true
+    };
+
+    var eGridDiv = document.getElementById("example-table");
+new agGrid.Grid(eGridDiv, gridOptions);
+
+// Script for Smart Sorting Toggle and dynamic list additions
+document.addEventListener('DOMContentLoaded', function() {
+    var smartSortingForm = document.getElementById('smart-sorting-form');
+
+    // This function will convert the form data to JSON before submitting
+    function convertFormDataToJson() {
+    var eventTypesList = document.getElementById('eventTypesList');
+    var eventOrderList = document.getElementById('eventOrderList');
+    var eventData = {
+        eventTypes: [],
+        eventOrder: []
+    };
+
+    // Loop through the event types list items and build the data structure
+    eventTypesList.querySelectorAll('li').forEach(function(listItem, index) {
+        var input = listItem.querySelector('input[type="text"]');
+        var checkbox = listItem.querySelector('input[type="checkbox"]');
+        eventData.eventTypes.push({
+            order: index + 1,
+            name: input.value,
+            finishHeat: checkbox ? checkbox.checked : false
+        });
+    });
+
+    // Loop through the event order list items and build the data structure
+    eventOrderList.querySelectorAll('li').forEach(function(listItem, index) {
+        var input = listItem.querySelector('input[type="text"]');
+        eventData.eventOrder.push({
+            order: index + 1,
+            name: input.value
+        });
+    });
+
+    // Convert the data structure to JSON and assign it to the hidden input
+    document.getElementById('eventOrderJson').value = JSON.stringify(eventData);
+}
+
+    // Attach the function to the form's submit event
+    smartSortingForm.addEventListener('submit', convertFormDataToJson);
+    
+
+    const smartSortingToggle = document.getElementById('smartSortingToggle');
+    const smartSortingOptions = document.getElementById('smartSortingOptions');
+    const eventTypesList = document.getElementById('eventTypesList');
+    const eventOrderList = document.getElementById('eventOrderList');
+    const addEventTypeButton = document.getElementById('addEventType');
+    const addEventOrderButton = document.getElementById('addEventOrder');
+
+    // Function to update the order numbers
+    function updateOrderNumbers(list) {
+        list.querySelectorAll('.input-group-text.order-number').forEach((element, index) => {
+            element.textContent = index + 1;
+        });
+    }
+
+    // Function to create a text input group with a toggle and remove button
+    function createTextInputGroup(placeholderText, listId, withToggle) {
+        const listItem = document.createElement('li');
+        listItem.className = 'input-group d-flex justify-content-between align-items-center';
+
+        const inputGroupPrepend = document.createElement('div');
+        inputGroupPrepend.className = 'input-group-prepend';
+
+        const inputGroupText = document.createElement('span');
+        inputGroupText.className = 'input-group-text order-number';
+
+        inputGroupPrepend.appendChild(inputGroupText);
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control';
+        input.placeholder = placeholderText;
+        input.name = listId === 'eventTypesList' ? 'eventTypeNames[]' : 'eventOrderNames[]';
+
+        listItem.appendChild(inputGroupPrepend);
+        listItem.appendChild(input);
+
+        // If withToggle is true, add the finish heat toggle
+        if (withToggle) {
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'toggle-container';
+
+            const finishHeatToggle = document.createElement('input');
+            finishHeatToggle.type = 'checkbox';
+            finishHeatToggle.className = 'form-check-input';
+            finishHeatToggle.name = 'finishHeatToggles[]';
+            finishHeatToggle.id = 'finishHeatToggle' + (listId === 'eventTypesList' ? eventTypesList.children.length : eventOrderList.children.length);
+
+            const toggleLabel = document.createElement('label');
+            toggleLabel.className = 'form-check-label toggle-label';
+            toggleLabel.htmlFor = finishHeatToggle.id;
+            toggleLabel.textContent = 'Finish heat';
+
+            toggleContainer.appendChild(finishHeatToggle);
+            toggleContainer.appendChild(toggleLabel);
+            listItem.appendChild(toggleContainer);
+        }
+
+        const inputGroupAppend = document.createElement('div');
+        inputGroupAppend.className = 'input-group-append';
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn btn-outline-danger';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remove';
+        removeButton.onclick = function() {
+            document.getElementById(listId).removeChild(listItem);
+            updateOrderNumbers(document.getElementById(listId));
+        };
+
+        inputGroupAppend.appendChild(removeButton);
+        listItem.appendChild(inputGroupAppend);
+
+        return listItem;
+    }
+
+    // Enable or disable smart sorting options
+    smartSortingToggle.addEventListener('change', function() {
+        const options = smartSortingOptions.querySelectorAll('input, select, button, textarea');
+        if (this.checked) {
+            smartSortingOptions.classList.remove('smart-sorting-disabled');
+            options.forEach(element => {
+                element.disabled = false;
+            });
+            addEventTypeButton.disabled = false;
+            addEventOrderButton.disabled = false;
+        } else {
+            smartSortingOptions.classList.add('smart-sorting-disabled');
+            options.forEach(element => {
+                element.disabled = true;
+            });
+            addEventTypeButton.disabled = true;
+            addEventOrderButton.disabled = true;
+        }
+    });
+
+    // Event listener for adding event types
+    addEventTypeButton.addEventListener('click', function() {
+        const listItem = createTextInputGroup('Enter event type', 'eventTypesList', true);
+        eventTypesList.appendChild(listItem);
+        updateOrderNumbers(eventTypesList);
+    });
+
+    // Event listener for adding event orders
+    addEventOrderButton.addEventListener('click', function() {
+        const listItem = createTextInputGroup('Enter event order', 'eventOrderList', false);
+        eventOrderList.appendChild(listItem);
+        updateOrderNumbers(eventOrderList);
+    });
+
+    // Initialize Sortable for both lists
+    new Sortable(eventTypesList, {
+        animation: 150,
+        onEnd: function() {
+            updateOrderNumbers(eventTypesList);
+        }
+    });
+
+    new Sortable(eventOrderList, {
+        animation: 150,
+        onEnd: function() {
+            updateOrderNumbers(eventOrderList);
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const smartSortingToggle = document.getElementById('smartSortingToggle');
+    const smartSortingOptions = document.getElementById('smartSortingOptions');
+    // Function to toggle the smart sorting fields
+    function toggleSmartSortingFields(enabled) {
+        const options = smartSortingOptions.querySelectorAll('input, select, button, textarea');
+        if (enabled) {
+            smartSortingOptions.classList.remove('smart-sorting-disabled');
+            options.forEach(element => element.disabled = false);
+        } else {
+            smartSortingOptions.classList.add('smart-sorting-disabled');
+            options.forEach(element => element.disabled = true);
+        }
+    }
+    toggleSmartSortingFields(smartSortingToggle.checked);
+    smartSortingToggle.addEventListener('change', function() {
+        toggleSmartSortingFields(this.checked);
+    });
+    smartSortingToggle.addEventListener('change', function() {
+        const smartSortingEnabled = this.checked;
+
+        // Send an AJAX request to update the Smart Sorting value
+        fetch('{{ url_for('admin.admin', tab_name='active_events') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 'smartSortingEnabled': smartSortingEnabled })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+            // Optionally, display a message to the user
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+});
+
+// Delegate the click event from the parent 'eventTypesList' or 'eventOrderList' to the remove buttons
+document.getElementById('eventTypesList').addEventListener('click', function(event) {
+    if (event.target.className.includes('btn-outline-danger')) {
+        this.removeChild(event.target.closest('li'));
+        updateOrderNumbers(this);
+    }
+});
+
+document.getElementById('eventOrderList').addEventListener('click', function(event) {
+    if (event.target.className.includes('btn-outline-danger')) {
+        this.removeChild(event.target.closest('li'));
+        updateOrderNumbers(this);
+    }
+});
+
+</script>
+
+<form id="update-form" method="post">
+    <div id="smartSortingData">
+
+    </div>
+    <input type="hidden" id="table-data" name="table_data" value="">
+    <button type="submit" id="update-button" class="btn btn-primary">Update Table</button>
+    
+    
+</form>
+
+{% endblock %}

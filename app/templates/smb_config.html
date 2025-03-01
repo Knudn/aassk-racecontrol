@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <h2>Configure SMB Share</h2>
+    <form action="" method="post">
+        {% for config in smb_config %}
+            {{ form.hidden_tag() }}
+            <p>
+                Enable {{ form.state(checked=config.state) }}  
+            </p> 
+            <p>
+                {{ form.name.label }}<br>
+                {{ form.name(value=config.name) }}
+            </p>
+
+            <p>
+                {{ form.smb_path.label }}<br>
+                {{ form.smb_path(value=config.smb_path) }}
+            </p>
+            <p>
+                {{ form.smb_name.label }}<br>
+                {{ form.smb_name(value=config.smb_name) }}
+            </p>
+            <p>
+                {{ form.smb_port.label }}<br>
+                {{ form.smb_port(value=config.smb_port) }}
+            </p>
+            <p>{{ form.submit() }}</p>
+         {% endfor %}
+    </form>
+{% endblock %}

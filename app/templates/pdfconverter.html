@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h3>Global Config</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for config in global_config %}
+        <tr>
+            <td>{{ config.param }}</td>
+            <td>{{ config.value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<div class="container mt-4">
+    <h3 class="mb-4">Cross Config</h3>
+
+    <form id="configForm" class="mb-3">
+        <div class="row form-group">
+            <div class="col">
+                <label for="dnf_point">DNF Point</label>
+                <input type="number" class="form-control" id="dnf_point" name="dnf_point" value="{{ cross_config.dnf_point }}">
+            </div>
+            <div class="col">
+                <label for="dns_point">DNS Point</label>
+                <input type="number" class="form-control" id="dns_point" name="dns_point" value="{{ cross_config.dns_point }}">
+            </div>
+            <div class="col">
+                <label for="dsq_point">DSQ Point</label>
+                <input type="number" class="form-control" id="dsq_point" name="dsq_point" value="{{ cross_config.dsq_point }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="invert_score">Adjust Final Score Based on Finishers</label>
+            <select class="form-control" id="invert_score" name="invert_score">
+                <option value="true" {% if cross_config.invert_score %}selected{% endif %}>True</option>
+                <option value="false" {% if not cross_config.invert_score %}selected{% endif %}>False</option>
+            </select>
+            <small class="form-text text-muted">
+                When enabled, adjusts the score distribution based on the actual number of finishers. For instance, if there are 3 drivers with a point distribution of [2,4,8], and only 1 driver finishes, enabling this option would result in scores of [0,0,8]. If disabled, the scores would be [0,0,2].
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="num_drivers">Number of Drivers</label>
+            <input type="number" class="form-control" id="num_drivers" name="num_drivers" min="1" value="{{ cross_config.driver_scores|length }}">
+        </div>
+        <hr class="hr" />
+        <div id="driver_scores_container">
+            <!-- JavaScript will populate this based on the number of drivers -->
+        </div>
+    </form>
+    <button id="saveConfigBtn" class="btn btn-primary">Save Configuration</button>
+</div>
+
+
+
+<script>
+$(document).ready(function() {
+    $('#saveConfigBtn').click(function(e) {
+        e.preventDefault(); // Prevent default button click behavior
+
+        // Gather form data
+        var formData = {
+            'dnf_point': $('#dnf_point').val(),
+            'dns_point': $('#dns_point').val(),
+            'dsq_point': $('#dsq_point').val(),
+            'invert_score': $('#invert_score').val(),
+            'num_drivers': $('#num_drivers').val(),
+            // Add driver scores dynamically based on inputs
+        };
+
+        // Dynamically add driver scores to formData
+        $('#driver_scores_container input').each(function() {
+            var name = $(this).attr('name');
+            var value = $(this).val();
+            formData[name] = value;
+        });
+
+        // AJAX request to server
+        $.ajax({
+            type: 'POST',
+            url: '/admin/cross_config',
+            data: formData,
+            success: function(response) {
+                // Handle success
+                console.log('Configuration saved successfully.');
+                // Optionally redirect or update the UI
+            },
+            error: function(xhr, status, error) {
+                // Handle error
+                console.error('Error saving configuration:', error);
+            }
+        });
+    });
+
+    const numDriversInput = document.getElementById('num_drivers');
+    const driverScoresContainer = document.getElementById('driver_scores_container');
+
+    function updateDriverScoresFields() {
+        const numDrivers = parseInt(numDriversInput.value, 10);
+        driverScoresContainer.innerHTML = '';
+        var driverScores = {{ driver_scores_json|safe }};
+        
+        for (let i = 1; i <= numDrivers; i++) {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+            const label = document.createElement('label');
+            label.textContent = `Position ${i} Score:`;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'form-control';
+            input.name = `driver_scores[${i}]`;
+            // Set input value to the score from driverScores, if it exists
+            input.value = driverScores[i] ? driverScores[i] : '0';
+
+            formGroup.appendChild(label);
+            formGroup.appendChild(input);
+            driverScoresContainer.appendChild(formGroup);
+        }
+    }
+
+    numDriversInput.addEventListener('change', updateDriverScoresFields);
+
+    // Initialize fields on load based on current number of drivers
+    updateDriverScoresFields();
+});
+</script>
+
+{% endblock %}

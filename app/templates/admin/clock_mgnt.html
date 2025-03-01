@@ -1,0 +1,141 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+<style>
+.toggle-container {
+    display: flex; /* This makes the child elements align horizontally */
+    align-items: center; /* This vertically centers the toggles if they have different heights */
+    gap: 20px; /* Optional: Adds some space between the toggles */
+}
+</style>
+
+<div class="toggle-container">
+    <div class="form-check form-switch" id="acommit">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" {{ 'checked' if toggles.AutoCommit else '' }}>
+        <label class="form-check-label" for="flexSwitchCheckDefault">Auto Commit</label>
+    </div>
+    <div class="form-check form-switch" id="d_start">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" {{ 'checked' if toggles.DualStart else '' }}>
+        <label class="form-check-label" for="flexSwitchCheckChecked">Duel Start</label>
+    </div>
+</div>
+
+<div id="timestamp-list" class="timestamp-container">
+    <!-- Timestamps will be populated here by JavaScript -->
+</div>
+
+<script>
+function update_content(dataString) {
+    const data = dataString;
+
+    // Sort the data by ID in descending order
+    data.sort((a, b) => b.id - a.id);
+
+    // Group data by TITLE + HEAT
+    const groupedData = data.reduce((acc, item) => {
+        const groupKey = `${item.TITLE} - Heat ${item.HEAT}`;
+        if (!acc[groupKey]) {
+            acc[groupKey] = [];
+        }
+        acc[groupKey].push(item);
+        return acc;
+    }, {});
+
+    $('#timestamp-list').empty();
+
+    // Iterate over each group and append its items to the DOM as a Bootstrap table
+    Object.keys(groupedData).forEach(group => {
+    const tableHtml = `
+        <h4 class="text-center my-4">${group}</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Driver</th>
+                    <th>Name</th>
+                    <th>Timestamp</th>
+                    <th>Button</th>
+                    <th>Placement</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${
+                    groupedData[group]
+                    .reverse() // Reverse the array to flip the order of the rows
+                    .map(item => `
+                        <tr data-ts-raw-${item.id}="${item.TS_RAW}">
+                            <td>${item.DRIVER}</td>
+                            <td>${item.DRIVER_NAME}</td>
+                            <td>${item.TS_SIMPLE}</td>
+                            <td>${item.BUTTON}</td>
+                            <td>${item.PLACEMENT}</td>
+                            <td><button class="btn btn-primary" onclick="editTimestamp(${item.id})">Commit</button></td>
+                        </tr>
+                    `).join('')
+                }
+            </tbody>
+        </table>
+    `;
+
+    $('#timestamp-list').append(tableHtml);
+});
+}
+
+function editTimestamp(id) {
+    var rowSelector = `tr[data-ts-raw-${id}]`;
+    var rawTimestamp = $(rowSelector).attr(`data-ts-raw-${id}`);
+
+    $.ajax({
+        url: 'http://192.168.20.228:5000/send-timestamp',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ "timestamp": rawTimestamp }),
+        success: function(response) {
+            console.log(response);
+            // Add any additional response handling here
+        },
+        error: function(error) {
+            console.error("Error updating timestamp: ", error);
+        }
+    });
+}
+
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', function() {
+    console.log('Connected to the server');
+    socket.emit('join', { username: 'clock_mgnt', room: 'clock_mgnt' });
+});
+
+socket.on('response', function(dataString) {
+    update_content(dataString)
+    console.log(dataString)
+});
+
+eventData = {{ event_data|safe }};
+update_content(eventData)
+
+$(document).ready(function() {
+    $('.form-check-input').change(function() {
+        const autoCommit = $('#flexSwitchCheckDefault').is(':checked');
+        const duelStart = $('#flexSwitchCheckChecked').is(':checked');
+
+        $.ajax({
+            url: '/admin/clock_mgnt', // Change this to your actual endpoint URL
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ autoCommit: autoCommit, duelStart: duelStart }),
+            success: function(response) {
+                console.log('Server response:', response);
+            },
+            error: function(error) {
+                console.error('Error sending toggles:', error);
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

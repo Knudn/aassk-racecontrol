@@ -1,0 +1,786 @@
+
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.0/font/bootstrap-icons.css">
+
+
+
+<style>
+    
+    /* Microservices container styles */
+    .microservices-container {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 15px;
+    }
+    
+    .microservices-scroll {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 15px;
+        padding-bottom: 5px; /* For scrollbar space */
+    }
+    
+    /* Microservice card styles */
+    .microservice-card {
+        flex: 0 0 auto;
+        width: 200px;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    .external-website-card {
+        background-color: white;
+        flex: 0 0 auto;
+        width: 100%;
+        height: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: ;
+        transition: box-shadow 0.3s ease;
+    }
+    .microservice-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .microservice-card .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        padding: 10px;
+        background: white;
+    }
+    
+    .microservice-name {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        word-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    .microservice-name[data-state="True"] {
+        color: #28a745;
+    }
+    
+    .microservice-name[data-state="False"] {
+        color: #dc3545;
+    }
+    
+    .action-icons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .action-icon {
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+    
+    /* Scrollbar styles */
+    .microservices-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .microservices-container::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 4px;
+    }
+    
+    .microservices-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .microservice-card {
+            width: 150px;
+            height: 80px;
+        }
+        .microservice-name {
+            font-size: 0.8rem;
+        }
+        .action-icon {
+            font-size: 1rem;
+        }
+    }
+
+    .external-website-card {
+    background-color: white;
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+    flex-wrap: wrap;
+}
+
+.external-website-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    margin-left: 20px;
+}
+
+.status-active .status-dot {
+    background-color: #4CAF50;
+}
+
+.status-inactive .status-dot {
+    background-color: #F44336;
+}
+
+.button-group {
+    order: 2;
+}
+
+.btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #2196F3;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+.insert_fields {
+    width: 50%;
+    padding: 0px;
+}
+
+.endpoint_config_result {
+    display: flex;
+}
+
+
+    </style>
+
+{% if mount_bool == "2" %}
+
+<div class="alert alert-danger" role="alert">
+    {{ mount_path }} not mounted!
+</div>
+{% endif %}
+{% if mount_bool == "3" %}
+<div class="alert alert-danger" role="alert">
+    {{ mount_path }} is empty!
+</div>
+  {% endif %}
+
+  <div class="external-website-card">
+    
+    <div class="status-indicator" id="serverStatusIndicator">
+        <span class="status-dot"></span>
+        <span id="serverStatusText">Checking...</span>
+    </div>
+
+    <div class="status-indicator status-active" style="margin-right: 10%;">
+        {% if archive_params_json.enabled == True %}
+            <span class="status-dot"></span>
+            <span>Enabled</span>
+        {% else %}
+            <span class="status-dot" style="background-color: #dc3545;"></span>
+            <span>Disabled</span>
+        {% endif %}
+
+    </div>
+
+    <div class="endpoint_config_result">
+        <input id="hostname_remote" class="form-control insert_fields" type="text" placeholder="Server Endpoint" style="width: 200px; margin-right: 9px;" value="{{ archive_params_json.hostname }}">
+        <input id="password_input" class="form-control insert_fields" type="text" placeholder="Password" value="{{ archive_params_json.password }}" style="width: 120px; margin-right: 9px;">
+        <button class="btn btn-primary" onclick="save_endpoint_config('none')">Save</button>
+    </div>
+    <div class="button-group">
+        
+        <button class="btn btn-primary" onclick="sendSyncRequest('single')">Sync Event</button>
+        <button class="btn btn-secondary" onclick="sendSyncRequest('full_sync')">Full Sync</button>
+        
+        <button class="btn btn-secondary" style="margin-left: 30px;" onclick="save_endpoint_config('stop')">Stop</button>
+        <button class="btn btn-primary" onclick="save_endpoint_config('start')">Start</button>
+    </div>
+    
+</div>
+
+  <div class="container-fluid mt-5">
+    <div class="microservices-container">
+        <div class="microservices-scroll">
+            {% for d in microservices %}
+            {% set state = d.state | string() %}
+            {% set name_json = d.name %}
+            {% if d.name == "Backup Clock" %}
+            <script>
+                var backupClockParams = "{{ d.params }}"
+            </script>
+            {% endif %}
+            <div class="microservice-card">
+                <div class="card-body">
+                    <h6 class="card-title microservice-name" data-state="{{ state }}">
+                        {{ d.name }}
+                    </h6>
+                    <div class="action-icons">
+                        <i class="bi bi-play-fill text-success action-icon" onclick="changeStatus(this, 'start', '{{ name_json }}', backupClockParams)"></i>
+                        <i class="bi bi-stop-fill text-danger action-icon" onclick="changeStatus(this, 'stop', '{{ name_json }}')"></i>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+<br>
+<h4 style="text-align: center;">Active Event & Driver Override</h4>
+<br>
+<div class="row">
+    <div class="col-md-6">
+        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Heat</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTable">
+                    <!-- Event rows added here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-primary btn-block" style="width: 100%;" onclick="setActiveEvent()">Set as active event</button>
+    </div>
+    <div class="col-md-6">
+        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Active Driver</th>
+                    </tr>
+                </thead>
+                <tbody id="driversTable">
+                    <!-- Driver rows added here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-primary btn-block" style="width: 100%;" onclick="setActiveEventAndDriver()">Set as active event & driver</button>
+    </div>
+    
+</div>
+
+
+<!-- IP Configuration Modal -->
+<div class="modal fade" id="ipConfigModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel">IP Configuration Required</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Since this application listens on the same port as another service, it's necessary to specify a unique IP address. Please enter the IP address below:</p>
+          <input type="text" class="form-control" id="ipInput" placeholder="test" value="asdasd">
+          <small class="form-text text-muted">To add an additional IP to the interface:</small>
+          <small class="form-text text-muted">sudo ip addr add {IP_ADDRESS}/{NETMASK} dev {INTERFACE_NAME}</small>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="applyIPConfiguration()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Number of events</div>
+                <div class="card-body">
+                    <h3 class="card-text">{{ num_events }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Runs</div>
+                <div class="card-body">
+                    <h3 class="card-text">{{ num_run }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Drivers</div>
+                <div class="card-body">
+                    <h3 class="card-text">{{ drivercount }}</h3>
+                </div>
+            </div>
+        </div>
+
+        
+        <div>
+            <br>
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="inputGroupSelect01">Event</label>
+            </div>
+            
+            <select class="custom-select" id="inputGroupSelect01"> 
+              <option selected>Choose...</option>
+
+              {% for a in events %}
+                    <option class="{{ a[2] }}" value={{ a[2] }}>{{ a[0] }}</option> 
+                    
+              {% endfor %}
+
+            </select>
+            <button class="sync-btn btn btn-success" type="submit">Sync</button>
+            <br>
+          </div>
+          <p class="state_sync"></p>
+          <div class="col-md-2">
+            <div class="card">
+                <div class="card-header">Drivers</div>
+                <div class="card-body">
+                    <h3 class="event_drivers">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-header">Recorded</div>
+                <div class="card-body">
+                    <h3 class="event_recorded">0/0</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-header">Penalties</div>
+                <div class="card-body">
+                    <h3 class="event_penalties">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card">
+                <div class="card-header">Heats</div>
+                <div class="card-body">
+                    <h3 class="event_heats">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="d-grid gap-2" style="padding-top: 15px;">
+    <button id="syncButton" class="btn btn-primary" type="button">Sync active event</button>
+</div>
+
+<script>
+
+document.getElementById('syncButton').addEventListener('click', function() {
+    fetch('/api/active_event_update', {
+        method: 'GET',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+    })
+    .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+    });
+});
+    async function checkServerHeartbeat() {
+        const statusIndicator = document.getElementById('serverStatusIndicator');
+        const statusDot = statusIndicator.querySelector('.status-dot');
+        const statusText = document.getElementById('serverStatusText');
+        try {
+            const hostnameRemoteAddress = document.getElementById('hostname_remote').value;
+            const response = await fetch(`/api/check_remote_heartbeat/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            });
+            const responseText = await response.text();
+
+            if (responseText == 'OK') {
+                statusIndicator.classList.remove('status-inactive');
+                statusIndicator.classList.add('status-active');
+                statusDot.style.backgroundColor = '#4CAF50'; // Green
+                statusText.textContent = 'UP';
+            } else {
+                throw new Error('Server responded, but status was not OK.');
+            }
+        } catch (error) {
+            console.error('Error checking server heartbeat:', error);
+            statusIndicator.classList.remove('status-active');
+            statusIndicator.classList.add('status-inactive');
+            statusDot.style.backgroundColor = '#F44336'; // Red
+            statusText.textContent = 'DOWN';
+        }
+    }
+
+function changeStatus(element, action, service, params) {
+    var card = $(element).closest('.microservice-card');
+    var nameElement = card.find('.microservice-name');
+
+    if (service === 'Backup Clock' && action === 'start') {
+        var currentIP = params; // Default to empty if not found
+
+        $('#ipInput').val(currentIP); // Pre-fill the modal with the current IP
+        $('#ipConfigModal').modal('show'); // Show the modal
+
+        $('#ipConfigModal .btn-primary').off('click').on('click', function() {
+            applyIPConfiguration(service, nameElement);
+        });
+    } else {
+        // Handle other services or actions
+        switch(action) {
+            case 'start':
+                nameElement.attr('data-state', 'True').css('color', '#28a745');
+                break;
+            case 'stop':
+                nameElement.attr('data-state', 'False').css('color', '#dc3545');
+                break;
+            // Include other cases as necessary
+        }
+        // Perform the status change operation
+        change_microservice_state(action, service);
+    }
+}
+
+function applyIPConfiguration(service, nameElement) {
+    var newIP = $('#ipInput').val();
+
+    // Now you can use the new IP to perform the service start operation with the new IP
+    // Adjust this part as necessary to fit your application's requirements
+    $.ajax({
+        type: "POST",
+        url: "/admin/home",
+        data: {
+            service_state: 'start',
+            service_name: service,
+            ip_address: newIP
+        },
+        success: function(result) {
+            console.log("Service started with new IP:", newIP);
+            // Update the status indicator
+            nameElement.attr('data-state', 'True').css('color', '#28a745');
+        },
+        error: function() {
+            console.log("Error changing service status or applying IP address.");
+        }
+    });
+
+    $('#ipConfigModal').modal('hide'); // Hide the modal after applying the configuration
+}
+
+function change_microservice_state(state, service) {
+    $.ajax({
+        type: "POST",
+        url: "/admin/home",
+        data: {service_state: state, service_name: service},
+        success: function(result) {
+            console.log("Microservice state changed successfully");
+        },
+        error: function() {
+            console.log("Error changing microservice state");
+        }
+    });
+}
+
+
+
+
+$(document).ready(function() {
+
+    function sendRequest(event, sync, event_name) {
+        $.ajax({
+            type: "POST",
+            url: "/admin/home",
+            data: {single_event: event, sync: sync, event_name: event_name},
+            success: function(result) {
+                document.getElementsByClassName("event_drivers")[0].innerHTML = result.drivers;
+                document.getElementsByClassName("event_recorded")[0].innerHTML = (result.v_times + result.p_times) + "/" + result.all_records;
+                document.getElementsByClassName("event_penalties")[0].innerHTML = result.p_times;
+                document.getElementsByClassName("event_heats")[0].innerHTML = result.heats;
+            }
+        });
+    }
+
+
+
+    $('#inputGroupSelect01').change(function() {
+        let event = this.value;
+        sendRequest(event, false, "none");
+    });
+
+    $(".sync-btn").click(function() {
+        let event = document.getElementById('inputGroupSelect01').value;
+        let event_name = document.getElementsByClassName(event)[0].innerHTML
+        sendRequest(event, "true", event_name);
+    });
+
+    $(document).ready(function() {
+    $.ajax({
+        url: '/api/get_event_order',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            var tableBody = $('#eventsTable');
+            var activeRow;
+
+            data.forEach(function(item, index) {
+                var row = $('<tr></tr>').click(function() {
+                    $('tr').removeClass('table-active');
+                    $(this).addClass('table-active');
+                    fetchDriverData(item.Event, item.Heat);
+                });
+
+                row.append($('<td></td>').text(item.Event));
+                row.append($('<td></td>').text('Heat ' + item.Heat));
+                tableBody.append(row);
+
+                if (item.Active) {
+                    activeRow = row;
+                }
+            });
+
+            if (activeRow) {
+                activeRow.trigger('click');
+                scrollTableToActiveRow(activeRow, $('.table-responsive'));
+            }
+        },
+        error: function() {
+            alert('Error fetching event data');
+        }
+    });
+
+    function fetchDriverData(event, heat) {
+    $.ajax({
+        url: `/api/get_current_startlist_w_data?event=${encodeURIComponent(event)}&heat=${encodeURIComponent(heat)}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("API Response:", response);
+
+            var driversTable = $('#driversTable');
+            driversTable.empty(); // Clear existing entries
+
+            if (!Array.isArray(response)) {
+                console.error('Expected response to be an array, received:', response);
+                return; // Stop the function if response is not an array
+            }
+
+            var activeRow; // Variable to store the active row reference
+
+            response.forEach(function(race) {
+                console.log("Race Data:", race);
+
+                if (!Array.isArray(race.drivers)) {
+                    console.error('Expected race.drivers to be an array, received:', race.drivers);
+                    return; // Skip this race if drivers is not an array
+                }
+
+                var row = $('<tr style="text-align: center;"></tr>').click(function(e) {
+                    e.stopPropagation(); // Stop the event from bubbling up
+                    $('tr', driversTable).removeClass('table-active');
+                    $(this).addClass('table-active');
+                });
+
+                if (race.drivers.length == 2) {
+                    driver_1 = race.drivers[0].first_name + " " + race.drivers[0].last_name;
+                    driver_2 = race.drivers[1].first_name + " " + race.drivers[1].last_name;
+                    row.data('driverIds', [race.drivers[0].id, race.drivers[1].id]);
+                    
+                    name_combined =  "["+race.drivers[0].id+"] " + driver_1 + "    ➖    " + driver_2 + " ["+race.drivers[1].id+"]";
+                    row.append($('<td></td>').text(`${name_combined}`));
+                    
+
+                    if (race.drivers[0].active || race.drivers[1].active) {
+                        activeRow = row; 
+                    }
+                }
+
+                if (race.drivers.length == 1) {
+                    driver_1 = race.drivers[0].first_name + " " + race.drivers[0].last_name;
+                    row.data('driverIds', [race.drivers[0].id,0])
+                    name_combined = driver_1;
+                    row.append($('<td></td>').text(`${name_combined}`));
+
+                    if (race.drivers[0].active) {
+                        activeRow = row;
+                    }
+                }
+                driversTable.append(row);
+            });
+
+            if (activeRow) {
+                activeRow.trigger('click');
+            }
+
+            var driversTable = $('#driversTable').closest('.table-responsive');
+            driversTable.scrollTop(0);
+        },
+        error: function() {
+            alert('Error fetching driver data');
+        }
+    });
+}
+});
+
+function scrollTableToActiveRow(activeRow, container) {
+    var rowPos = activeRow.position().top;
+    var containerHeight = container.height();
+    var rowHeight = activeRow.outerHeight();
+    var scrollTo = rowPos - (containerHeight / 2) + (rowHeight / 2);
+
+    container.animate({
+    scrollTop: scrollTo
+    }, 0);
+}
+
+
+});
+
+function setActiveEvent() {
+    var eventRow = $('#eventsTable .table-active').closest('tr');
+    var eventName = eventRow.find('td:first').text().trim(); // Get the event name correctly
+    var eventHeat = eventRow.find('td:last').text().replace('Heat ', '').trim(); // Clean the heat number correctly
+
+    update_active_driver(0, 0, eventName, eventHeat); // Set both driver IDs to "0"
+}
+
+function setActiveEventAndDriver() {
+    var eventRow = $('#eventsTable .table-active');
+    var driverRow = $('#driversTable .table-active');
+    var eventName = eventRow.find('td:first').text();
+    var eventHeat = eventRow.find('td:last').text().replace('Heat ', '');
+
+    var driverIds = driverRow.data('driverIds'); // Assuming driver row data contains driver IDs
+    var driverOneId = driverIds ? driverIds[0] : 0;
+    var driverTwoId = driverIds ? driverIds[1] : 0;
+
+    update_active_driver(driverOneId, driverTwoId, eventName, eventHeat);
+}
+
+
+function sendSyncRequest(type) {
+    fetch(`/api/upate_remote_data?type=${type}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Sync successful:', data);
+        // Handle successful response here
+        alert('Sync completed successfully!');
+    })
+    .catch(error => {
+        console.error('Sync failed:', error);
+        alert('Sync failed. Please try again.');
+    });
+}
+
+function update_active_driver(driver_one_id, driver_two_id, event_name, heat) {
+    const endpoint = '/api/set_active_state';
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ driver_one: driver_one_id, driver_two: driver_two_id, event: event_name, event_heat: heat }),
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch((error) => console.error('Error:', error));
+}
+
+function save_endpoint_config(state) {
+    var endpoint = document.getElementsByClassName("insert_fields")[0].value;
+    var password = document.getElementsByClassName("insert_fields")[1].value;
+    console.log(endpoint, password)
+    $.ajax({
+        type: "POST",
+        url: "/admin/home",
+        data: {endpoint_server_update: "True", password: password, hostname: endpoint, state: state},
+        success: function(result) {
+            location.reload();
+        }
+    });
+}
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkServerHeartbeat();
+    // Optionally, you can set up an interval to check periodically
+    // setInterval(checkServerHeartbeat, 60000); // Check every minute
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Information</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --primary-color: #2c3e50;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --border-color: #bdc3c7;
+        }
+        #top_driver_bar {
+            display: flex;
+            justify-content: space-between;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container {
+            width: 100%;
+            padding: 20px;
+        }
+        .title-container {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+        .info-section {
+            flex: 1;
+            background-color: white;
+        }
+        .info-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+        }
+        .info-body {
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+        .info-row {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-cell {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+        }
+        .info-cell i {
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .info-header, .info-row {
+                flex-direction: column;
+            }
+            .info-cell {
+                padding: 8px;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .info-cell:last-child {
+                border-bottom: none;
+            }
+        }
+        .active-driver {
+            background-color: #74ff51;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <h1 id="title1"></h1>
+        </div>
+        <div class="alert alert-warning" role="alert" style="padding:5px; font-size: 15px;" id="top_driver_bar">
+            <span id="currentHeat"></span>
+            <span id="eventTitle"></span>
+            <span id="dayTitle"></span>
+        </div>
+        <div class="content-wrapper">
+            <div class="info-section">
+                <div class="info-header">
+                    <div class="info-cell"><i class="fas fa-user"></i> Name</div>
+                    <div class="info-cell"><i class="fas fa-snowmobile"></i> Vehicle</div>
+                    <div class="info-cell"><i class="fas fa-star"></i> Points</div>
+                    <div class="info-cell"><i class="fas fa-flag-checkered"></i> Finish Time</div>
+                    <div class="info-cell"><i class="fas fa-exclamation-triangle"></i> Penalty</div>
+                </div>
+                <div id="driversInfo" class="info-body">
+                    <!-- Driver stats will be appended here -->
+                </div>
+            </div>
+
+            <div class="info-section">
+                <select id="runDropdown" class="form-select form-select-sm" aria-label=".form-select-sm example" name="run">
+                    <option selected>Open this select menu</option>
+                </select>
+                <div class="info-header">
+                    <div class="info-cell"><i class="fas fa-trophy"></i> Position</div>
+                    <div class="info-cell"><i class="fas fa-user"></i> Name</div>
+                    <div class="info-cell"><i class="fas fa-star"></i> Total Points</div>
+                    <div class="info-cell"><i class="fas fa-clock"></i> Best Time</div>
+                </div>
+                <div id="driver_data" class="info-body">
+                    <!-- Data will be appended here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+
+    <script>
+
+        function updateAllData(data) {
+            get_current_event_stats(data);
+            get_driver_data_right(data, false);
+            get_top_driver_header(data);
+        }
+
+        function initializeWebSocket() {
+            socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            socket.on('connect', function() {
+                console.log('Connected to the server');
+                socket.emit('join', { username: 'John', room: 'room1' });
+            });
+
+            socket.on('response', function(dataString) {
+                const data = JSON.parse(dataString);
+                const new_result = MD5(JSON.stringify(dataString));
+                console.log(data)
+                if (new_result !== old_results) {
+                    console.log('Updating data');
+                    updateAllData(data);
+                    old_results = new_result;
+                } else {
+                    console.log('No changes in data');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWebSocket();
+
+            fetch('/api/get_current_startlist_w_data')
+                .then(response => response.json())
+                .then(data => {
+                    updateAllData(data);
+                    old_results = MD5(JSON.stringify(data));
+                    old_event_hash = MD5(JSON.stringify(data[0]["race_config"]["TITLE_1"] + data[0]["race_config"]["TITLE_2"] + data[0]["race_config"]["HEAT"]));
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+
+        function find_active_driver(data){
+            active_driver = false
+            data.forEach(item => {
+                if (item["race_config"] == undefined) {
+                    if (item.drivers["0"].active == true) {
+                        active_driver = item.drivers["0"].id
+                    }
+                }
+            });
+            return active_driver
+        }
+
+        function get_current_event_stats(data) {
+
+            active_driver = find_active_driver(data)
+            const title1 = document.getElementById('title1');
+            const title_1 = data[0]["race_config"]["TITLE_1"];
+            const title_2 = data[0]["race_config"]["TITLE_2"]; 
+            const heat = data[0]["race_config"]["HEAT"];
+            title1.textContent = `${title_1} ${title_2} HEAT ${heat}`;
+            console.log(`/api/get_timedata_cross/?title_1=${title_1}&title_2=${title_2}&heat=${heat}`)
+            $.ajax({
+                url: `/api/get_timedata_cross/?title_1=${title_1}&title_2=${title_2}&heat=${heat}`,
+                type: 'GET',
+                dataType: 'json', 
+                success: function(res) {
+                    append_current_driver_stats_html(res, active_driver);
+                }
+            });
+        }
+
+        function get_events() {
+            $.ajax({
+                url: `/api/get_event_order`,
+                type: 'GET',
+                dataType: 'json', 
+                success: function(res) {
+                    processApiResponse(res)
+                }
+            });
+        }
+        
+        function processApiResponse(apiResponse) {
+            const uniqueEvents = [...new Set(apiResponse.map(item => item.Event))];
+            const dropdown = document.getElementById('runDropdown');
+            dropdown.innerHTML = '<option selected>Open this select menu</option>';
+            
+            uniqueEvents.forEach(event => {
+                const option = document.createElement('option');
+                option.text = event;
+                option.value = event;
+                dropdown.add(option);
+            });
+
+            dropdown.addEventListener('change', handleDropdownSelection);
+        }
+
+        function handleDropdownSelection(event) {
+            const selectedValue = event.target.value;
+            if (selectedValue !== 'Open this select menu') {
+                get_driver_data_right(null, true, selectedValue);
+            }
+        }
+
+        function get_driver_data_right(data, other, combinedTitle = '') {
+            let url;
+
+            if (other == true) {
+                url = `/api/driver-points?combined_title=${encodeURIComponent(combinedTitle)}`;
+            } else {
+                const title_2 = data[0]["race_config"]["TITLE_2"];
+                const title_1 = data[0]["race_config"]["TITLE_1"];
+
+                url = title_2.toUpperCase().includes("FINALE") ? "/api/driver-points?title_2=Finale" : `/api/driver-points?combined_title=${title_1} ${title_2}`;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json', 
+                success: function(res) {
+                    //const aggregatedData = aggregateDriverData(res);
+                    append_current_right_stats_html(res);
+                }
+            });
+        }
+
+        function aggregateDriverData(data) {
+            const driverMap = new Map();
+
+            data.forEach(item => {
+                const driverId = `${item.first_name} ${item.last_name}`;
+                if (!driverMap.has(driverId)) {
+                    driverMap.set(driverId, {
+                        first_name: item.first_name,
+                        last_name: item.last_name,
+                        total_points: 0,
+                        lowest_finishtime: Infinity
+                    });
+                }
+
+                const driver = driverMap.get(driverId);
+                driver.total_points += item.points;
+                if (item.finishtime > 0 && item.finishtime < driver.lowest_finishtime) {
+                    driver.lowest_finishtime = item.finishtime;
+                }
+            });
+
+            return Array.from(driverMap.values())
+                .sort((a, b) => b.total_points - a.total_points || a.lowest_finishtime - b.lowest_finishtime);
+        }
+
+        function append_current_right_stats_html(data) {
+            const targetDiv = document.getElementById('driver_data');
+            targetDiv.innerHTML = '';
+            data.forEach((item, index) => {
+                const driverRow = document.createElement('div');
+                driverRow.classList.add('info-row');
+                
+                let formattedTime = item.lowest_finishtime + " s";
+                driverRow.innerHTML = `
+                    <div class="info-cell">${index + 1}</div>
+                    <div class="info-cell">${item.first_name} ${item.last_name}</div>
+                    <div class="info-cell">${item.total_points}</div>
+                    <div class="info-cell">${secondsToMinutes(item.lowest_finishtime)}</div>
+                `;
+                targetDiv.appendChild(driverRow);
+            });
+        }
+
+        function display_get_top_driver_header(data) {
+            let heat = data["title_1+title_2+heat_0"]
+            let event = data["title_1+title_2_0"]
+            let day = data["title_1_0"]
+            
+            if (heat != undefined) {
+                document.getElementById('currentHeat').innerHTML = `<strong>Current Heat:</strong> ${heat.first_name} ${heat.last_name} - ${secondsToMinutes(heat.finishtime / 1000)}`;
+            } else {
+                document.getElementById('currentHeat').innerHTML = `<strong>Heat:</strong> Not started`;
+            }
+            if (event != undefined) {
+                document.getElementById('eventTitle').innerHTML = `<strong>${event.title_2}:</strong> ${event.first_name} ${event.last_name} - ${secondsToMinutes(event.finishtime / 1000)}`;
+            } else {
+                document.getElementById('eventTitle').innerHTML = `<strong>EVENT:</strong> Not started`
+            }
+
+            if (day != undefined) {
+                document.getElementById('dayTitle').innerHTML = `<strong>${day.title_1}:</strong> ${day.first_name} ${day.last_name} - ${secondsToMinutes(day.finishtime / 1000)}`;
+            } else {
+                document.getElementById('dayTitle').innerHTML = `<strong>DAY:</strong> Not started`;
+            }
+        }
+        
+        function secondsToMinutes(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = (seconds % 60).toFixed(3);
+            return `${minutes}:${remainingSeconds.padStart(6, '0')}`;
+        }
+        function append_current_driver_stats_html(data, active_driver) {
+            const driversInfo = document.getElementById('driversInfo');
+            driversInfo.innerHTML = '';
+            data.forEach(item => {
+
+                const driverRow = document.createElement('div');
+                if (active_driver == item.cid) {
+                    driverRow.classList.add('active-driver');
+                }
+                
+                driverRow.classList.add('info-row');
+                driverRow.innerHTML = `
+                    <div class="info-cell">${item.first_name} ${item.last_name}</div>
+                    <div class="info-cell">${item.snowmobile}</div>
+                    <div class="info-cell">${item.points}</div>
+                    <div class="info-cell">${secondsToMinutes(item.finishtime)}</div>
+                `;
+                if (item.penalty == 1) {
+                    pen = `DNS`
+                } else if (item.penalty == 2) {
+                    pen = `DNF`
+                } else if (item.penalty == 3) {
+                    pen = `DSQ`
+                } else {
+                    pen = item.penalty
+                }
+
+                driverRow.innerHTML += `\n<div class="info-cell">${pen}</div>`
+
+                driversInfo.appendChild(driverRow);
+            });
+        }
+
+        function get_top_driver_header(title_name) {
+            title_1 = title_name[0]["race_config"]["TITLE_1"]
+            title_2 = title_name[0]["race_config"]["TITLE_2"]
+            heat = title_name[0]["race_config"]["HEAT"]
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: `/api/get_timedata/?title_1=${title_1}&title_2=${title_2}&heat=${heat}&single_all=true&entries_per_filter=1&unique_names=true`,
+                    type: 'GET',
+                    success: function(data) {
+                        display_get_top_driver_header(data);
+                    },
+                    error: function() {
+                        reject('Error fetching snowmobile models');
+                    }
+                });
+            });
+        }
+
+        function milliseconds_to_sec(ms) {
+            return (ms).toFixed(3)
+        }
+
+        function MD5(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+
+        get_events();
+    </script>
+</body>
+</html>

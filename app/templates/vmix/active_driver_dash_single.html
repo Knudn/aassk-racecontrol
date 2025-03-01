@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+  <script>
+    function updateOverlay(data) {
+        const standardizedData = standardizeData(data);
+
+        if (standardizedData) {
+            $(".name").text(standardizedData.NAME || "TBA");
+            $(".vehicle").text(standardizedData.SNOWMOBILE || "TBA");
+            
+            if (standardizedData.FINISHTIME > 0) {
+                $(".time").text(formatMilliseconds(standardizedData.FINISHTIME));
+                $(".time").addClass("finished");
+            } else {
+                $(".time").text("0.000");
+                $(".time").removeClass("finished");
+            }
+        } else {
+            $(".name").text("TBA");
+            $(".vehicle").text("TBA");
+            $(".time").text("0.000");
+            $(".time").removeClass("finished");
+        }
+    }
+    
+    function standardizeData(data) {
+        if (Array.isArray(data)) {
+            // Find the object with active driver
+            const activeDriverObj = data.find(item => 
+                item.drivers && 
+                item.drivers.length > 0 && 
+                item.drivers[0].active
+            );
+
+            if (activeDriverObj) {
+                const driver = activeDriverObj.drivers[0];
+                return {
+                    NAME: `${driver.first_name} ${driver.last_name}`,
+                    SNOWMOBILE: driver.vehicle,
+                    FINISHTIME: driver.time_info.FINISHTIME / 1000 // Convert to seconds
+                };
+            }
+        }
+        // If no active driver found
+        return null;
+    }
+    
+    function formatMilliseconds(seconds) {
+      // Convert to a number with 3 decimal places
+      seconds = Number(seconds.toFixed(3));
+    
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+    
+      const formattedTime = `${minutes}:${remainingSeconds.toFixed(3).padStart(6, '0')}`;
+      
+      return formattedTime;
+    }
+    
+    function fetchInitialContent() {
+        $.get("/api/get_current_startlist_w_data", function(data) {
+            updateOverlay(data);
+        }).fail(function() {
+            console.error("Error fetching initial data");
+        });
+    }
+    
+    $(document).ready(function() {
+        // Fetch initial data from API
+        fetchInitialContent();
+    
+        // Set up WebSocket connection
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+    
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+    
+        socket.on('response', function(dataString) {
+            console.log("WebSocket received:", dataString);  // Log the raw received data
+            const data = JSON.parse(dataString);
+            updateOverlay(data);
+        });
+    });
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .driver-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .name {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .vehicle {
+      font-size: 16px;
+      text-transform: uppercase;
+      color: #cccccc;
+    }
+
+    .time {
+      font-size: 36px;
+      font-weight: bold;
+      color: #00FFFF;
+      min-width: 140px;
+      text-align: right;
+    }
+
+    .time.finished {
+      color: #FF4500;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="driver-info">
+      <span class="name">TBA</span>
+      <span class="vehicle">TBA</span>
+    </div>
+    <span class="time">0.000</span>
+  </div>
+</body>
+</html>

@@ -1,0 +1,793 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Panel Configuration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .config-panel {
+            border: 2px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .grayed-out {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        #restart_fppd1 {
+            background-color: red;
+        }
+        #restart_fppd2 {
+            background-color: red;
+        }
+        .mode-btn.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .mode-btn {
+            padding: 0.25rem 1rem;
+        }
+        .form-select-sm {
+            height: calc(1.5em + 0.5rem + 2px);
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">LED Panel Configuration</h1>
+        
+<!-- Mode Section -->
+
+<div class="config-panel mb-4">
+    <div class="row align-items-center mb-3">
+        <div class="col-auto">
+            <h2 class="mb-0" style="font-size: 1.2rem;">Mode:</h2>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Display Mode">
+                <button type="button" class="btn btn-outline-primary mode-btn" data-mode="parallel">Parallel</button>
+                <button type="button" class="btn btn-outline-primary mode-btn" data-mode="single">Single</button>
+            </div>
+        </div>
+        <div class="col-auto ms-2">
+            <button type="button" class="btn btn-primary btn-sm" id="saveModeConfig">Save Configuration</button>
+        </div>
+    </div>
+
+    <!-- Single Mode Controls -->
+    <div id="singleModeControls" class="mt-3" style="display: none;">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0 me-2">Display:</label>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" id="singleDisplaySelect" style="width: 150px;">
+                    <option value="1">Display 1 (Left)</option>
+                    <option value="2">Display 2 (Right)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parallel Mode Controls -->
+    <div id="parallelModeControls" class="mt-3" style="display: none;">
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0 me-2">Display 1:</label>
+                <select class="form-select form-select-sm d-inline-block" id="display1DriverSelect" style="width: 120px;">
+                    <option value="1">Driver 1</option>
+                    <option value="2">Driver 2</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label mb-0 me-2">Display 2:</label>
+                <select class="form-select form-select-sm d-inline-block" id="display2DriverSelect" style="width: 120px;">
+                    <option value="1">Driver 1</option>
+                    <option value="2">Driver 2</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+        
+        <div class="row">
+            {% for panel_id, panel_config in panels.items() %}
+            <div class="col-md-6">
+                <div class="config-panel" id="display{{ panel_id }}Panel">
+                    <h2>Display {{ panel_id }} ({% if panel_id == 1 %}left{% else %}right{% endif %})</h2>
+                    <form id="form{{ panel_id }}" method="POST">
+                        <input type="hidden" name="panel_id" value="{{ panel_id }}">
+                        <div class="mb-3">
+                            <div class="btn-group w-100" role="group" aria-label="Driver Data">
+                                <button type="button" class="btn btn-primary" id="restart_fppd{{ panel_id }}">Restart FPPD service</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-primary mb-2 w-100" name="endpoint{{ panel_id }}" id="toggle_on_off{{ panel_id }}">Clear Display</button>
+                            <div class="text-center mb-2">
+                                <h5>Active Drivers</h5>
+                            </div>
+                            <div class="btn-group w-100" role="group" aria-label="Driver Data">
+                                <button type="button" class="btn btn-primary" id="driverDataOn{{ panel_id }}">On</button>
+                                <button type="button" class="btn btn-primary" id="driverDataOff{{ panel_id }}">Off</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="endpoint" id="endpoint{{ panel_id }}" value="{{ panel_config[0] }}" placeholder="FPP endpoint">
+                                <button type="submit" class="btn btn-primary" name="action" value="save_endpoint">Save</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <textarea class="form-control" id="displayText{{ panel_id }}" name="display_text" rows="3" placeholder="Enter display text"></textarea>
+                                <button type="button" class="btn btn-primary" id="sendText{{ panel_id }}">Send</button>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-6">
+                                <label for="fontSize{{ panel_id }}" class="form-label">Font Size</label>
+                                <input type="number" class="form-control" id="fontSize{{ panel_id }}" name="font_size" value="60" min="1">
+                            </div>
+                            <div class="col-6">
+                                <label for="fontColor{{ panel_id }}" class="form-label">Font Color</label>
+                                <input type="color" class="form-control form-control-color" id="fontColor{{ panel_id }}" name="font_color" value="#FFFFFF">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <select class="form-select" id="playlist{{ panel_id }}" name="playlist">
+                                    <option selected>Choose playlist...</option>
+                                </select>
+                                <button type="button" class="btn btn-primary" name="action" value="run_playlist">Run</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="brightness{{ panel_id }}" class="form-label">Brightness</label>
+                            <input type="range" class="form-range" min="0" max="100" id="brightness{{ panel_id }}" name="brightness" value="{{ panel_config[2] }}">
+                        </div>
+                    </form>
+
+                    <div class="mt-3">
+                        <h3>Panel Content</h3>
+                        <canvas id="canvas{{ panel_id }}" width="192" height="128" style="border:1px solid #000; width:100%; height:auto;"></canvas>
+                        <button type="button" class="btn btn-secondary mt-2" id="refresh{{ panel_id }}">Refresh Display</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const initialModeConfig = {{ mode_config | safe }};
+        let currentModeConfig = { ...initialModeConfig };
+    </script>
+    <script>
+function initializeModeBtns() {
+    console.log('Initializing mode buttons with config:', currentModeConfig); // Debug log
+
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const singleModeControls = document.getElementById('singleModeControls');
+    const parallelModeControls = document.getElementById('parallelModeControls');
+    const singleDisplaySelect = document.getElementById('singleDisplaySelect');
+    const display1DriverSelect = document.getElementById('display1DriverSelect');
+    const display2DriverSelect = document.getElementById('display2DriverSelect');
+    const saveModeConfigButton = document.getElementById('saveModeConfig');
+
+    // Apply the current configuration
+    function applyModeConfig(config) {
+        if (!config || !config.mode) return;
+        
+        // Clear all active states first
+        modeBtns.forEach(btn => btn.classList.remove('active'));
+        
+        // Set active state for current mode
+        const activeBtn = document.querySelector(`.mode-btn[data-mode="${config.mode}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            updateControlsVisibility(config.mode);
+            if (config.mode === 'single') {
+                //singleDisplaySelect.value = "2".toString()
+                singleDisplaySelect.value = config.display.toString();
+            } else if (config.mode === 'parallel') {
+                if (config.display1_driver) {
+                    display1DriverSelect.value = config.display1_driver.toString();
+                }
+                if (config.display2_driver) {
+                    display2DriverSelect.value = config.display2_driver.toString();
+                }
+            }
+        }
+    }
+
+    // Apply initial configuration
+    applyModeConfig(currentModeConfig);
+
+    function updateControlsVisibility(mode) {
+        singleModeControls.style.display = mode === 'single' ? 'block' : 'none';
+        parallelModeControls.style.display = mode === 'parallel' ? 'block' : 'none';
+    }
+
+    function updateMode(mode, config = null) {
+        let requestData = {
+            command: "set_mode",
+            mode: mode
+        };
+
+        if (mode === 'single' && config) {
+            requestData.display = parseInt(config.display);
+        } else if (mode === 'parallel' && config) {
+            requestData.display1_driver = parseInt(config.display1Driver);
+            requestData.display2_driver = parseInt(config.display2Driver);
+        }
+
+        fetch("/admin/ledpanel", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Successfully updated mode to ${mode}`, config);
+            currentModeConfig = { ...requestData };  // Update our working copy
+            applyModeConfig(currentModeConfig);
+        })
+        .catch(error => {
+            console.error(`Error updating mode:`, error);
+        });
+    }
+
+    // Event listeners for mode buttons
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            let config = null;
+            
+            if (mode === 'single') {
+                config = { display: singleDisplaySelect.value };
+            } else if (mode === 'parallel') {
+                config = {
+                    display1Driver: display1DriverSelect.value,
+                    display2Driver: display2DriverSelect.value
+                };
+            }
+            
+            updateMode(mode, config);
+        });
+    });
+
+    // Event listeners for select controls
+    singleDisplaySelect.addEventListener('change', () => {
+        if (currentModeConfig.mode === 'single') {
+            updateMode('single', { display: singleDisplaySelect.value });
+        }
+    });
+
+    display1DriverSelect.addEventListener('change', () => {
+        if (currentModeConfig.mode === 'parallel') {
+            updateMode('parallel', {
+                display1Driver: display1DriverSelect.value,
+                display2Driver: display2DriverSelect.value
+            });
+        }
+    });
+
+    display2DriverSelect.addEventListener('change', () => {
+        if (currentModeConfig.mode === 'parallel') {
+            updateMode('parallel', {
+                display1Driver: display1DriverSelect.value,
+                display2Driver: display2DriverSelect.value
+            });
+        }
+    });
+    
+    if (saveModeConfigButton) {
+        saveModeConfigButton.addEventListener('click', () => {
+            const currentMode = document.querySelector('.mode-btn.active').dataset.mode;
+            let config = null;
+            
+            if (currentMode === 'single') {
+                
+                config = {
+
+                    display: parseInt(singleDisplaySelect.value)
+                };
+            } else if (currentMode === 'parallel') {
+                config = {
+                    display1_driver: parseInt(display1DriverSelect.value),
+                    display2_driver: parseInt(display2DriverSelect.value)
+                };
+            }
+
+            const requestData = {
+                command: "save_mode_config",
+                mode: currentMode,
+                ...config
+            };
+
+            fetch("/admin/ledpanel", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Mode configuration saved successfully:', data);
+                saveModeConfigButton.classList.add('btn-success');
+                saveModeConfigButton.disabled = true;
+                saveModeConfigButton.textContent = 'Saved!';
+                setTimeout(() => {
+                    saveModeConfigButton.classList.remove('btn-success');
+                    saveModeConfigButton.disabled = false;
+                    saveModeConfigButton.textContent = 'Save Configuration';
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error saving mode configuration:', error);
+                saveModeConfigButton.classList.add('btn-danger');
+                saveModeConfigButton.textContent = 'Error Saving';
+                setTimeout(() => {
+                    saveModeConfigButton.classList.remove('btn-danger');
+                    saveModeConfigButton.textContent = 'Save Configuration';
+                }, 2000);
+            });
+        });
+    }
+
+    // Remove the redundant fetch call at the end since we're using the initial config
+}
+
+function initializePage() {
+    console.log('Initializing page');
+    
+    // Initialize the mode buttons
+
+    initializeModeBtns();
+
+    function fetchStatus(panelId) {
+        const endpoint = document.getElementById(`endpoint${panelId}`).value;
+        if (!endpoint) {
+            console.warn(`No endpoint specified for panel ${panelId}`);
+            return;
+        }
+
+        fetch(`http://${endpoint}:5000/status`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Status for panel ${panelId}:`, data);
+                updateDriverDataButtons(panelId, data.active_track === panelId);
+            })
+            .catch(error => {
+                console.error(`Error fetching status for panel ${panelId}:`, error);
+            });
+    }
+
+    function updateDriverDataButtons(panelId, isActive) {
+        const onButton = document.getElementById(`driverDataOn${panelId}`);
+        const offButton = document.getElementById(`driverDataOff${panelId}`);
+        const panel = document.getElementById(`display${panelId}Panel`);
+
+        if (isActive) {
+            onButton.classList.add('btn-success');
+            offButton.classList.remove('btn-danger');
+            panel.style.border = '2px solid green';
+        } else {
+            onButton.classList.remove('btn-success');
+            offButton.classList.add('btn-danger');
+            panel.style.border = '2px solid red';
+        }
+    }
+
+    function startDriverData(panelId) {
+        const endpoint = document.getElementById(`endpoint${panelId}`).value;
+        if (!endpoint) {
+            console.warn(`No endpoint specified for panel ${panelId}`);
+            return;
+        }
+
+        fetch(`http://${endpoint}:5000/driver_start?track=${panelId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Started driver data for panel ${panelId}:`, data);
+                fetchStatus(panelId);
+            })
+            .catch(error => {
+                console.error(`Error starting driver data for panel ${panelId}:`, error);
+            });
+        location.reload();
+    }
+
+    function stopDriverData(panelId) {
+        const endpoint = document.getElementById(`endpoint${panelId}`).value;
+        if (!endpoint) {
+            console.warn(`No endpoint specified for panel ${panelId}`);
+            return;
+        }
+
+        fetch(`http://${endpoint}:5000/stop`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Stopped driver data for panel ${panelId}:`, data);
+                fetchStatus(panelId);
+            })
+            .catch(error => {
+                console.error(`Error stopping driver data for panel ${panelId}:`, error);
+            });
+        location.reload();
+    }
+
+    function fetchPlaylists(panelId) {
+        console.log(`Fetching playlists for panel ${panelId}`);
+        const endpoint = document.getElementById(`endpoint${panelId}`);
+        
+        if (!endpoint || !endpoint.value) {
+            console.warn(`No endpoint specified for panel ${panelId}`);
+            return;
+        }
+
+        fetch(`http://${endpoint.value}/api/playlists`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(playlists => {
+                console.log(`Received playlists for panel ${panelId}:`, playlists);
+                
+                const playlistSelect = document.getElementById(`playlist${panelId}`);
+                playlistSelect.innerHTML = '<option selected>Choose playlist...</option>';
+                playlists.forEach(playlist => {
+                    const option = document.createElement('option');
+                    option.value = playlist;
+                    option.textContent = playlist;
+                    playlistSelect.appendChild(option);
+                });
+                console.log(`Updated playlist options for panel ${panelId}`);
+            })
+            .catch(error => {
+                console.error(`Error fetching playlists for panel ${panelId}:`, error);
+            });
+    }
+
+    function fetchAndDrawPanelContent(panelId) {
+        const endpoint = document.getElementById(`endpoint${panelId}`).value;
+        if (!endpoint) {
+            console.warn(`No endpoint specified for panel ${panelId}`);
+            return;
+        }
+
+        fetch(`http://${endpoint}/api/overlays/models`)
+            .then(response => response.json())
+            .then(models => {
+                const panelInfo = models.find(model => model.Name === "LED Panels");
+                if (!panelInfo) {
+                    throw new Error("LED Panels model not found");
+                }
+
+                return fetch(`http://${endpoint}/api/overlays/model/LED%20Panels/data/rle`)
+                    .then(response => response.json())
+                    .then(rleData => ({ panelInfo, rleData }));
+            })
+            .then(({ panelInfo, rleData }) => {
+                const canvas = document.getElementById(`canvas${panelId}`);
+                const ctx = canvas.getContext('2d');
+                
+                const pixelData = decodeRLE(rleData.data);
+                
+                const imageData = ctx.createImageData(panelInfo.width, panelInfo.height);
+                for (let i = 0; i < pixelData.length; i++) {
+                    imageData.data[i] = pixelData[i];
+                }
+                ctx.putImageData(imageData, 0, 0);
+            })
+            .catch(error => {
+                console.error(`Error fetching panel content for panel ${panelId}:`, error);
+            });
+    }
+
+    function decodeRLE(rleData) {
+        let pixelData = [];
+        for (let i = 0; i < rleData.length; i += 4) {
+            const count = rleData[i];
+            const color = rleData.slice(i + 1, i + 4);
+            for (let j = 0; j < count; j++) {
+                pixelData.push(...color, 255); // Add alpha channel
+            }
+        }
+        return pixelData;
+    }
+
+    function runPlaylist(panelId, playlist, endpoint) {
+        console.log(`Running playlist "${playlist}" on panel ${panelId}`);
+        
+        const data = {
+            command: "set_playlist",
+            endpoint: endpoint,
+            args: [playlist, 1, true, false]
+        };
+
+        fetch("/admin/ledpanel", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Successfully started playlist "${playlist}" on panel ${panelId}`);
+        })
+        .catch(error => {
+            console.error(`Error starting playlist "${playlist}" on panel ${panelId}:`, error);
+        });
+    }
+
+    function turn_off_display(display) {
+        console.log(`Turning off display ${display}`);
+        const endpoint = document.getElementById(`endpoint${display}`);
+        if (!endpoint || !endpoint.value) {
+            console.error(`No endpoint specified for display ${display}`);
+            return;
+        }
+
+        const data = {
+            command: "stop",
+            endpoint: endpoint.value,
+        };
+
+        fetch("/admin/ledpanel", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Successfully turned off display ${display}`);
+        })
+        .catch(error => {
+            console.error(`Error turning off display ${display}:`, error);
+        });
+        location.reload();
+    }
+
+    function restart_fppd(display) {
+        console.log(`Restarting FPPD service ${display}`);
+        console.log()
+        const endpoint = document.getElementById(`endpoint${display}`);
+        
+        if (!endpoint || !endpoint.value) {
+            console.error(`No endpoint specified for display ${display}`);
+            return;
+        }
+        console.log(endpoint.value)
+        fetch(`http://${endpoint.value}:5000/restart_service`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Successfully turned off display ${display}`);
+        })
+        .catch(error => {
+            console.error(`Error turning off display ${display}:`, error);
+        });
+    }
+
+    function display_text(text, endpoint, fontSize, fontColor) {
+        const data = {
+            "endpoint": endpoint,
+            "command": "display_text",
+            "Message": text,
+            "Position": "center",
+            "Font": "Helvetica",
+            "FontSize": fontSize,
+            "AntiAlias": false,
+            "PixelsPerSecond": 20,
+            "Color": fontColor,
+            "AutoEnable": true
+        };
+
+        fetch("/admin/ledpanel", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Successfully displayed text on panel`);
+        })
+        .catch(error => {
+            console.error(`Error displaying text on panel:`, error);
+        });
+    }
+
+    // Set up event listeners
+    for (let panelId = 1; panelId <= 2; panelId++) {
+        // Fetch playlists
+        fetchPlaylists(panelId);
+
+        // Update playlists when endpoint changes
+        const endpointInput = document.getElementById(`endpoint${panelId}`);
+        if (endpointInput) {
+            endpointInput.addEventListener('change', () => fetchPlaylists(panelId));
+        }
+
+        // Handle brightness change
+        const brightnessInput = document.getElementById(`brightness${panelId}`);
+        if (brightnessInput) {
+            brightnessInput.addEventListener('change', (event) => {
+                const form = event.target.closest('form');
+                form.submit();
+            });
+        }
+
+        // Set up driver data buttons
+        const restart_fppd_service_button = document.getElementById(`restart_fppd${panelId}`);
+        const driverDataOnButton = document.getElementById(`driverDataOn${panelId}`);
+        const driverDataOffButton = document.getElementById(`driverDataOff${panelId}`);
+        if (driverDataOnButton && driverDataOffButton && restart_fppd_service_button) {
+            driverDataOnButton.addEventListener('click', () => startDriverData(panelId));
+            driverDataOffButton.addEventListener('click', () => stopDriverData(panelId));
+            restart_fppd_service_button.addEventListener('click', () => restart_fppd(panelId));
+        }
+
+        const onOffButton = document.getElementById(`toggle_on_off${panelId}`);
+        if (onOffButton) {
+            onOffButton.addEventListener('click', () => turn_off_display(panelId));
+        }
+
+        // Set up run playlist button
+        const playlistSelect = document.getElementById(`playlist${panelId}`);
+        const runButton = document.querySelector(`#form${panelId} button[name="action"][value="run_playlist"]`);
+        if (playlistSelect && runButton) {
+            runButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                const selectedPlaylist = playlistSelect.value;
+                if (selectedPlaylist && selectedPlaylist !== 'Choose playlist...') {
+                    const endpoint = document.getElementById(`endpoint${panelId}`).value;
+                    runPlaylist(panelId, selectedPlaylist, endpoint);
+                } else {
+                    console.warn(`No playlist selected for panel ${panelId}`);
+                }
+            });
+        }
+
+        // Set up refresh button
+        const refreshButton = document.getElementById(`refresh${panelId}`);
+        if (refreshButton) {
+            refreshButton.addEventListener('click', () => fetchAndDrawPanelContent(panelId));
+        }
+
+        // Set up send text button
+        const sendButton = document.getElementById(`sendText${panelId}`);
+        const textArea = document.getElementById(`displayText${panelId}`);
+        const fontSizeInput = document.getElementById(`fontSize${panelId}`);
+        const fontColorInput = document.getElementById(`fontColor${panelId}`);
+        if (sendButton && textArea && fontSizeInput && fontColorInput) {
+            sendButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                const text = textArea.value;
+                const fontSize = parseInt(fontSizeInput.value, 10);
+                const fontColor = fontColorInput.value;
+                const endpoint = document.getElementById(`endpoint${panelId}`).value;
+                if (text) {
+                    display_text(text, endpoint, fontSize, fontColor);
+                } else {
+                    console.warn(`No text entered for panel ${panelId}`);
+                }
+            });
+        }
+
+        // Initial fetch of panel content and status
+        fetchAndDrawPanelContent(panelId);
+        fetchStatus(panelId);
+    }
+}
+
+function saveEndpoint(panelId) {
+    const form = document.getElementById(`form${panelId}`);
+    const endpointInput = document.getElementById(`endpoint${panelId}`);
+    const formData = new FormData(form);
+    console.log(panelId)
+    fetch('/admin/ledpanel', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            panel_id: panelId,
+            endpoint: endpointInput.value,
+            command: 'save_endpoint'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Endpoint saved successfully:', data);
+        // You can add user feedback here, like showing a success message
+    })
+    .catch(error => {
+        console.error('Error saving endpoint:', error);
+        // You can add user feedback here, like showing an error message
+    });
+}
+
+// Add event listeners to the Save buttons
+for (let panelId = 1; panelId <= 2; panelId++) {
+    const saveButton = document.querySelector(`#form${panelId} button[value="save_endpoint"]`);
+    if (saveButton) {
+        saveButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            saveEndpoint(panelId);
+        });
+    }
+}
+
+// Use both DOMContentLoaded and load events
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page initializing with config:', initialModeConfig);  // Debug log
+    initializePage();
+});
+
+//window.addEventListener('load', initializePage);
+
+</script>
+</body>
+</html>
+{% endblock %}

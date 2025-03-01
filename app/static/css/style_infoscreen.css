@@ -1,0 +1,142 @@
+
+/* Apply styles only within the .info-messages-container to not affect the rest of the site */
+.info-messages-container {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+justify-content: space-around;
+}
+.white-readonly[readonly] {
+    background-color: white;
+  }
+.info-message-card {
+border: 2px solid black;
+width: 300px;
+display: flex;
+flex-direction: column;
+align-items: center;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Modern shadow effect */
+overflow: hidden; /* Ensures nothing spills out of the card boundaries */
+}
+
+.info-message-header, 
+.info-message-footer {
+width: 100%;
+padding: 10px;
+border-bottom: 2px solid black;
+text-align: center;
+background-color: #f8f9fa; /* Light gray background for header and footer */
+}
+
+.info-message-body {
+padding: 20px;
+width: 100%;
+display: flex;
+justify-content: center;
+}
+
+.view-vnc-btn {
+padding: 10px 25px;
+border: none;
+background-color: #007bff;
+color: white;
+font-size: 1.25em;
+cursor: pointer;
+width: 80%; /* Large button occupying most of the body's width */
+margin: auto; /* Center the button horizontally */
+transition: background-color 0.3s ease; /* Smooth background transition for hover effect */
+}
+
+.view-vnc-btn:hover {
+background-color: #0056b3; /* Darken button on hover for interactive effect */
+}
+
+.deactivate-btn,
+.remove-btn {
+padding: 5px 15px;
+border: none;
+background-color: #6c757d;
+color: white;
+margin: 5px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.approve-btn {
+padding: 5px 15px;
+border: none;
+background-color: #00991f;
+color: white;
+margin: 5px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.deactivate-btn:hover {
+background-color: #545b62; /* Darken button on hover */
+}
+
+.remove-btn {
+background-color: #dc3545;
+}
+
+.remove-btn:hover {
+background-color: #c82333; /* Darken button on hover */
+}
+
+.info-message-footer button {
+width: calc(50% - 10px); /* Adjust width to account for the margin */
+}
+
+.centered-button, .add-asset-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+.add-btn {
+    background-color: #e7e7e7; /* Light grey */
+    border: none;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 16px;
+}
+
+
+
+.custom-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.custom-header, .custom-input-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.header-item, .order-number, .input-field, .remove-button {
+    margin: 0 5px;
+    text-align: center;
+}
+
+.order-number {
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.input-field, .header-item {
+    flex: 1; /* Allow to grow and fill space */
+}
+
+.narrow, .header-item:nth-child(4) {
+    flex: 0 0 25px; /* Fixed width for narrow input and corresponding header */
+}
+
+.remove-button button, .header-item:nth-child(5) {
+    padding: 5px 10px;
+}

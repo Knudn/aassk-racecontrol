@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600);
+
+*, *:before, *:after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  align-items: center;
+}
+
+table {
+    background: #012B39;
+    border-radius: 0.25em;
+    border-collapse: collapse;
+    margin: 1em;
+    width: auto;
+
+}
+
+th {
+  border-bottom: 1px solid #364043;
+  color: #E2B842;
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 0.5em 1em;
+  text-align: left;
+}
+td {
+  color: #fff;
+  font-weight: 400;
+  padding: 0.35em 1em;
+  font-size: 22px;
+}
+.disabled td {
+  color: #4F5F64;
+}
+tbody tr {
+  transition: background 0.25s ease;
+}
+tbody tr:hover {
+  background: #014055;
+}
+
+.tables-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: start;
+    flex-wrap: wrap;
+    margin-top: 1px;
+}
+
+@media (max-width: 600px) {
+    .tables-container {
+        flex-direction: column;
+    }
+}
+
+.tables-container table:first-of-type {
+    margin-right: 30px;
+}
+
+.highlighted {
+    background-color: #4CAF50;
+    color: #FFFFFF;
+}
+    </style>
+
+
+</head>
+<body>
+    <div class="tables-container">
+        <table class="container" style="max-width: 49%;">
+            <thead>
+                <tr>
+                    <th><h1>#</h1></th>
+                    <th><h1>Event</h1></th>
+                    <th><h1>Heat</h1></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr class="{{ 'highlighted' if event.active else '' }}">
+                    <td>{{ event.Order }}</td>
+                    <td>{{ event.Event }}</td>
+                    <td>{{ event.Heat }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if events2 != [] %}
+        <table class="container" style="max-width: 49%;">
+            <thead>
+                <tr>
+                    <th><h1>#</h1></th>
+                    <th><h1>Event</h1></th>
+                    <th><h1>Heat</h1></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event2 in events2 %}
+                <tr class="{{ 'highlighted' if event2.active else '' }}">
+                    <td>{{ event2.Order }}</td>
+                    <td>{{ event2.Event }}</td>
+                    <td>{{ event2.Heat }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+<script>
+var urlParams = new URLSearchParams(window.location.search);
+var scale = urlParams.get('scale');
+
+scale = scale === null || isNaN(scale) ? 1 : Number(scale);
+
+document.body.style.transform = `scale(${scale})`;
+document.body.style.width = `${100 / scale}%`;
+document.body.style.height = `${100 / scale}%`;
+document.body.style.transformOrigin = 'top left'; 
+</script>
+</body>
+</html>

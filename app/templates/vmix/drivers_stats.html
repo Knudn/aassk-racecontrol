@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+
+    <style>
+        body {
+            position: relative;
+        }
+        .leaderboard {
+            scale: 1.2;
+            position: absolute;
+            top: 50px;
+            right: 100px;
+            background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 50px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th, .results-table td {
+            text-align: left;
+            padding: 8px;
+            color: #eaeaea; /* Light text for readability */
+            font-family: Arial, Helvetica, sans-serif;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3); /* Soft gold line for separation */
+        }
+
+        .results-table th {
+            padding-top: 12px;
+            text-align: center;
+        }
+
+        .results-table td {
+            background-color: transparent; /* Ensure cells are transparent */
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .title-box {
+            color: #ffffff; /* White color for the text */
+            text-align: center;
+            margin-bottom: 1px;
+            margin-top: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .leaderboard {
+                width: 150px;
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="leaderboard">
+    <h2 class="title-box">Top 10</h2>
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for name, score in results %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ score / 1000 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+            socket.emit('join', { username: 'John', room: 'room1' });
+        });
+        socket.on('response', function() {
+          location.reload()
+
+        });
+</script>
+</body>
+</html>

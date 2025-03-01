@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centered Race Overlay with Live Timer</title>
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
+    }
+    body {
+        color: #FFFFFF;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 10px;
+    }
+    .overlay {
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+        padding: 5px 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    .driver-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .driver {
+        display: flex;
+        align-items: center;
+        padding: 2px 5px;
+        white-space: nowrap;
+    }
+    .position {
+        font-size: 18px;
+        font-weight: bold;
+        color: #FFD700;
+        margin-right: 5px;
+        min-width: 20px;
+        text-align: right;
+    }
+    .name {
+        font-size: 18px;
+        margin-right: 5px;
+        min-width: 80px;
+    }
+    .time {
+        font-size: 18px;
+        color: #00FFFF;
+    }
+    .status {
+        font-size: 18px;
+        color: #FF4500;
+        font-weight: bold;
+    }
+    .separator {
+        width: 1px;
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.3);
+        margin: 0 10px;
+    }
+</style>
+</head>
+<body>
+<div class="overlay">
+    <div id="driver-container" class="driver-container">
+        <!-- Driver information will be dynamically inserted here -->
+    </div>
+</div>
+
+<script>
+    let activeDrivers = {};
+    let intervalId;
+    
+    function updateOverlay(data) {
+        const driverContainer = document.getElementById('driver-container');
+        driverContainer.innerHTML = ''; 
+    
+        data.forEach((item, index) => {
+            if (item.drivers) {
+                item.drivers.forEach((driver, driverIndex) => {
+                    const driverDiv = document.createElement('div');
+                    driverDiv.classList.add('driver');
+    
+                    const positionSpan = document.createElement('span');
+                    positionSpan.classList.add('position');
+                    positionSpan.textContent = driver.id;
+    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.classList.add('name');
+                    nameSpan.textContent = `${driver.first_name}. ${driver.last_name}`;
+    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.classList.add('time');
+    
+                    if (driver.time_info.PENELTY == 1) {
+                        timeSpan.textContent = "DNS";
+                        timeSpan.classList.add('status');
+                    } else if (driver.time_info.PENELTY == 2) {
+                        timeSpan.textContent = "DNF";
+                        timeSpan.classList.add('status');
+                    } else if (driver.time_info.PENELTY == 3) {
+                        timeSpan.textContent = "DSQ";
+                        timeSpan.classList.add('status');
+                    
+
+                    } else if (driver.time_info.FINISHTIME > 0) {
+                        timeSpan.textContent = (driver.time_info.FINISHTIME / 1000).toFixed(3);
+                        if (activeDrivers[driver.id]) {
+                            delete activeDrivers[driver.id];
+                        }
+                    } else {
+                        timeSpan.textContent = "0.000";
+                    }
+    
+                    driverDiv.appendChild(positionSpan);
+                    driverDiv.appendChild(nameSpan);
+                    driverDiv.appendChild(timeSpan);
+    
+                    driverContainer.appendChild(driverDiv);
+    
+                    if (index < data.length - 1 || driverIndex < item.drivers.length - 1) {
+                        const separator = document.createElement('div');
+                        separator.classList.add('separator');
+                        driverContainer.appendChild(separator);
+                    }
+                });
+            }
+        });
+    
+
+    }
+    
+    function getCurrentTimeInMicroseconds() {
+        const now = new Date();
+        return (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) * 1000000 + now.getMilliseconds() * 1000;
+    }
+    
+    function updateDriverTime(driverId) {
+        const driver = activeDrivers[driverId];
+        if (driver) {
+            const currentTimeInMicroseconds = getCurrentTimeInMicroseconds();
+            const elapsedTime = (currentTimeInMicroseconds - driver.startTime) / 1000000;
+            driver.element.textContent = Math.max(0, elapsedTime).toFixed(3);
+        }
+    }
+    
+
+    
+    function loadDriverData() {
+        fetch('/api/get_current_startlist_w_data')
+            .then(response => response.json())
+            .then(data => updateOverlay(data))
+            .catch(error => console.error('Error fetching data:', error));
+    }
+    
+    window.onload = loadDriverData;
+    
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
+    
+    socket.on('connect', function() {
+        console.log('Connected to the server');
+        socket.emit('join', { username: 'John', room: 'room1' });
+    });
+    
+    socket.on('response', function(dataString) {
+        const data = JSON.parse(dataString);
+        updateOverlay(data);
+    });
+    
+
+    
+    // Call debug function every 5 seconds
+    </script>
+</body>
+</html>

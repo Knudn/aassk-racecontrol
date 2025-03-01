@@ -1,0 +1,246 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style_infoscreen.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+
+<script src="{{url_for('static', filename='js/js_infoscreen.js')}}"></script>
+
+
+</head>
+<body>
+
+<div class="container py-4">
+<h2>Dashboard Configuration</h2>
+
+    <!-- Add a new section for displaying the InfoScreenInitMessages -->
+    <div class="card my-3">
+        <div class="card-header">
+            <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#infoScreenMessagesSection">
+                Info Screen Messages
+            </button>
+        </div>
+        <div id="infoScreenMessagesSection" class="collapse show">
+            <div class="card-body">
+                <div class="info-messages-container">
+                    {% for message in info_screen_msg %}
+                    <div class="info-message-card {% if not message.approved %}not-approved{% endif %}">
+                        <div class="info-message-header">
+                            <span>Hostname: {{ message.hostname }}</span>
+                            <span>IP: {{ message.ip }}</span>
+                            <span hidden>ID: {{ message.unique_id }}</span>
+                        </div>
+
+                        {% if message.approved == "0" %}
+                        <div class="info-message-body">
+                            <button class="approve-btn">Approve</button>
+                            <button class="remove-btn">Remove</button>
+                        </div>
+                        {% else %}
+                        <div class="info-message-body">
+                            <button class="view-vnc-btn">View VNC</button>
+                        </div>
+                        <div class="info-message-footer">
+                            <button class="deactivate-btn">Deactivate</button>
+                            <button class="remove-btn">Remove</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<!-- Monitors Section -->
+<div class="card my-3">
+    <div class="card-header">
+        <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#monitorsSection">
+            Monitors
+        </button>
+    </div>
+    <div id="monitorsSection" class="collapse">
+        <div class="card-body">
+            <div class="accordion" id="accordionExample">
+                {% for message in info_screen_approved %}
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header" id="heading{{ loop.index }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}" data-accordion-index="{{ message.id }}">
+                                {{ message.hostname }} - <span class="text-muted">{{ message.ip }}</span>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <div class="text-center">
+                                    <h4 class="d-inline bg-white px-3">Add asset</h4>
+                                    <hr class="my-4">
+                                </div>
+                                <div class="modal-body" style="display: flex; align-items: center;">
+                                    <!-- Dropdown Menu -->
+                                    <div class="select-container" style="flex-grow: 1;" id="select_asset_{{ message.id }}">
+                                        <select class="form-select" aria-label="Asset selector">
+                                            {% for asset in info_screen_assents %}
+                                                <option value="{{ asset.id }}">{{asset.name}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="city-input-container" style="margin-left: 10px;">
+                                        <input type="text" class="form-control" id="timer_field_{{ message.id }}" placeholder="Timer (sec)">
+                                    </div>
+                                
+                                </div>
+                                <div class="add-asset-button" data-button-id="{{ message.id }}">
+                                    <button  type="button" id="associate_asset" class="associate_asset">+ Add asset</button>
+                                </div>
+                                <br>
+                                    <div class="text-center">
+                                        <h4 class="d-inline bg-white px-3">Current asset list</h4>
+                                        <hr class="my-4">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Index</th>
+                                                    <th scope="col">Name</th>
+                                                    <th scope="col">Asset</th>
+                                                    <th scope="col">Timer</th>
+                                                    <th scope="col">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="sortable-{{ message.id }}">
+                                                {% set counter = [0] %}
+                                                {% for asset_assoc in info_screen_associations %}
+                                                    {% if asset_assoc.infoscreen == message.id %}
+                                                    
+                                                        {% for assets in info_screen_assents %}
+                                                            {% if assets.id == asset_assoc.asset %}
+                                                            {% set _ = counter.append(counter.pop(0) + 1) %}
+
+                                                                <tr data-id="{{ asset_assoc.id }}">
+                                                                    <td index="">{{ counter[0] }}</td>
+                                                                    <td><input type="text" class="form-control" value="{{ assets.name }}" readonly></td>
+                                                                    <td><input type="text" class="form-control" value="{{ assets.asset }}" readonly></td>
+                                                                    <td width="10%"><input type="text" class="timer_data form-control" value="{{ asset_assoc.timer }}" placeholder="Inf"></td>
+                                                                    <td>
+                                                                        <button  type="button" class="remove-asset-button btn btn-outline-danger">Remove</button>
+                                                                    </td>
+                                                                </tr>
+                                                                
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                   
+                                                {% endfor %}
+                                            </tbody>
+                                            
+                                        </table>
+                                        
+
+                                    </div>
+                                    <button id="updateOrder-{{ message.id }}" class="btn btn-primary mt-3">Update</button>
+                            </div>
+                            
+                        </div>
+                        
+                    </div>
+                    
+                {% endfor %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Card and Button -->
+<div class="card my-3">
+    <div class="card-header">
+        <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#urlSection">
+            Assets
+        </button>
+    </div>
+    <div id="urlSection" class="collapse show">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Asset</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="assetsTableBody">
+                {% for assets in info_screen_assents %}
+                <tr>
+                    <td>{{ assets.name }}</td>
+                    <td>{{ assets.asset }}</td>
+                    <td><button class="btn btn-danger" onclick="deleteAsset({{ assets.id }})">Delete</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="card-body centered-button">
+            <!-- Add Asset Button with Font Awesome icon -->
+            <button type="button" class="add-btn" data-bs-toggle="modal" data-bs-target="#assetModal">
+                <i class="fa fa-plus"></i> Add Asset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure -->
+<div class="modal fade" id="assetModal" tabindex="-1" aria-labelledby="assetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assetModalLabel">Add New Asset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal body content here -->
+                <form id="assetForm">
+                    <!-- Name Field -->
+                    <div class="mb-3">
+                        <label for="assetName" class="form-label">Asset Name</label>
+                        <input type="text" class="form-control" id="assetName" name="name" required>
+                    </div>
+                    
+                    <!-- Asset Source Options -->
+                    <label class="form-label">Asset Source (Choose one)</label>
+                    
+                    <!-- URL Field -->
+                    <div class="mb-3">
+                        <input type="url" class="form-control" id="assetURL" name="url" placeholder="Enter asset URL">
+                        <div class="form-text">
+                            Enter the URL of the asset if it's hosted online.
+                        </div>
+                    </div>
+                    
+                    <!-- Divider (optional) -->
+                    <div class="text-center mb-3">
+                        - OR -
+                    </div>
+                    
+                    <!-- Upload Field -->
+                    <div class="mb-3">
+                        <input type="file" class="form-control" id="assetUpload" name="file" accept="image/*">
+                        <div class="form-text">
+                            Upload an image from your computer.
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary save-changes-btn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+    
+
+{% endblock %}

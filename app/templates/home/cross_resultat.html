@@ -1,0 +1,393 @@
+{% extends 'home/layout.html' %}
+{% block content %}
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Cross Results</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+  
+<style>
+
+.accordion {
+  font-size: 1rem;
+  margin: 0 auto;
+  border-radius: 5px;
+}
+
+.accordion-header,
+.accordion-body {
+  background: white;
+}
+
+.accordion-header {
+  padding: 1.5em 1.5em;
+  background: #3F51B5;
+  color: white;
+  cursor: pointer;
+  font-size: .7em;
+  letter-spacing: .1em;
+  transition: all .3s;
+  text-transform: uppercase;
+}
+
+.accordion__item {
+    border-bottom: 1px solid #3a4ba4;
+}
+
+.accordion__item .accordion__item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.accordion-header:hover {
+  background: #2D3D99;
+  position: relative;
+  z-index: 5;
+}
+
+.accordion-body {
+  background: #fcfcfc;
+  color: #353535;
+  display: none;
+}
+
+.accordion-body__contents {
+  padding: 1.5em 1.5em;
+  font-size: .50em;
+}
+
+.accordion__item.active:last-child .accordion-header {
+  border-radius: none;
+}
+
+.accordion:first-child > .accordion__item > .accordion-header {
+  border-bottom: 1px solid transparent;
+}
+
+.accordion__item > .accordion-header:after {
+  content: "\f3d0";
+  font-family: IonIcons;
+  font-size: 1.2em;
+  float: right;
+  position: relative;
+  top: -2px;
+  transition: .3s all;
+  transform: rotate(0deg);
+}
+
+.accordion__item.active > .accordion-header:after {
+  transform: rotate(-180deg);
+}
+
+.accordion__item.active .accordion-header {
+  background: #2D3D99;
+}
+
+.accordion__item .accordion__item .accordion-header {
+  background: #f1f1f1;
+  color: #353535;
+}
+
+@media screen and (max-width: 1000px) {
+  body {
+    padding: 1em;
+  }
+  
+  .accordion {
+    width: 100%;
+  }
+}
+
+.table {
+  font-size: large;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
+</head>
+<body translate="no" data-new-gr-c-s-check-loaded="14.1160.0" data-gr-ext-installed="">
+  <div id="accordionContainer" class="accordion js-accordion">
+    <!-- Dynamically generated accordion content will go here -->
+</div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script id="rendered-js">
+    var accordion = (function () {
+      var initialized = false; // Add an initialization flag
+      var $accordion, $accordion_header, $accordion_item;
+      var settings = { speed: 400, oneOpen: false };
+
+      function init($settings) {
+        if (!initialized) {
+          $accordion = $('.js-accordion');
+          $accordion_header = $accordion.find('.js-accordion-header');
+          $accordion_item = $('.js-accordion-item');
+
+          // Setup event handler
+          $accordion_header.on('click', function () {
+            toggle($(this));
+          });
+
+          initialized = true; // Set flag to true
+        }
+
+        $.extend(settings, $settings);
+
+        if (settings.oneOpen && $('.js-accordion-item.active').length > 1) {
+          $('.js-accordion-item.active:not(:first)').removeClass('active');
+        }
+
+        $('.js-accordion-item.active').find('> .js-accordion-body').show();
+      }
+
+      function toggle($this) {
+        if (settings.oneOpen && $this[0] != $this.closest('.js-accordion').find('> .js-accordion-item.active > .js-accordion-header')[0]) {
+          $this.closest('.js-accordion')
+            .find('> .js-accordion-item')
+            .removeClass('active')
+            .find('.js-accordion-body')
+            .slideUp();
+        }
+
+        $this.closest('.js-accordion-item').toggleClass('active');
+        $this.next().stop().slideToggle(settings.speed);
+      }
+
+      return { init: init };
+    }());
+
+
+$(document).ready(function () {
+  accordion.init({ speed: 300, oneOpen: true });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/get_timedata_cross/')
+        .then(response => response.json())
+        .then(data => {
+            const groupedByEventAndHeat = groupDataByEventAndHeat(data);
+            createAccordions(groupedByEventAndHeat);
+        });
+});
+
+
+function groupDataByEvent(data) {
+    const events = {};
+    data.forEach(item => {
+
+        const eventName = `${item.title_1} ${item.title_2}`;
+        if (!events[eventName]) {
+            events[eventName] = [];
+        }
+        events[eventName].push(item);
+    });
+    return events;
+}
+
+// Update the accordion toggle functionality to use event delegation
+$(document).on('click', '.js-accordion .js-accordion-header', function() {
+  var $this = $(this);
+  var $next = $this.next();
+  $next.slideToggle(400);
+  $this.parent().toggleClass('active');
+
+  if (settings.oneOpen) {
+    $this.parent().siblings('.js-accordion-item').each(function() {
+      if ($(this).hasClass('active')) {
+        $(this).removeClass('active');
+        $(this).children('.js-accordion-body').slideUp(400);
+      }
+    });
+  }
+});
+
+// ... (previous code remains the same)
+
+function format_all_score(data) {
+  new_data = {}
+  data.forEach((participant, index) => {
+    if (!new_data.hasOwnProperty(participant.first_name + participant.last_name)) {
+      new_data[participant.first_name + participant.last_name] = [
+        participant.first_name + " " + participant.last_name, 
+        participant.snowmobile,
+        participant.penalty,
+        participant.finishtime,
+        participant.points,
+        participant.cid
+      ]
+    } else {
+      finishtime = new_data[participant.first_name + participant.last_name][3]
+      if (finishtime > participant.finishtime || finishtime == 0) {
+        if (participant.finishtime > 0) {
+          finishtime = participant.finishtime
+        }
+      }
+
+      points = new_data[participant.first_name + participant.last_name][4] + participant.points
+
+      new_data[participant.first_name + participant.last_name][4] = points
+      new_data[participant.first_name + participant.last_name][3] = finishtime
+    }
+  })
+  const entries = Object.entries(new_data);
+  const sortedEntries = entries.sort((a, b) => {
+    // First, sort by points (descending order)
+    if (b[1][4] !== a[1][4]) {
+      return b[1][4] - a[1][4];
+    }
+    // If points are equal, sort by best time (ascending order)
+    return a[1][3] - b[1][3];
+  });
+
+  return sortedEntries
+}
+
+
+function createAccordions(groupedByEventAndHeat) {
+    const container = document.getElementById('accordionContainer');
+    Object.keys(groupedByEventAndHeat).forEach((eventName) => {
+        // Main accordion item for the event
+        const eventItem = document.createElement('div');
+        eventItem.className = 'accordion__item js-accordion-item';
+        eventItem.innerHTML = `
+        <div class="accordion-header js-accordion-header" style="font-size: 15px; padding: 15px;">${eventName}</div>
+            <div class="accordion-body js-accordion-body" style="display: none;">
+                <div class="accordion-body__contents">
+                    <!-- Event summary will be added here -->
+                </div>
+            </div>
+        `;
+        container.appendChild(eventItem);
+
+        // Create a table for the event summary (all participants regardless of heat)
+        const table = document.createElement('table');
+        table.className = 'table table-striped'; // Bootstrap classes for styling
+
+        // Optionally, add table headers here if needed
+        const headerRow = table.insertRow();
+        ['No.', 'CID', 'Name', 'Snowmobile','Best Finishtime', 'Points'].forEach(headerText => {
+            const headerCell = document.createElement('th');
+            headerCell.textContent = headerText;
+            headerRow.appendChild(headerCell);
+        });
+
+        // Flatten participant data for the event
+        const participants = Object.values(groupedByEventAndHeat[eventName]).flat();
+        sorted_data = format_all_score(participants)
+        sorted_data.forEach((participant, index)=> {
+          name = participant[1][0]
+          snowmobile = participant[1][1]
+          finishtime = participant[1][3]
+          points = participant[1][4]
+          cid_value = participant[1][5]
+
+          const row = table.insertRow();
+          const numberCell = row.insertCell();
+          numberCell.textContent = index + 1;
+          const cid = row.insertCell();
+          cid.textContent = cid_value;
+          const nameCell = row.insertCell();
+          nameCell.textContent = `${name}`; 
+          const snowmobileCell = row.insertCell();
+          snowmobileCell.textContent = snowmobile;
+          const FinishtimeCell = row.insertCell();
+          FinishtimeCell.textContent = finishtime;
+          const PointsCell = row.insertCell();
+          PointsCell.textContent = points;
+        })
+
+
+        // Append the table to the event's accordion body
+        eventItem.querySelector('.accordion-body__contents').appendChild(table);
+
+        // Create sub-accordion for each heat within this event
+        const heats = groupedByEventAndHeat[eventName];
+        Object.keys(heats).forEach((heat) => {
+          // Sub-accordion for each heat
+          const heatAccordion = document.createElement('div');
+          heatAccordion.className = 'accordion js-sub-accordion';
+          heatAccordion.innerHTML = `
+              <div class="accordion__item js-accordion-item">
+                  <div class="accordion-header js-accordion-header" style="font-size: 18px; padding-top: 5px; padding-bottom: 5px">Heat ${heat}</div>
+                  <div class="accordion-body js-accordion-body" style="display: none;">
+                      <div class="accordion-body__contents">
+                          <!-- Participants for this heat will be added here -->
+                      </div>
+                  </div>
+              </div>
+          `;
+          eventItem.querySelector('.accordion-body__contents').appendChild(heatAccordion);
+
+          // Create a Bootstrap table for participants in this heat
+          const table = document.createElement('table');
+          table.className = 'table table-striped'; // Bootstrap classes for styling
+          // Optionally, add a table header
+          const thead = document.createElement('thead');
+          table.appendChild(thead);
+          const headerRow = thead.insertRow();
+          const headers = ['No.', 'CID', 'Name', 'Snowmobile', 'Penalty' ,'Finishtime', 'Points'];
+          headers.forEach(text => {
+              const th = document.createElement('th');
+              th.textContent = text;
+              headerRow.appendChild(th);
+          });
+
+          const tbody = document.createElement('tbody');
+          table.appendChild(tbody);
+
+          heats[heat].forEach((participant, index) => {
+              const row = tbody.insertRow();
+              const numberCell = row.insertCell();
+              numberCell.textContent = index + 1;
+              const number_bid = row.insertCell();
+              number_bid.textContent = participant.cid;
+              const nameCell = row.insertCell();
+              nameCell.textContent = `${participant.first_name} ${participant.last_name}`; // Participant name
+              const snowmobileCell = row.insertCell();
+              snowmobileCell.textContent = participant.snowmobile; // Participant snowmobile
+              const PenaltyCell = row.insertCell()
+              PenaltyCell.textContent = participant.penalty;
+              const FinishtimeCell = row.insertCell();
+              FinishtimeCell.textContent = participant.finishtime;
+              const PointsCell = row.insertCell();
+              PointsCell.textContent = participant.points;
+
+          });
+
+          // Append the Bootstrap-styled table to the heat's accordion body
+          heatAccordion.querySelector('.accordion-body__contents').appendChild(table);
+      });
+    });
+}
+
+
+
+
+function groupDataByEventAndHeat(data) {
+    const events = {};
+    data.forEach(item => {
+        const eventName = `${item.title_1} ${item.title_2}`;
+        if (!events[eventName]) {
+            events[eventName] = {};
+        }
+        if (!events[eventName][item.heat]) {
+            events[eventName][item.heat] = [];
+        }
+        events[eventName][item.heat].push(item);
+    });
+    return events;
+}
+
+</script>
+  
+</body>
+</html>
+
+
+{% endblock %}

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starliste</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/startlist-style-upcoming.css') }}">
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+
+<script>
+function adjustFontSize() {
+    let headings = document.querySelectorAll('.test-heading');
+    headings.forEach(h1 => {
+        if (h1) {
+            let parentWidth = h1.parentElement.offsetWidth;
+            let fontSize = 30;
+
+            h1.style.fontSize = fontSize + 'px';
+
+            while (h1.scrollWidth > parentWidth && fontSize > 10) {
+                fontSize--;
+                h1.style.fontSize = fontSize + 'px';
+            }
+        }
+    });
+}
+
+
+    function updateScoreboard() {
+            $.ajax({
+                url: '/api/get_current_startlist_w_data',
+                type: 'GET',
+                success: function(data) {
+                    html_data = displayData(data, false);
+                    title = data[0]["race_config"]["TITLE_2"]
+                    run = data[0]["race_config"]["HEAT"]
+                    runs = data[0]["race_config"]["HEATS"]
+
+                    document.getElementById('main_title').innerHTML = '<h1><span style="color: red;">Nå:</span> ' + title + " " + run + "/" + runs +'</h1>';
+                    $('#startlist-container_active').html(html_data[0]);
+                    $('#startlist-container').html(html_data[1]);
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+        function updateScoreboard_upcoming() {
+            $.ajax({
+                url: '/api/get_current_startlist_w_data?upcoming=true',
+                type: 'GET',
+                success: function(data) {
+                    html_data = displayData(data, true);
+                    title = data[0]["race_config"]["TITLE_2"]
+                    run = data[0]["race_config"]["HEAT"]
+                    runs = data[0]["race_config"]["HEATS"]
+                    document.getElementById('main_title_upcoming').innerHTML = '<h1><span style="color: red;">Neste:</span> ' + title + " " + run + "/" + runs +'</h1>';
+
+                    
+                    $('#startlist-upcoming').html(html_data[1]);
+
+
+                },
+                error: function() {
+                    console.log('Error fetching data');
+                }
+            });
+        }
+        
+        function displayData(data, upcoming) {
+            if (data[0]["race_config"]["MODE"] == 0) {
+                        location.reload()
+                    }
+            let htmlContent = '';
+            let htmlContent_active = '';
+            let htmlContent_finished = '';
+
+            let skip = false
+            let finished_driver = []
+            let active_drivers = []
+            let active = false
+            let drivers_amount = data.length - 1
+
+            data.forEach(race => {
+                let pair_index = race.race_id
+                if(race.drivers) {
+                    
+                    tmp_finish_list = []
+                    skip = false
+                    active = false
+                    finished = false
+                    
+                    race.drivers.forEach((driver, index) => {
+
+                        
+                        if (index == 0) {
+                            if (race.drivers[index].active || race.drivers[index + 1].active && upcoming == false) {
+                                active = true
+                            }
+
+                            if ((race.drivers[index].time_info.PENELTY != 0 ) && (race.drivers[index + 1].time_info.PENELTY != 0) && active == false) {
+                                finished = true
+                            }
+
+                            if ((race.drivers[index].time_info.PENELTY != 0 || race.drivers[index].time_info.FINISHTIME != 0) && (race.drivers[index + 1].time_info.PENELTY != 0 || race.drivers[index + 1].time_info.FINISHTIME != 0) && active == false) {
+                                finished = true
+                            }
+
+                            
+                            if (race.drivers[index].time_info.PENELTY != 0 && race.drivers[index + 1].time_info.FINISHTIME == 0 || race.drivers[index + 1].time_info.PENELTY != 0 && race.drivers[index].time_info.FINISHTIME == 0) {
+                                skip = false
+                            }
+                            else if ((race.drivers[index].time_info.PENELTY != 0 || race.drivers[index].time_info.FINISHTIME != 0) && (race.drivers[index + 1].time_info.PENELTY == 0 || race.drivers[index + 1].time_info.FINISHTIME == 0)) {
+                                tmp_finish_list.push(race.drivers[index], race.drivers[index + 1])
+                                finished_driver.push(tmp_finish_list)
+                                skip = true
+
+
+                            } else if ((race.drivers[index + 1].time_info.PENELTY != 0 || race.drivers[index + 1].time_info.FINISHTIME != 0) && (race.drivers[index].time_info.PENELTY == 0 || race.drivers[index].time_info.FINISHTIME == 0)) {
+                                tmp_finish_list.push(race.drivers[index], race.drivers[index + 1])
+                                finished_driver.push(tmp_finish_list)
+                                skip = true 
+                            }
+                            if (skip == false && active == false) {
+                                htmlContent += '<div class="rows">';
+                            } 
+                            if (active == true) {
+                                htmlContent_active += '<div class="rows">';
+                            }
+                            if (finished == true) {
+                                htmlContent_finished += '<div class="rows">';
+                            }
+                            
+
+                        }
+                        if (index == 1 && (race.drivers[index].time_info.PENELTY != 0 ) && (race.drivers[index - 1].time_info.PENELTY != 0)) {
+                            htmlContent += '</div>';
+                        }
+
+                        if (skip == false && active == false && finished == false) {
+
+
+                            if (driver.time_info.PENELTY == 0) {
+                                driverClass = 'cell_r';
+                            } else {
+                                driverClass = 'cell_r_dsq';
+                            }
+
+                            if (drivers_amount > 10) {
+                                htmlContent += `
+                                <div class="${driverClass}">
+                                    <h2>${driver.first_name} ${driver.last_name} [${driver.id}]</h2>
+                                </div>
+                            `;
+                            } else {
+                                htmlContent += `
+                                <div class="${driverClass}">
+                                    <h2>${driver.first_name} ${driver.last_name} [${driver.id}]</h2>
+                                    <p>${driver.vehicle}</p>
+                                </div>
+                                `;
+
+                            }
+
+                            if (index == 0) {
+                                htmlContent += '<div class="matchup"><p>' + pair_index + '</p></div>';
+                            }
+
+                            if (index == 1) {
+                                htmlContent += '</div>'; 
+                            }
+                        } else if (active == true) {
+
+                            if (driver.time_info.PENELTY == 0) {
+                                driverClass = 'cell_r_active';
+                            } else {
+                                driverClass = 'cell_r_dsq_active';
+                            }
+                            
+                            htmlContent_active += `
+                                <div class="${driverClass}">
+                                    <h1 class="test-heading">${driver.first_name} ${driver.last_name} [${driver.id}]</h1>
+                                    <p>${driver.vehicle}</p>
+                                </div>
+                                `;
+                            if (index == 0) {
+                                htmlContent_active += '<div class="matchup_active"><p>' + pair_index + '</p></div>';
+                            } 
+                            if (index == 1) {
+                                htmlContent_active += '</div>'; 
+                        }
+                    } else if (finished == true) {
+
+                        if (driver.time_info.PENELTY == 0) {
+                    driverClass = 'winner';
+                } else {
+                    driverClass = 'looser';
+                }
+
+                htmlContent_finished += `<div class="finished-driver-row ${driverClass}">
+                    <span>${driver.first_name} ${driver.last_name} [${driver.id}]</span>
+                    <span>${driver.vehicle}</span>
+                </div>`;
+                if (index == 0) {
+                    htmlContent_finished += '<div class="finished-matchup"><span>Matchup: ' + pair_index + '</span></div>';
+                }
+                }
+            });
+
+
+            }
+                
+            });
+            
+
+            return [htmlContent_active, htmlContent]
+            //$('#finished_drivers').html(htmlContent_finished);
+
+            }
+        
+
+    $(document).ready(function() {
+        updateScoreboard();
+        updateScoreboard_upcoming()
+        setTimeout(adjustFontSize, 500);
+
+    });
+
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+        console.log('Connected to the server');
+        socket.emit('join', { username: 'John', room: 'room1' });
+    });
+
+    socket.on('response', function(dataString) {
+        updateScoreboard();
+        updateScoreboard_upcoming()
+        setTimeout(adjustFontSize, 500);
+        });
+
+
+
+</script>
+
+
+</head>
+<body>
+
+
+    <div class="container">
+        <h1 id="startliste_title" style="padding: 20px;">STARTLISTE</h1>
+        <div class="main-content">
+            <div class="left-content">
+                <h1 class="main_manue" id="main_title">Startliste</h1>
+                <hr>
+                <div id="startlist-container_active" class="table-wrapper_active" style="margin-bottom: 20px;">
+                    <!-- Data will be displayed here -->
+                </div>
+                <div id="startlist-container" class="table-wrapper">
+                    <!-- Data will be displayed here -->
+                </div>
+        
+                <div id="finished_drivers" class="table-wrapper_finished" style="margin-top: 15px;">
+                    <!-- Data will be displayed here -->
+                </div>            
+            </div>
+
+            <div class="vertical-line"></div>
+
+
+            <div class="right-content">
+                <h1 class="main_manue_upcoming" id="main_title_upcoming">Startliste</h1>
+                <div id="startlist-upcoming" class="table-wrapper">
+                    <!-- Data will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

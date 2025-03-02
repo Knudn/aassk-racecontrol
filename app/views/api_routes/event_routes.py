@@ -45,7 +45,7 @@ def register_event_routes(api_bp):
         event_data = get_active_startlist()
         if current_app.config['event_content'] != event_data:
             # Import the send_data_to_room function from parent module
-            from app.api.api_blueprint import send_data_to_room
+            from app.views.api_view import send_data_to_room
             send_data_to_room(event_data)
             
             current_app.config['event_content'] = event_data

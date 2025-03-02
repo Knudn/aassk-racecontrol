@@ -27,10 +27,8 @@ def global_config():
         else:
             print("test")
 
-    # Retrieve the latest configuration from the database
     latest_config = Configuration.query.order_by(Configuration.id.desc()).first()
     if latest_config:
         form.session_name.data = latest_config.session_name
         form.project_dir.data = latest_config.project_dir
-        # ... populate other fields
     return render_template('configure.html', form=form)

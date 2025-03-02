@@ -12,10 +12,10 @@ socketio = SocketIO()
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    app.secret_key = 'your_secret_key'
+    app.secret_key = 'supersecretkey'
     pwd = getcwd()
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + path.join(pwd, 'site.db')
-    app.config['SECRET_KEY'] = 'your_secret_key'
+    app.config['SECRET_KEY'] = app.secret_key
 
 
     db.init_app(app)
@@ -23,6 +23,8 @@ def create_app():
 
     from app.views.index_view import index_bp
     from app.views.admin_view import admin_bp
+
+    #API view blueprint
     from app.views.api_view import api_bp
     from app.views.vmix_view import vmix_bp
     from app.views.board_view import board_bp

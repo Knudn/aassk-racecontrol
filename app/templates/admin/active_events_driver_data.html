@@ -140,17 +140,17 @@ document.getElementById("refresh_data").addEventListener("click", function() {
         run: "{{ event_entry_file.run }}"
     };
     
-     fetch("{{ url_for('api.api', tab_name='reload_event') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(jsonData),
-    }).then(response => response.json())
-    .then(data => {
-        console.log(data);
+     fetch("/api/reload_event", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(jsonData),
+        }).then(response => response.json())
+        .then(data => {
+            console.log(data);
+        });
     });
-});
 
 
 

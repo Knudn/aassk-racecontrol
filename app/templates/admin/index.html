@@ -456,9 +456,9 @@ document.getElementById('syncButton').addEventListener('click', function() {
                 'Content-Type': 'application/json'
             },
             });
-            const responseText = await response.text();
-
-            if (responseText == 'OK') {
+            const responseText = await response.json();
+            console.log('Server heartbeat response:', responseText);
+            if (responseText["status"] == 'OK') {
                 statusIndicator.classList.remove('status-inactive');
                 statusIndicator.classList.add('status-active');
                 statusDot.style.backgroundColor = '#4CAF50'; // Green

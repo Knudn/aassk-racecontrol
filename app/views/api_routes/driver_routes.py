@@ -79,7 +79,7 @@ def register_driver_routes(api_bp):
         db.session.commit()
         
         # Import the send_data_to_room function
-        from app.api.api_blueprint import send_data_to_room
+        from app.views.api_view import send_data_to_room
         send_data_to_room(get_active_startlist())
         
         return {"status": "success", "message": "Active state updated"}
@@ -308,7 +308,7 @@ def register_driver_routes(api_bp):
                         event_data = get_active_startlist()
                         
                         # Import the send_data_to_room function
-                        from app.api.api_blueprint import send_data_to_room
+                        from app.views.api_view import send_data_to_room
                         send_data_to_room(event_data)
                         
                         requests.get("http://127.0.0.1:7777/api/active_event_update")

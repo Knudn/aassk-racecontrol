@@ -282,8 +282,6 @@ def kvali_criteria():
 
 def cross_config_tab():
     from app.models import CrossConfig, db
-    from flask import Markup
-
 
     cross_config = CrossConfig.query.first()
 

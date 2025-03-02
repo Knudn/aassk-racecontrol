@@ -1,7 +1,5 @@
 
-from flask import Blueprint, render_template, redirect
-from app import socketio, join_room, emit
-
+from flask import Blueprint, redirect
 
 index_bp = Blueprint('index', __name__)
 

@@ -3,6 +3,19 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#ignore the dbfiles used by msport
+*.sqlite
+*.db
+
+#Ignore PID
+*.pid
+
+#ignore images etc
+*.pdf
+*.jpeg
+*.png
+*.jpg
+
 # C extensions
 *.so
 

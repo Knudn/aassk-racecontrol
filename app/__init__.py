@@ -29,7 +29,6 @@ def create_app():
     from app.views.vmix_view import vmix_bp
     from app.views.board_view import board_bp
     from app.views.cross_view import cross_bp
-    from app.views.home_view import home_bp
 
     app.register_blueprint(index_bp)
     app.register_blueprint(admin_bp)
@@ -37,7 +36,6 @@ def create_app():
     app.register_blueprint(vmix_bp)
     app.register_blueprint(board_bp)
     app.register_blueprint(cross_bp)
-    app.register_blueprint(home_bp)
 
     app.jinja_env.filters['tojson'] = jsonify
     

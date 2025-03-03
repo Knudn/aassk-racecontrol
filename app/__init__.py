@@ -17,14 +17,13 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + path.join(pwd, 'site.db')
     app.config['SECRET_KEY'] = app.secret_key
 
-
+    # Configure SocketIO with CORS support
+    socketio.init_app(app, cors_allowed_origins="*")  # Allow all origins for testing
     db.init_app(app)
-    socketio.init_app(app)
 
+    # Register blueprints
     from app.views.index_view import index_bp
     from app.views.admin_view import admin_bp
-
-    #API view blueprint
     from app.views.api_view import api_bp
     from app.views.vmix_view import vmix_bp
     from app.views.board_view import board_bp
@@ -37,6 +36,10 @@ def create_app():
     app.register_blueprint(board_bp)
     app.register_blueprint(cross_bp)
 
+    # Register socket event handlers
+    from app.config.websocket_config import register_socket_events
+    register_socket_events(socketio)
+    
     app.jinja_env.filters['tojson'] = jsonify
     
     return app, socketio

@@ -624,16 +624,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         socket.on('connect', function() {
             console.log('Connected to the server');
-            
-
-            socket.emit('join', { username: 'John', room: 'room1' });
-
+            socket.emit('join', { username: 'speaker', room: 'default' });
         });
         add_websocket_live_timer()
 
         socket.on('response', function(dataString) {
             
             const data = JSON.parse(dataString);
+            
             new_title = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
             
             if (!data[0]["drivers"]) {
@@ -657,12 +655,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const socket_retry = io.connect('http://' + document.domain + ':' + location.port);
 
         socket_retry.on('connect', function() {
-            console.log('Connected to the server');
+            console.log('Connected to retry websocket endpoint');
             socket_retry.emit('join', { username: 'socket_retry', room: 'socket_retry' });
         });
         
         socket_retry.on('response', function(dataString) {
-            console.log(dataString)
             const data = JSON.parse(dataString);
             retry_entry_table(data)
             //display_retry_entries(data);

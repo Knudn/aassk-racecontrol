@@ -2,16 +2,11 @@
 from flask import request, current_app, render_template
 from app.lib.utils import GetEnv, manage_process_screen
 import requests
+from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
+from app import socketio, mqtt_client
 
 def register_system_routes(api_bp):
     """Register all system-related routes with the API blueprint"""
-
-
-    @api_bp.route('/api/websocket_test', methods=['GET', 'POST'])
-    def websocket_test():
-        return render_template('websocket_test.html')
-    
-
 
     @api_bp.route('/api/restart', methods=['GET', 'POST'])
     def restart():
@@ -30,8 +25,15 @@ def register_system_routes(api_bp):
         result = manage_process_screen("cross_clock_server.py", "start")
         current_app.logger.info(f"Start result: {result}")
         return {"status": "success", "message": "Service started"}
-    
-    @api_bp.route('/api/websocket_test', methods=['GET', 'POST'])
-    def test_websocket_session():
 
-        pass
+
+    @api_bp.route('/api/test', methods=['GET', 'POST'])
+    def test():
+        import json
+        from app.lib.utils import get_upcoming_drivers
+
+        data = {"D1":["21","green"],"D2":["52","green"]}
+
+        data = get_upcoming_drivers()
+        mqtt_client.publish("prestage_drivers", json.dumps(data))
+        return data

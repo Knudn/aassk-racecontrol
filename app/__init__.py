@@ -4,10 +4,16 @@ from flask_sqlalchemy import SQLAlchemy
 from app.lib.db_operation import map_database_files
 from flask_socketio import SocketIO, join_room, emit
 from os import getcwd, path
+import paho.mqtt.client as mqtt
+
 
 # Initialize SQLAlchemy and SocketIO with no settings
 db = SQLAlchemy()
 socketio = SocketIO()
+
+mqtt_client = mqtt.Client()
+mqtt_client.connect("localhost", 1883, 60)
+
 
 def create_app():
     app = Flask(__name__)
@@ -28,6 +34,7 @@ def create_app():
     from app.views.vmix_view import vmix_bp
     from app.views.board_view import board_bp
     from app.views.cross_view import cross_bp
+    from app.views.infoscreen_view import infoscreen_bp
 
     app.register_blueprint(index_bp)
     app.register_blueprint(admin_bp)
@@ -35,6 +42,7 @@ def create_app():
     app.register_blueprint(vmix_bp)
     app.register_blueprint(board_bp)
     app.register_blueprint(cross_bp)
+    app.register_blueprint(infoscreen_bp)
 
     # Register socket event handlers
     from app.config.websocket_config import register_socket_events
@@ -42,4 +50,5 @@ def create_app():
     
     app.jinja_env.filters['tojson'] = jsonify
     
+
     return app, socketio

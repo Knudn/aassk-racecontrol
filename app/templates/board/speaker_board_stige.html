@@ -4,19 +4,53 @@
   <meta charset="UTF-8">
   <title>Race Commentary Information</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">    
 
 
 <script src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
 <script src="{{url_for('static', filename='js/bootstrap.bundle.min.js')}}"></script>
 <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script src="{{url_for('static', filename='js/ladder/vendor.js')}}"></script>
+<script src="{{url_for('static', filename='js/ladder/custom.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='css/ladder/app.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/ladder/custom.css')}}">
 
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 
 
   <style>
+    .turnament-bracket {
+        padding: 20px;
+        margin-top: 20px;
+        width: 100%;
+        overflow-x: auto;
+        display: flex;
+        justify-content: center;
+    }
+    .graph-block {
+        margin: 0 auto;
+        max-width: 100%;
+    }
+    body.render .turnament-bracket {
+        padding: 5px;
+    }
+    #bracket-container {
+        margin-top: 30px;
+        border-top: 1px solid #ddd;
+        padding-top: 15px;
+        width: 100%;
+        overflow-x: hidden;
+    }
+    .demo {
+        transform-origin: center top;
+    }
+    #bracket-container h4 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
     .qualify-line {
         text-align: center;
         padding: 1px;
@@ -167,17 +201,17 @@
   </style>
 </head>
 <body>
-
+    
     <div class="alert alert-info" role="alert" style="margin-bottom: 0px; padding:10px;">
         <h2 class="header_title"></h2>
       </div>
-
+      
     <div class="alert alert-warning" role="alert" style="padding:5px; font-size: 15px;" id="top_driver_bar">
         <span id="currentHeat"></span>
         <span id="eventTitle"></span>
         <span id="dayTitle"></span>
     </div>
-
+    
       </div>
       <div id="alert_msg">
 
@@ -187,7 +221,7 @@
         <div id="left-driver" class="driver">
             <div id="left-results" class="left-results"></div>
         </div>
-
+    
         <div class="middle-container">
             <div>
                 <h1 class="heat_num" style="font-size: 30px">1/1</h1>
@@ -204,14 +238,14 @@
                 <span id="boot-icon" class="bi bi-stopwatch" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
 
             </button>
-
+            
 
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mockDataModal">
                 <span id="boot-icon" class="bi bi-arrow-clockwise" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
             </button>
 
         </div>
-
+    
         <div id="right-driver" class="driver">
             <div id="right-retry-table" class="right-retry-table-class"></div>
         </div>
@@ -244,7 +278,7 @@
             </div>
         </div>
     </div>
-</div>
+</div>    
 <!-- EVENT ORDER MODEL -->
 <div class="modal fade" id="eventsModal" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document" style="width: 80%;">
@@ -262,7 +296,7 @@
                 <th scope="col">Order</th>
                 <th scope="col">Event</th>
                 <th scope="col">Heat</th>
-
+                
               </tr>
             </thead>
             <tbody id="eventTableBody">
@@ -354,15 +388,21 @@
       </div>
     </div>
   </div>
-
+    
         </div>
       </div>
     </div>
   </div>
 
+  <div id="bracket-container">
+    <h4>Stige</h4>
+    <div class="turnament-bracket">
+        <div id="doubleElimination" class="graph-block"></div>
+    </div>
+</div>
+
 <script>
     h_server_url = "{{ SpeakerPageConfig_json.h_server_url }}"
-    kvaliCriteria = JSON.parse('{{ kvali_criteria | replace("\\n", "") | safe }}');
 </script>
 
 <script>
@@ -378,7 +418,7 @@ function add_websocket_live_timer() {
         document.getElementsByClassName("T1")[0].innerHTML = newData.Driver1.time;
         document.getElementsByClassName("T2")[0].innerHTML = newData.Driver2.time;
     }
-
+    
     ws.onmessage = function(event){
         var arr = JSON.parse(event.data);
         setTimeout(() => {
@@ -408,7 +448,7 @@ document.getElementById('loadDataButton').addEventListener('click', function() {
                 const orderTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Order}</td>`;
                 const eventTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''}" ${active}>${event.Event}</td>`;
                 const heatTd = `<td class="${event.Enabled === 0 ? 'strikethrough' : ''} " ${active}>${event.Heat}</td>`;
-
+                
                 tableRow.innerHTML = orderTd + eventTd + heatTd;
 
                 eventTableBody.appendChild(tableRow);
@@ -425,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
 
-
+            
             document.querySelectorAll('.tab-pane').forEach((tabPane, index) => {
                 tabPane.querySelector('table tbody').innerHTML = '';
                 const tabLink = document.querySelector(`.nav-tabs .nav-item:nth-child(${index + 1}) a`);
@@ -443,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const event = data[key];
                 let tableBody, tabTitle;
-
+                
 
                 if (key.includes('title_1+title_2+heat_') && recordCount.tab1 < 10) {
                     tableBody = document.querySelector('#tab1 table tbody') ;
@@ -510,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
   </script>
-
+  
   <script>
 
     var x;
@@ -522,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var D1_name = newData.Driver1.name
         var D2_name = newData.Driver2.name
     }
-
+    
 
 
   </script>
@@ -538,9 +578,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 matchingParallel: isCheckboxChecked,
                 h_server_url:h_server_url
             };
-
+    
             $.ajax({
-                url: '/board/speaker',
+                url: '/board/speaker',  
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(settingsData),
@@ -575,11 +615,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (current_mode != old_mode) {
             location.reload()
-        }
+        } 
 
         old_mode = data[0]["race_config"]["MODE"]
 
-
+        
     }
 
     var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
@@ -590,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let array_checksum = ""
     var old_results = ""
 
-
+    
     $(document).ready(function() {
         // API call to fetch initial data
         $.ajax({
@@ -610,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     insert_alert("clean")
                 }
-
+                
 
                 old_results = MD5(JSON.stringify(data));
             },
@@ -624,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         socket.on('connect', function() {
             console.log('Connected to the server');
-
+            
 
             socket.emit('join', { username: 'default', room: 'default' });
 
@@ -632,14 +672,14 @@ document.addEventListener('DOMContentLoaded', function() {
         add_websocket_live_timer()
 
         socket.on('response', function(dataString) {
-
+            
             const data = JSON.parse(dataString);
             new_title = data[0]["race_config"]["TITLE_1"] + "-" + data[0]["race_config"]["TITLE_2"] + " (" + data[0]["race_config"]["HEAT"] + "/" + data[0]["race_config"]["HEATS"]+")";
-
+            
             if (!data[0]["drivers"]) {
 //                location.reload()
             }
-            var new_result = MD5(JSON.stringify(dataString));
+            var new_result = MD5(JSON.stringify(dataString)); 
             if (!(new_result == old_results)) {
 
                 title_name = [data[0]["race_config"]["TITLE_1"], data[0]["race_config"]["TITLE_2"], data[0]["race_config"]["HEAT"]]
@@ -660,7 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Connected to the server');
             socket_retry.emit('join', { username: 'socket_retry', room: 'socket_retry' });
         });
-
+        
         socket_retry.on('response', function(dataString) {
             console.log(dataString)
             const data = JSON.parse(dataString);
@@ -724,7 +764,7 @@ async function updateDriverDisplay(title_name) {
             display_get_top_driver_header(top_speed_data)
             const retry_entries_data = await get_retry_entries(title_name);
             retry_entry_table(retry_entries_data)
-
+            
         } catch (error) {
                 console.log('Error getting top speeds for current:', error)
             }
@@ -795,7 +835,7 @@ function display_get_top_driver_header(data) {
     let heat = data["title_1+title_2+heat_0"]
     let event = data["title_1+title_2_0"]
     let day = data["title_1_0"]
-
+    
     if (heat != undefined) {
         document.getElementById('currentHeat').innerHTML = `<strong>Current Heat:</strong> ${heat.first_name} ${heat.last_name} - ${milliseconds_to_sec(heat.finishtime)}`;
     } else {
@@ -820,14 +860,14 @@ function display_get_top_driver_header(data) {
         if (!driver.first_name) {
             return '<p>No active driver</p>';
         }
-        var finishTime = (driver.time_info && driver.time_info.FINISHTIME > 0)
-                            ? (driver.time_info.FINISHTIME / 1000).toFixed(2) + ' seconds'
+        var finishTime = (driver.time_info && driver.time_info.FINISHTIME > 0) 
+                            ? (driver.time_info.FINISHTIME / 1000).toFixed(2) + ' seconds' 
                             : 'N/A';
 
         let finish_time_sec= (driver.time_info.FINISHTIME / 1000).toFixed(3) + " Sec";
-        var table_color = ""
+        var table_color = "" 
         if (driver.status == "0") {
-            var status = "Ikke Fullført"
+            var status = "Ikke Fullført" 
             table_color = "bg-info p-2 text-dark bg-opacity-25"
 
         } else if (driver.status == "1") {
@@ -839,18 +879,18 @@ function display_get_top_driver_header(data) {
             table_color = "bg-danger p-2 text-dark bg-opacity-25"
         }
         if (driver.time_info.PENELTY == "0") {
-            var penelty = ""
+            var penelty = "" 
         } else if (driver.time_info.PENELTY == "2") {
-            var penelty = "DNF"
+            var penelty = "DNF" 
             table_color = table_color + " border-warning "
         } else if (driver.time_info.PENELTY == "1") {
-            var penelty = "DNS"
+            var penelty = "DNS" 
             table_color = table_color + " border-primary "
         } else if (driver.time_info.PENELTY == "3") {
-                var penelty = "DSQ"
+                var penelty = "DSQ" 
                 table_color = table_color + " border-secondary "
         }
-
+        
 
 
         return `<div class="driver-info">
@@ -877,9 +917,9 @@ function display_get_top_driver_header(data) {
                     </table>
                 </div>
 
-                <hr width="80%" color="green" />`;
+                <hr width="80%" color="green" />`; 
     }
-
+    
 });
 
 function display_retry_entries(entries) {
@@ -942,12 +982,12 @@ function display_startlist(data) {
   newDiv.id = 'right-startlist';
   newDiv.className = 'right-startlist-class';
   newDiv.style = "width: 90%;";
-
+  
   let html = `
    <div> <h4 style="text-align: center;"> Startliste </h4> </div>
       <table class="table table-sm mb-0">
           <tbody>`;
-
+  
   for (let i = 1; i < data.length; i++) {
       const race = data[i];
       const driver1 = race.drivers[0];
@@ -958,7 +998,7 @@ function display_startlist(data) {
       } else {
            active_class = "badge bg-secondary"
       }
-
+      
       html += `
           <tr class="align-middle">
               <td style="width: 5%">
@@ -1016,16 +1056,15 @@ function addRetry(cid) {
    });
 }
 
-function display_results(data) {
+function display_results(data) {      
     const newDiv = document.createElement('div');
     newDiv.id = 'left-results';
     newDiv.className = 'left-results-class';
     newDiv.style = "width: 90%;";
 
-    const isQualification = data[0]?.race_config?.TITLE_2?.includes('Kvalifisering');
     const eventTitle = data[0]?.race_config?.TITLE_2;
     const eventTitle_full = data[0]?.race_config?.TITLE_1 + " " + data[0]?.race_config?.TITLE_2
-
+    
 
 
     function sortDrivers(drivers) {
@@ -1068,24 +1107,17 @@ function display_results(data) {
                 const driverBestTimes = new Map();
 
                 combinedData.forEach(eventData => {
-                    console.log(eventData)
                     eventData.slice(1).flatMap(race => race.drivers)
                         .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
                         .forEach(driver => {
-                            const totalTime = driver.time_info.FINISHTIME +
+                            const totalTime = driver.time_info.FINISHTIME + 
                                             (driver.time_info.PENELTY > 3 ? driver.time_info.PENELTY : 0);
                             const driverId = driver.id;
-                            const isPenaltyState123 = driver.time_info.PENELTY >= 1 && driver.time_info.PENELTY <= 3;
                             
-                            // Only update if:
-                            // 1. We haven't seen this driver before, OR
-                            // 2. This time is better than previous best AND
-                            //    either this entry is not a penalty state 1-3 OR we don't already have a valid finish time
                             if (!driverBestTimes.has(driverId) || 
-                                (totalTime < driverBestTimes.get(driverId).time_info.FINISHTIME +
-                                (driverBestTimes.get(driverId).time_info.PENELTY > 3 ? 
-                                driverBestTimes.get(driverId).time_info.PENELTY : 0) && 
-                                (!isPenaltyState123 || driverBestTimes.get(driverId).time_info.PENELTY >= 1))) {
+                                totalTime < driverBestTimes.get(driverId).time_info.FINISHTIME + 
+                                          (driverBestTimes.get(driverId).time_info.PENELTY > 3 ? 
+                                           driverBestTimes.get(driverId).time_info.PENELTY : 0)) {
                                 driverBestTimes.set(driverId, driver);
                             }
                         });
@@ -1099,22 +1131,22 @@ function display_results(data) {
                         .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
                 );
             }
-
+            
             // Update the display
             newDiv.innerHTML = createContent(currentDrivers, event.target.checked);
-
+            
             // Reattach event listener
             const newToggle = document.getElementById('seeCombinedToggle');
             if (newToggle) {
                 newToggle.checked = event.target.checked;
                 newToggle.addEventListener('change', handleToggle);
             }
-
+            
         } catch (error) {
             console.error('Error fetching combined data:', error);
             alert('Error loading combined results');
             newDiv.innerHTML = createContent(currentDrivers, false);
-
+            
             const newToggle = document.getElementById('seeCombinedToggle');
             if (newToggle) {
                 newToggle.checked = false;
@@ -1125,21 +1157,6 @@ function display_results(data) {
 
     function createContent(drivers, isChecked = false) {
         let html = '';
-        kvaliCriteria.forEach(criteria => {
-            if (criteria.event == eventTitle) {
-                    kvali_nr = criteria.kvalinr
-                }
-        })
-        if (isQualification) {
-            html += `
-            <div class="d-flex justify-content-end mb-2">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="seeCombinedToggle" ${isChecked ? 'checked' : ''}>
-                    <label class="form-check-label" for="seeCombinedToggle">Bestetid fra Kvalifisering</label>
-                </div>
-            </div>`;
-        }
-
 
         html += `
             <table class="table table-sm mb-0">
@@ -1179,16 +1196,6 @@ function display_results(data) {
                         ${driver.status}
                     </td>
                 </tr>`;
-            if (isQualification) {
-            if (index +1 == kvali_nr && isChecked) {
-            html += `<tr>
-                <td colspan="3" class="qualify-line">
-                    <span class="qualify-text">Kvalifisering til Stige/Finale</span>
-                </td>
-            </tr>
-            `
-            }
-        }
         });
 
 
@@ -1203,28 +1210,22 @@ function display_results(data) {
     const parentDiv = document.getElementById('left-driver');
     parentDiv.appendChild(newDiv);
 
-    // Attach initial event listener
-    if (isQualification) {
-        const toggle = document.getElementById('seeCombinedToggle');
-        if (toggle) {
-            toggle.addEventListener('change', handleToggle);
-        }
-    }
+
 }
 
 function retry_entry_table(data) {
     const TABLE_ID = 'right-retry-table';
     const STARTLIST_ID = 'right-startlist';
-
+    
     // Early return if no data
     if (!data?.length) {
         $(`#${TABLE_ID}`).remove();
         return;
     }
-
+    
     // Create or get table container
     let $tableContainer = $(`#${TABLE_ID}`);
-
+    
     if (!$tableContainer.length) {
         $tableContainer = $('<div>', {
             id: TABLE_ID,
@@ -1233,10 +1234,10 @@ function retry_entry_table(data) {
         });
         $(`#${STARTLIST_ID}`).before($tableContainer);
     }
-
+    
 
     const tableHTML = `
-    <h4> KJØRE PÅ NY LISTE </h4>
+    <h4> KJØRE PÅ NY LISTE </h4> 
         <table class="table table-hover mb-0 border">
             <thead>
                 <tr class="bg-light">
@@ -1251,7 +1252,7 @@ function retry_entry_table(data) {
                         <td class="px-3 py-2 align-middle">${driver.CID}</td>
                         <td class="px-3 py-2 align-middle">${driver.driver_name}</td>
                         <td class="px-3 py-2 align-middle text-center">
-                            <button
+                            <button 
                                 class="btn btn-outline-danger btn-sm"
                                 onclick="removeDriver(${driver.CID})"
                                 aria-label="Remove ${driver.driver_name}"
@@ -1264,7 +1265,7 @@ function retry_entry_table(data) {
             </tbody>
         </table>
     `;
-
+    
     // Update container content
     $tableContainer.html(tableHTML);
 }
@@ -1302,6 +1303,346 @@ function removeDriver(cid) {
    });
 }
 </script>
+<script type="text/javascript">
+    // Driver order setting function
+    function driver_order_setting(timedata) {
+        var driver_order_object = {};
 
+        for (const key in timedata) {
+            if (timedata.hasOwnProperty(key)) {
+                const dataArray = timedata[key];
+                dataArray.forEach(entry => {
+                    if (!driver_order_object.hasOwnProperty(key)) {
+                        driver_order_object[key] = [];
+                    }
+                    driver_order_object[key].push(entry);
+                });
+            }
+        }
+        return driver_order_object;
+    }
+
+    // Transform data function for bracket
+    function transformData(originalData) {
+        console.log(originalData, "GGGGGGGGGGGGGGGGGGGGGGGGGGG")
+        let teams = [];
+        let results = [];
+        let driver_pair_order = driver_order_setting(originalData.Timedata);
+        let exit_loop = false;
+        let skip_entry = false;
+        let finale = [];
+        let semi_finale = [];
+
+        var heat_count = Math.ceil(Math.log2(originalData.Timedata["1"].length));
+        
+        // Check if the required data exists and is in the correct format
+        if (originalData && originalData.Timedata && Array.isArray(originalData.Timedata["1"])) {
+            for (let i = 0; i < originalData.Timedata["1"].length; i += 2) {
+                if (i + 1 < originalData.Timedata["1"].length) {
+                    // Create a pair with the current and next team
+                    let pair = [
+                        { "name": originalData.Timedata["1"][i][1] + " " + originalData.Timedata["1"][i][2], "flag": "no" },
+                        { "name": originalData.Timedata["1"][i + 1][1] + " " + originalData.Timedata["1"][i + 1][2], "flag": "no" }
+                    ];
+                    teams.push(pair);
+                } else {
+                    // If there's no pair (odd number of teams), add the last team alone
+                    let single = { "name": originalData.Timedata["1"][i][1], "flag": "no" };
+                    teams.push([single]);
+                }
+            }
+        } else {
+            console.error('Data is not available or in an unexpected format');
+        }
+        
+        const isEven = num => num % 2 === 0;
+        full_loc_array = [];
+        count = 0;
+
+        for (let key in originalData.Timedata) {
+            med_loc_array = [];
+            if (originalData.Timedata.hasOwnProperty(key)) {
+                let dataArray = originalData.Timedata[key];
+                
+                if (key == 1) { 
+                    num = key;
+                } else {
+                    num = (key - 1);
+                }
+
+                for (let driver_o in driver_pair_order[num]) {
+                    
+                    for (let i = 0; i < dataArray.length; i += 1) {
+                        if (typeof new_loc_array == 'undefined') {
+                            new_loc_array = [];
+                        }
+                        
+                        if (heat_count == key) {
+                            let finale_pair = [];
+                            let semi_finale_pair = [];
+                            let tmp_finale_pair = [];
+                            let tmp_semi_finale = [];
+                            
+                            count += 1;
+                            let tmp_key = (key -1);
+                            
+                            if (driver_pair_order[(tmp_key)][0][7] > driver_pair_order[(tmp_key)][1][7] && driver_pair_order[(tmp_key)][1][6] == 0) {
+                                tmp_semi_finale.push(driver_pair_order[(tmp_key)][0]);
+                                tmp_finale_pair.push(driver_pair_order[(tmp_key)][1]);
+                                console.log("1")
+                            } else {
+                                tmp_semi_finale.push(driver_pair_order[(tmp_key)][1]);
+                                tmp_finale_pair.push(driver_pair_order[(tmp_key)][0]);
+                                console.log("2")
+                            }
+
+                            if (driver_pair_order[(tmp_key)][2][7] > driver_pair_order[(tmp_key)][3][7] && driver_pair_order[(tmp_key)][3][6] == 0) {
+                                tmp_semi_finale.push(driver_pair_order[(tmp_key)][2]);
+                                tmp_finale_pair.push(driver_pair_order[(tmp_key)][3]);
+                                console.log("3")
+                            } else {
+                                tmp_semi_finale.push(driver_pair_order[(tmp_key)][3]);
+                                tmp_finale_pair.push(driver_pair_order[(tmp_key)][2]);
+                                console.log("4")
+                            }
+
+                            for (let b in driver_pair_order[(tmp_key)]) {
+                                for (let g in tmp_finale_pair) {
+                                    if (tmp_finale_pair[g][7] == driver_pair_order[(tmp_key)][b][7]) {
+                                        for (let h in driver_pair_order[(key)]) {
+                                            if (driver_pair_order[key][h][0] == tmp_finale_pair[g][0]) {
+                                                if (driver_pair_order[key][h][6] == 1) {
+                                                    finale_pair.push(11111111);
+                                                } else if (driver_pair_order[key][h][6] == 2) {
+                                                    finale_pair.push(22222222);
+                                                } else if (driver_pair_order[key][h][6] == 3) {
+                                                    finale_pair.push(33333333);
+                                                } else {
+                                                    finale_pair.push(driver_pair_order[key][h][7]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                for (let g in tmp_semi_finale) {
+                                    if (tmp_semi_finale[g][7] == driver_pair_order[(tmp_key)][b][7]) {
+                                        for (let h in driver_pair_order[(key)]) {
+                                            if (driver_pair_order[key][h][0] == tmp_semi_finale[g][0]) {
+                                                if (driver_pair_order[key][h][6] == 1) {
+                                                    semi_finale_pair.push(11111111);
+                                                } else if (driver_pair_order[key][h][6] == 2) {
+                                                    semi_finale_pair.push(22222222);
+                                                } else if (driver_pair_order[key][h][6] == 3) {
+                                                    semi_finale_pair.push(33333333);
+                                                } else {
+                                                    semi_finale_pair.push(driver_pair_order[key][h][7]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                }
+                            
+                            med_loc_array.push(finale_pair);
+                            med_loc_array.push(semi_finale_pair);
+                            
+                            exit_loop = true;
+                            break;
+                        } else if (driver_pair_order[num][driver_o][0] == dataArray[i][0] && heat_count != key) {
+                            count += 1;
+
+                            if (dataArray[i][6] == 1) {
+                                entry = 11111111;
+                            } else if (dataArray[i][6] == 2) {
+                                entry = 22222222;
+                            } else if (dataArray[i][6] == 3) {
+                                entry = 33333333;
+                            } else {
+                                entry = dataArray[i][7];
+                            }
+                            new_loc_array.push(entry);
+
+                            if (count == 2) {
+                                count = 0;
+                                med_loc_array.push(new_loc_array);
+                                new_loc_array = [];
+                                break;
+                            }
+                        } 
+                    }
+                    if (exit_loop == true) {break;}
+                }
+            }
+            full_loc_array.push(med_loc_array);
+        }
+        
+        results = full_loc_array;
+        data = {teams, results};
+        console.log(data, "ggggggggggggggggggggggggggggggggggggg")
+        return data;
+    }
+
+    // Render function for bracket
+    function render_fn(container, data, score, state) {
+        switch (state) {
+            case "empty-bye":
+                container.append("No team");
+                return;
+            case "empty-tbd":
+                container.append("Upcoming");
+                return;
+            case "entry-no-score":
+            case "entry-default-win":
+            case "entry-complete":
+                container.append(data.name).append();
+                return;
+        }
+    }
+
+    // Edit function for bracket
+    function edit_fn(container, data, place, time, doneCb) {
+        var input = $('<input type="text">');
+        input.val(data ? data.flag + ':' + data.name : '');
+        container.html(input);
+        input.focus();
+        input.blur(function () {
+            var inputValue = input.val();
+            if (inputValue.length === 0) {
+                doneCb(null); // Drop the team and replace with BYE
+            } else {
+                var flagAndName = inputValue.split(':'); // Expects correct input
+                doneCb({flag: flagAndName[0], name: flagAndName[1]});
+            }
+        });
+    }
+
+    // Initialize the bracket when page loads
+    $(document).ready(function() {
+        // Connect to socket for updates if available
+        if (typeof io !== 'undefined') {
+            const socket = io.connect('http://' + document.domain + ':' + location.port);
+            
+            socket.on('connect', function() {
+                console.log('Connected to the server for bracket updates');
+            });
+            
+            socket.on('response', function(dataString) {
+                // Force reload the bracket data when socket data is received
+                loadBracketData();
+            });
+            
+            // Also listen for the retry entries socket
+            const socket_retry = io.connect('http://' + document.domain + ':' + location.port);
+            socket_retry.on('connect', function() {
+                socket_retry.emit('join', { username: 'socket_bracket', room: 'socket_retry' });
+            });
+            
+            socket_retry.on('response', function(dataString) {
+                loadBracketData();
+            });
+        }
+        
+        // Initial load
+        loadBracketData();
+        
+        // Also add a resize handler to adjust scaling
+        //$(window).on('resize', adjustBracketScale);
+    });
+    
+    // Function to adjust bracket scale to fit the screen
+    function adjustBracketScale() {
+        const bracketWidth = $('div#doubleElimination .demo').width();
+        const containerWidth = $('#bracket-container').width();
+        
+        if (bracketWidth > containerWidth) {
+            // Calculate scale factor
+            const scale = containerWidth / bracketWidth * 0.95; // 95% to add some margin
+            $('div#doubleElimination .demo').css({
+                'transform': 'scale(' + scale + ')',
+                'transform-origin': 'center top'
+            });
+        } else {
+            // Reset scale if not needed
+            $('div#doubleElimination .demo').css({
+                'transform': 'scale(1)',
+                'transform-origin': 'center top'
+            });
+        }
+    }
+
+    // Function to load bracket data
+    function loadBracketData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const event_filter = urlParams.get('event_filter');
+        
+        let url;
+        if (event_filter) {
+            url = "/api/get_specific_event_data?event_filter=" + event_filter;
+        } else {
+            url = "/api/get_specific_event_data";
+        }
+
+        $.getJSON(url, function(data) {
+            const new_data = transformData(data);
+            const drivers_num = new_data.teams.length * 2;
+            
+            let teamWidth, scoreWidth, matchMargin, roundMargin;
+            // Set dimensions based on number of drivers
+            if (drivers_num <= 2) {
+                teamWidth = 300;
+                scoreWidth = 60;
+                matchMargin = 100;
+                roundMargin = 100;
+            } else if (drivers_num <= 4) {
+                teamWidth = 300;
+                scoreWidth = 60;
+                matchMargin = 100;
+                roundMargin = 100;
+                $('div#doubleElimination .demo').css('padding-left', '30%');
+            } else if (drivers_num <= 8) {
+                teamWidth = 300;
+                scoreWidth = 60;
+                matchMargin = 100;
+                roundMargin = 100;
+                $('div#doubleElimination .demo').css('padding-left', '15%');
+            } else if (drivers_num <= 16) {
+                teamWidth = 300;
+                scoreWidth = 60;
+                matchMargin = 60;
+                roundMargin = 60;
+                $('div#doubleElimination .demo').css('padding-left', '10%');
+            } else {
+                teamWidth = 250;
+                scoreWidth = 60;
+                matchMargin = 15;
+                roundMargin = 80;
+            }
+
+            // Clear existing bracket
+            $('div#doubleElimination').empty();
+            $('<div class="demo animated slow"></div>').appendTo('div#doubleElimination');
+            // Create the bracket
+            window.br = $('div#doubleElimination .demo').bracket({
+                dir: 'lr',
+                teamWidth: teamWidth,
+                scoreWidth: scoreWidth,
+                matchMargin: matchMargin,
+                roundMargin: roundMargin,
+                centerConnectors: true,
+                init: new_data,
+                decorator: {
+                    edit: edit_fn,
+                    render: render_fn
+                }
+            });
+            
+            // Run the scale adjustment after bracket is created
+            setTimeout(adjustBracketScale, 100);
+        }).fail(function(jqxhr, textStatus, error) {
+            console.error("Failed to load bracket data:", error);
+        });
+    }
+</script>
 </body>
 </html>

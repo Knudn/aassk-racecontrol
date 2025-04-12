@@ -10,6 +10,7 @@ import time
 import aiohttp
 import string
 import os
+from websockets.exceptions import ConnectionClosed
 
 
 # Setting up logging
@@ -28,7 +29,7 @@ with sqlite3.connect(DB_PATH) as con:
     cur = con.cursor()
 
     listen_ip = cur.execute("SELECT params FROM microservices WHERE path = 'msport_display_proxy.py';").fetchone()[0]
-    print(listen_ip)
+    
     use_inter = cur.execute("SELECT use_intermediate from global_config;").fetchone()[0]
 
 data_sock = {
@@ -236,20 +237,21 @@ async def data_clean(data, db_handler):
     #    await async_update_event(listen_ip)
     #    update_field = False
 
-async def server(ws, path):
-    while True:
-        await asyncio.sleep(0.1)
-        if ws.open:
+async def server(ws, path=None):
+    try:
+        while True:
             try:
                 message_to_send = json.dumps(data_sock, indent=4)
                 await ws.send(message_to_send)
-                # Check and act on update_field
+                await asyncio.sleep(0.1)
+            except websockets.exceptions.ConnectionClosed:
+                logging.info("WebSocket connection is closed. Stopping message send.")
+                break
             except Exception as e:
                 logging.error(f"WebSocket error: {e}")
                 break
-        else:
-            logging.info("WebSocket connection is closed. Stopping message send.")
-            break
+    except Exception as e:
+        logging.error(f"Error in server function: {e}")
 
 
 

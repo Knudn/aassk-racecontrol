@@ -104,6 +104,7 @@ def scoreboard_loop_old():
     
     return str(session['index'])
 
+
 @board_bp.route('/board/speaker/', methods = ['GET', 'POST'])
 def speaker():
     from app.lib.db_operation import get_active_event
@@ -133,18 +134,18 @@ def speaker():
         SpeakerPageConfig.h_server_url = data["h_server_url"]
 
         db.session.commit()
-    
+
     SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
     cross_state = g_config["cross"]
+    
     if str(cross_state) == "True":
         return render_template('board/speaker_board_cross.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
-    
-    elif mode == 1 or mode == 2 or mode == 3:
+    elif mode == 3:
+        return render_template('board/speaker_board_stige.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
+    elif mode == 1 or mode == 2:
         return render_template('board/speaker_board_p.html', SpeakerPageConfig_json=SpeakerPageConfig_json, kvali_criteria=json.dumps(kvali_criteria))
     else:
         return render_template('board/speaker_board_s.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
-    
-
     
 
 @board_bp.route('/board/startlist_active_simple_single')

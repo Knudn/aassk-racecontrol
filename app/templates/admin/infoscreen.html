@@ -7,240 +7,425 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
 
-<script src="{{url_for('static', filename='js/js_infoscreen.js')}}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Connect to websocket as admin
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var activeClients = {}; // Store active clients by SID
+        
+        socket.on('connect', function() {
+            console.log('Admin connected to the server');
+            // Join admin room
+            socket.emit('join', { 
+                username: 'admin', 
+                room: 'admin',
+                hostname: window.location.hostname
+            });
+            
+            // Request current active sessions
+            socket.emit('get_sessions', { room: 'infoscreen' });
+        });
+        
+        // Listen for confirmation of joining admin room
+        socket.on('joined', function(data) {
+            console.log('Joined admin room:', data);
+        });
+        
+        // Listen for session list
+        socket.on('session_list', function(data) {
+            console.log('Received session list:', data);
+            updateClientList(data.sessions);
+        });
+        
+        // Listen for admin updates (new clients, disconnections)
+        socket.on('admin_update', function(data) {
+            console.log('Admin update:', data);
+            
+            if (data.action === 'join') {
+                // A new client has joined
+                activeClients[data.session.sid] = data.session;
+                addClientToTable(data.session);
+            } else if (data.action === 'disconnect') {
+                // A client has disconnected
+                delete activeClients[data.sid];
+                removeClientFromTable(data.sid);
+            }
+        });
+        
+        // Function to update the client list table
+        function updateClientList(sessions) {
+            const clientsTable = document.getElementById('active-clients-body');
+            clientsTable.innerHTML = '';
+            
+            if (!sessions || sessions.length === 0) {
+                document.getElementById('no-clients-message').style.display = 'block';
+                document.getElementById('active-clients-table').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('no-clients-message').style.display = 'none';
+            document.getElementById('active-clients-table').style.display = 'table';
+            
+            sessions.forEach(function(session) {
+                activeClients[session.sid] = session;
+                addClientToTable(session);
+            });
+        }
+        
+        // Function to add a client to the table
+        function addClientToTable(session) {
+            const clientsTable = document.getElementById('active-clients-body');
+            
+            // Check if this client already exists in the table
+            const existingRow = document.getElementById(`client-${session.sid}`);
+            if (existingRow) {
+                // Update the existing row
+                existingRow.innerHTML = createClientRowContent(session);
+                return;
+            }
+            
+            // Create a new row
+            const row = document.createElement('tr');
+            row.id = `client-${session.sid}`;
+            row.innerHTML = createClientRowContent(session);
+            clientsTable.appendChild(row);
+            
+            // Add event listener to the send content button
+            const sendBtn = document.getElementById(`send-btn-${session.sid}`);
+            if (sendBtn) {
+                sendBtn.addEventListener('click', function() {
+                    const contentSelect = document.getElementById(`content-select-${session.sid}`);
+                    const contentId = contentSelect.value;
+                    
+                    if (!contentId) {
+                        alert('Please select content to send');
+                        return;
+                    }
+                    
+                    sendContentToClient(session.sid, contentId);
+                });
+            }
+        }
+        
+        // Function to create client row HTML
+        function createClientRowContent(session) {
+            const connectedTime = new Date(session.connected_at * 1000).toLocaleString();
+            return `
+                <td>${session.username}</td>
+                <td>${session.hostname}</td>
+                <td>${session.ip || 'Unknown'}</td>
+                <td>${connectedTime}</td>
+                <td>
+                    <select class="form-select" id="content-select-${session.sid}">
+                        <option value="">Select content</option>
+                        {% for asset in info_screen_assents %}
+                        <option value="{{ asset.id }}">{{ asset.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <button id="send-btn-${session.sid}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </td>
+            `;
+        }
+        
+        // Function to remove a client from the table
+        function removeClientFromTable(sid) {
+            const row = document.getElementById(`client-${sid}`);
+            if (row) {
+                row.remove();
+            }
+            
+            // Check if there are any clients left
+            const clientsTable = document.getElementById('active-clients-body');
+            if (clientsTable.children.length === 0) {
+                document.getElementById('no-clients-message').style.display = 'block';
+                document.getElementById('active-clients-table').style.display = 'none';
+            }
+        }
+        
+        function sendContentToClient(sid, contentId) {
+            // Get the content HTML from assets
+            {% for asset in info_screen_assents %}
+            if (contentId === "{{ asset.id }}") {
+                const content = `{{asset.asset | safe}}`;
 
-
-</head>
-<body>
+                fetch('/infoscreen/set_session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sid: sid,
+                        content: content
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log(`Successfully sent content ${contentId} to client ${sid}`);
+                    } else {
+                        console.error(`Failed to send content to client: ${data.message}`);
+                        alert(`Failed to send content: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending content:', error);
+                    alert('An error occurred while sending the content');
+                });
+                
+                console.log(`Sent content ${contentId} to client ${sid}`);
+            }
+            {% endfor %}
+        }
+        
+        // Broadcast content to all clients
+        document.getElementById('broadcast-btn').addEventListener('click', function() {
+            const contentId = document.getElementById('broadcast-content').value;
+            
+            if (!contentId) {
+                alert('Please select content to broadcast');
+                return;
+            }
+            
+            {% for asset in info_screen_assents %}
+            if (contentId === "{{ asset.id }}") {
+                const content = `{{ asset.content|safe }}`;
+                
+                // Loop through all active clients and send content
+                Object.keys(activeClients).forEach(function(sid) {
+                    // Send to each client through the correct API endpoint
+                    fetch('/infoscreen/set_session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            sid: sid,
+                            content: content
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log(`Successfully broadcasted content ${contentId} to client ${sid}`);
+                        } else {
+                            console.error(`Failed to broadcast to client ${sid}: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error broadcasting to client ${sid}:`, error);
+                    });
+                });
+                
+                alert(`Broadcasting content to ${Object.keys(activeClients).length} clients`);
+                console.log(`Broadcasted content ${contentId} to all clients`);
+            }
+            {% endfor %}
+        });
+        
+        // Add new content asset
+        document.getElementById('save-content-btn').addEventListener('click', function() {
+            const name = document.getElementById('asset-name').value;
+            const content = document.getElementById('asset-content').value;
+            
+            if (!name || !content) {
+                alert('Please provide both a name and content');
+                return;
+            }
+            
+            // Send request to add asset
+            fetch('/admin/add_asset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error adding asset: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the asset');
+            });
+        });
+        
+        // Delete asset
+        window.deleteAsset = function(assetId) {
+            if (confirm('Are you sure you want to delete this asset?')) {
+                fetch(`/admin/delete_asset/${assetId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting asset: ' + data.message);
+                    }
+                });
+            }
+        };
+        
+        // Refresh client list
+        document.getElementById('refresh-clients-btn').addEventListener('click', function() {
+            socket.emit('get_sessions', { room: 'infoscreen' });
+        });
+    });
+</script>
 
 <div class="container py-4">
-<h2>Dashboard Configuration</h2>
-
-    <!-- Add a new section for displaying the InfoScreenInitMessages -->
+    <h2>InfoScreen Management</h2>
+    
+    <!-- Active Clients Section -->
     <div class="card my-3">
         <div class="card-header">
-            <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#infoScreenMessagesSection">
-                Info Screen Messages
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#clientsSection">
+                    <i class="fas fa-desktop"></i> Active InfoScreen Clients
+                </button>
+                <button id="refresh-clients-btn" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div id="clientsSection" class="collapse show">
+            <div class="card-body">
+                <div id="no-clients-message" class="alert alert-info">
+                    No active InfoScreen clients connected
+                </div>
+                
+                <table id="active-clients-table" class="table table-bordered" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Client ID</th>
+                            <th>Hostname</th>
+                            <th>IP Address</th>
+                            <th>Connected At</th>
+                            <th>Content</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active-clients-body">
+                        <!-- Client rows will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Broadcast Section -->
+    <div class="card my-3">
+        <div class="card-header">
+            <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#broadcastSection">
+                <i class="fas fa-broadcast-tower"></i> Broadcast to All Screens
             </button>
         </div>
-        <div id="infoScreenMessagesSection" class="collapse show">
+        <div id="broadcastSection" class="collapse">
             <div class="card-body">
-                <div class="info-messages-container">
-                    {% for message in info_screen_msg %}
-                    <div class="info-message-card {% if not message.approved %}not-approved{% endif %}">
-                        <div class="info-message-header">
-                            <span>Hostname: {{ message.hostname }}</span>
-                            <span>IP: {{ message.ip }}</span>
-                            <span hidden>ID: {{ message.unique_id }}</span>
-                        </div>
-
-                        {% if message.approved == "0" %}
-                        <div class="info-message-body">
-                            <button class="approve-btn">Approve</button>
-                            <button class="remove-btn">Remove</button>
-                        </div>
-                        {% else %}
-                        <div class="info-message-body">
-                            <button class="view-vnc-btn">View VNC</button>
-                        </div>
-                        <div class="info-message-footer">
-                            <button class="deactivate-btn">Deactivate</button>
-                            <button class="remove-btn">Remove</button>
-                        </div>
-                        {% endif %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <select class="form-select" id="broadcast-content">
+                            <option value="">-- Select Content to Broadcast --</option>
+                            {% for asset in info_screen_assents %}
+                            <option value="{{ asset.id }}">{{ asset.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    {% endfor %}
+                    <div class="col-md-4">
+                        <button id="broadcast-btn" class="btn btn-warning">
+                            <i class="fas fa-broadcast-tower"></i> Broadcast to All Screens
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-<!-- Monitors Section -->
-<div class="card my-3">
-    <div class="card-header">
-        <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#monitorsSection">
-            Monitors
-        </button>
-    </div>
-    <div id="monitorsSection" class="collapse">
-        <div class="card-body">
-            <div class="accordion" id="accordionExample">
-                {% for message in info_screen_approved %}
-                    <div class="accordion-item">
-
-                        <h2 class="accordion-header" id="heading{{ loop.index }}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}" data-accordion-index="{{ message.id }}">
-                                {{ message.hostname }} - <span class="text-muted">{{ message.ip }}</span>
-                            </button>
-                        </h2>
-                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                                <div class="text-center">
-                                    <h4 class="d-inline bg-white px-3">Add asset</h4>
-                                    <hr class="my-4">
+    <!-- Content Assets Section -->
+    <div class="card my-3">
+        <div class="card-header">
+            <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#assetsSection">
+                <i class="fas fa-file-code"></i> Content Assets
+            </button>
+        </div>
+        <div id="assetsSection" class="collapse show">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Content Preview</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in info_screen_assents %}
+                        <tr>
+                            <td>{{ asset.name }}</td>
+                            <td>
+                                <div style="max-height: 100px; overflow: auto;">
+                                    {{ asset.content|truncate(200) }}
                                 </div>
-                                <div class="modal-body" style="display: flex; align-items: center;">
-                                    <!-- Dropdown Menu -->
-                                    <div class="select-container" style="flex-grow: 1;" id="select_asset_{{ message.id }}">
-                                        <select class="form-select" aria-label="Asset selector">
-                                            {% for asset in info_screen_assents %}
-                                                <option value="{{ asset.id }}">{{asset.name}}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="city-input-container" style="margin-left: 10px;">
-                                        <input type="text" class="form-control" id="timer_field_{{ message.id }}" placeholder="Timer (sec)">
-                                    </div>
-                                
-                                </div>
-                                <div class="add-asset-button" data-button-id="{{ message.id }}">
-                                    <button  type="button" id="associate_asset" class="associate_asset">+ Add asset</button>
-                                </div>
-                                <br>
-                                    <div class="text-center">
-                                        <h4 class="d-inline bg-white px-3">Current asset list</h4>
-                                        <hr class="my-4">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Index</th>
-                                                    <th scope="col">Name</th>
-                                                    <th scope="col">Asset</th>
-                                                    <th scope="col">Timer</th>
-                                                    <th scope="col">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="sortable-{{ message.id }}">
-                                                {% set counter = [0] %}
-                                                {% for asset_assoc in info_screen_associations %}
-                                                    {% if asset_assoc.infoscreen == message.id %}
-                                                    
-                                                        {% for assets in info_screen_assents %}
-                                                            {% if assets.id == asset_assoc.asset %}
-                                                            {% set _ = counter.append(counter.pop(0) + 1) %}
-
-                                                                <tr data-id="{{ asset_assoc.id }}">
-                                                                    <td index="">{{ counter[0] }}</td>
-                                                                    <td><input type="text" class="form-control" value="{{ assets.name }}" readonly></td>
-                                                                    <td><input type="text" class="form-control" value="{{ assets.asset }}" readonly></td>
-                                                                    <td width="10%"><input type="text" class="timer_data form-control" value="{{ asset_assoc.timer }}" placeholder="Inf"></td>
-                                                                    <td>
-                                                                        <button  type="button" class="remove-asset-button btn btn-outline-danger">Remove</button>
-                                                                    </td>
-                                                                </tr>
-                                                                
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    {% endif %}
-                                                   
-                                                {% endfor %}
-                                            </tbody>
-                                            
-                                        </table>
-                                        
-
-                                    </div>
-                                    <button id="updateOrder-{{ message.id }}" class="btn btn-primary mt-3">Update</button>
-                            </div>
-                            
-                        </div>
-                        
-                    </div>
-                    
-                {% endfor %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAsset('{{ asset.id }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addAssetModal">
+                    <i class="fas fa-plus"></i> Add New Content
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Existing Card and Button -->
-<div class="card my-3">
-    <div class="card-header">
-        <button class="btn btn-link text-start" data-bs-toggle="collapse" data-bs-target="#urlSection">
-            Assets
-        </button>
-    </div>
-    <div id="urlSection" class="collapse show">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Asset</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="assetsTableBody">
-                {% for assets in info_screen_assents %}
-                <tr>
-                    <td>{{ assets.name }}</td>
-                    <td>{{ assets.asset }}</td>
-                    <td><button class="btn btn-danger" onclick="deleteAsset({{ assets.id }})">Delete</button></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="card-body centered-button">
-            <!-- Add Asset Button with Font Awesome icon -->
-            <button type="button" class="add-btn" data-bs-toggle="modal" data-bs-target="#assetModal">
-                <i class="fa fa-plus"></i> Add Asset
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Structure -->
-<div class="modal fade" id="assetModal" tabindex="-1" aria-labelledby="assetModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Add Asset Modal -->
+<div class="modal fade" id="addAssetModal" tabindex="-1" aria-labelledby="addAssetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="assetModalLabel">Add New Asset</h5>
+                <h5 class="modal-title" id="addAssetModalLabel">Add New Content</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Modal body content here -->
-                <form id="assetForm">
-                    <!-- Name Field -->
-                    <div class="mb-3">
-                        <label for="assetName" class="form-label">Asset Name</label>
-                        <input type="text" class="form-control" id="assetName" name="name" required>
+                <div class="mb-3">
+                    <label for="asset-name" class="form-label">Content Name</label>
+                    <input type="text" class="form-control" id="asset-name" placeholder="Enter a name for this content">
+                </div>
+                <div class="mb-3">
+                    <label for="asset-content" class="form-label">HTML Content</label>
+                    <textarea class="form-control" id="asset-content" rows="10" placeholder="Enter HTML content"></textarea>
+                    <div class="form-text">
+                        You can use HTML, CSS, and JavaScript in your content.
                     </div>
-                    
-                    <!-- Asset Source Options -->
-                    <label class="form-label">Asset Source (Choose one)</label>
-                    
-                    <!-- URL Field -->
-                    <div class="mb-3">
-                        <input type="url" class="form-control" id="assetURL" name="url" placeholder="Enter asset URL">
-                        <div class="form-text">
-                            Enter the URL of the asset if it's hosted online.
-                        </div>
-                    </div>
-                    
-                    <!-- Divider (optional) -->
-                    <div class="text-center mb-3">
-                        - OR -
-                    </div>
-                    
-                    <!-- Upload Field -->
-                    <div class="mb-3">
-                        <input type="file" class="form-control" id="assetUpload" name="file" accept="image/*">
-                        <div class="form-text">
-                            Upload an image from your computer.
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary save-changes-btn">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-content-btn">Save Content</button>
             </div>
         </div>
     </div>
 </div>
-</div>
-
-    
 
 {% endblock %}

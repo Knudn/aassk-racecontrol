@@ -52,12 +52,10 @@ class EventKvaliRate(db.Model):
 class InfoScreenAssetAssociations(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asset = db.Column(db.Integer, nullable=False)
-    infoscreen = db.Column(db.Integer, nullable=False)
-    timer = db.Column(db.Integer)
-    options = db.Column(JSON, nullable=True)
+    websocket_id = db.Column(db.String(32), nullable=False)
 
     def __repr__(self):
-        return f'<InitMessage {self.asset} {self.infoscreen} {self.timer} {self.options}>'
+        return f'<InitMessage {self.id} {self.asset} {self.websocket_id}>'
     
 class InfoScreenAssets(db.Model):
     id = db.Column(db.Integer, primary_key=True)

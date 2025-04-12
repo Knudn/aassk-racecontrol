@@ -78,15 +78,6 @@
         }
     };
 
-    // The title is no longer needed but we'll keep the fetch in case needed later
-    fetch('http://{{ip}}:4433/api-ladder/1')
-      .then(response => response.text())
-      .then(title => {
-        // Title element is removed
-        console.log("Title fetched:", title);
-      })
-      .catch(error => console.error('Error fetching title:', error));
-
     // Add fade-in animation when the page loads
     document.addEventListener('DOMContentLoaded', function() {
         const overlay = document.querySelector('.race-overlay');

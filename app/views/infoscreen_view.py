@@ -1,26 +1,22 @@
-@api_bp.route('/init', methods=['POST'])
-def receive_init():
-    from app.models import InfoScreenInitMessage
-    from app import db
-    import hashlib
 
-    data = request.json
-    hostname = data.get('Hostname')
-    ip = request.remote_addr
-    id_hash = hashlib.md5((str(ip)+str(hostname)).encode()).hexdigest()[-5:]
+from flask import Blueprint, redirect, render_template, request
+from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
+from app import socketio
 
-    existing_message = InfoScreenInitMessage.query.filter_by(unique_id=id_hash).first()
 
-    if existing_message:
-        return {"Added":id_hash, "Approved": existing_message.approved}
-    else:
-        new_message = InfoScreenInitMessage(hostname=hostname, ip=ip, unique_id=id_hash)
-        db.session.add(new_message)
-        db.session.commit()
+infoscreen_bp = Blueprint('infoscreen', __name__)
 
-        return {"Added":id_hash, "Approved": False}
+@infoscreen_bp.route('/infoscreen/infoscreen', methods=['GET'])
+def websocket_test():
+    return render_template('websocket_test.html')
 
-        
-@api_bp.route('/api/infoscreen_asset/<filename>')
-def infoscreen_asset(filename):
-    return send_from_directory('static/assets/infoscreen', filename)
+@infoscreen_bp.route('/infoscreen/set_session', methods=['GET', 'POST'])
+def send_to_websocket():
+    data = request.get_json()
+    sid = data["sid"]
+    print(data)
+    with open("app/templates/board/startlist_active_simple.html", "r") as f:
+        page = f.read()
+
+    emit_to_room(socketio, page, room=sid)
+    return "DONE"    

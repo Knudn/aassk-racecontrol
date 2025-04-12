@@ -9,8 +9,12 @@ import socket
 import argparse
 import config
 
+
 # In-memory timestamp request tracker
 virtual_clock_request = []
+
+
+
 
 def configure_logging(app):
     if not os.path.exists(config.LOG_DIRECTORY):
@@ -148,6 +152,8 @@ def create_tables(app):
         return GlobalConfig_db
 
 if __name__ == '__main__':
+
+
     parser = argparse.ArgumentParser(description='Run the web server with specific host.')
     parser.add_argument('--host', type=str, default=config.DEFAULT_HOST,
                         help=f'Host address to listen on. Default is {config.DEFAULT_HOST}.')
@@ -158,9 +164,9 @@ if __name__ == '__main__':
     app.config['timestamp_tracket'] = virtual_clock_request
     app.config['listen_address'] = IP
     app.config['current_event'] = None
-    app.config['event_content'] = ""
     app.config['remote_result_page_state'] = False
     app.config['remote_result_page_enabled'] = False
+    app.config['event_content'] = ""
     
     configure_logging(app)
     app.logger.info('App started')

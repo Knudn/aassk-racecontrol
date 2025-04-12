@@ -1,7 +1,7 @@
 # app/api/driver_routes.py
 from flask import request, current_app
 import sqlite3
-from app.lib.db_operation import get_active_event, get_active_startlist
+from app.lib.db_operation import get_active_event, get_active_startlist, get_active_startlist_w_timedate
 from app.lib.utils import Set_active_driver, GetEnv, get_active_driver_name
 from app.models import (
     ActiveDrivers,
@@ -320,3 +320,62 @@ def register_driver_routes(api_bp):
                             active = True
 
         return {"status": "error", "message": "No next driver found"}
+    
+    @api_bp.route('/api/prestage_drivers', methods=['GET'])
+    def prestage_drivers():
+        import json
+        from random import randint
+        from flask import current_app
+        from app.lib.utils import get_best_kvali_time
+        import json
+
+        event = [{'db_file': 'Event082', 'SPESIFIC_HEAT': '4'}]
+        with sqlite3.connect("site.db") as con:
+            query = "SELECT D1, D2 FROM active_drivers;"
+            cur = con.cursor()
+            active_driver = cur.execute(query).fetchall()
+            D1 = active_driver[0][0]
+            D2 = active_driver[0][1]
+
+        try:
+            current_event_data = json.loads(current_app.config['event_content'])
+        except:
+            return json.dumps({"D1":["X","green"], "D2":["X","green"]})
+
+        next_event = False
+        next_drivers = False
+
+        for k, a in enumerate(current_event_data):
+            if next_drivers:
+                if "stige" in current_app.config['current_title_2'].lower():
+                    kval_title = current_app.config['current_title_2'].replace("Stige", "Kvalifisering")
+                    best_time = get_best_kvali_time({"D1":a["drivers"][0]["id"], "D2":a["drivers"][1]["id"]}, kval_title)
+                    if best_time.index(a["drivers"][0]["id"]) == 0:
+                        data = {"D1":[a["drivers"][0]["id"],"green"], "D2":[a["drivers"][1]["id"],"white"]}
+                    else:
+                        data = {"D1":[a["drivers"][0]["id"],"white"], "D2":[a["drivers"][1]["id"],"green"]}
+                    break
+                else:
+                    data = {"D1":[a["drivers"][0]["id"],"white"], "D2":[a["drivers"][1]["id"],"white"]}
+                    break
+
+            if "race_config" in a:
+                continue
+
+            if a["drivers"][0]["id"] == D1 or a["drivers"][0]["id"] == D2:
+                if len(current_event_data) == k+1:
+                    next_event = True
+                    next_drivers = False
+                    break
+                else:
+                    next_event = False
+                    next_drivers = True
+
+        if next_event:
+            nxt_event = get_active_startlist_w_timedate(upcoming=True)
+            data = {"D1":[nxt_event[1]["drivers"][0]["id"],"white"], "D2":[nxt_event[1]["drivers"][1]["id"],"white"]}
+
+        if "stige" in current_app.config['current_title_2'].lower():
+            pass
+
+        return data

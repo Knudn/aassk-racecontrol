@@ -14,7 +14,7 @@ LOG_FORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 LOG_MAX_BYTES = 10000000
 LOG_BACKUP_COUNT = 5
 
-# Paths
+# Defualt global configurations
 PWD = os.getcwd()
 PROJECT_DIR = PWD + "/"
 DB_LOCATION = PWD + "/data/event_db/"

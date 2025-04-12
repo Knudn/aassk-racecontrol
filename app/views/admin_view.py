@@ -450,6 +450,7 @@ def active_events():
                 # Insert EventTypes
                 sort_data = json.loads(sort_data)
                 for event_type in sort_data['eventTypes']:
+
                     new_event_type = EventType(
                         order=event_type['order'],
                         name=event_type['name'],
@@ -459,6 +460,7 @@ def active_events():
                 
                 # Insert EventOrders
                 for event_order in sort_data['eventOrder']:
+                    print(event_order)
                     new_event_order = EventOrder(
                         order=event_order['order'],
                         name=event_order['name']

@@ -84,6 +84,18 @@
       align-items: center;
       flex-shrink: 0;
     }
+    
+    #nxt_event_state {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0px;
+    }
+
+    #nxt_event_state span {
+      display: inline-block;
+      vertical-align: middle;
+      padding: 0 2%;
+    }
 
     .driver-info {
       text-align: center;
@@ -149,6 +161,7 @@
     #top_driver_bar {
       display: flex;
       justify-content: space-between;
+      margin-bottom: 0px;
     }
 
     #top_driver_bar span {
@@ -176,6 +189,12 @@
         <span id="currentHeat"></span>
         <span id="eventTitle"></span>
         <span id="dayTitle"></span>
+    </div>
+
+    <div class="alert alert-success" role="alert" style="padding:5px; font-size: 15px;" id="nxt_event_state">
+        <span id="next_event"></span>
+        <span id="next_d1"></span>
+        <span id="next_d2"></span>
     </div>
 
       </div>
@@ -604,6 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 displayActiveDrivers(data, title_name);
                 display_startlist(data);
                 display_results(data);
+                check_for_nxt_event(data[0]["race_config"]["TITLE_2"]);
 
                 if (data[1] == undefined) {
                     insert_alert("NO DRIVERS! (JOSTEIN STRESSER SANNSYNELIGVIS MED Å SETTE OPP STARTLISTENE)")
@@ -648,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 validate_mode(data)
                 display_startlist(data);
                 display_results(data)
+                check_for_nxt_event(data[0]["race_config"]["TITLE_2"])
                 old_results = new_result
             } else {
                 console.log("Nope dude")
@@ -1014,6 +1035,62 @@ function addRetry(cid) {
            console.error('Error adding driver to retry:', error);
        }
    });
+}
+
+
+function check_for_nxt_event(current_event) {
+    $.ajax({
+        url: '/api/test',
+        type: 'GET',
+        success: function(data) {
+            if (data["EVENT_NAME"] != current_event) {
+                if (data["D1"][0] == "X" && data["D2"][0] == "X") {
+
+                    nxt_header = document.getElementById("nxt_event_state")
+                    
+                    
+                    
+                    nxt_header.style.display = "flex"
+                    nxt_header.style.justifyContent = "center"
+                    console.log(data["EVENT_NAME"])
+                    if (data["EVENT_NAME"] !== undefined) {
+                        nxt_header.innerHTML = "Startliste for " + data["EVENT_NAME"] + " er IKKE klar!"
+                    } else {
+                        nxt_header.innerHTML = "Neste event er IKKE klar!"
+                    }
+                } else {
+                
+                document.getElementById("nxt_event_state").style.display = "flex"
+                 
+                nxt_event_element = document.getElementById("next_event")
+                nxt_d1_element = document.getElementById("next_d1")
+                nxt_d2_element = document.getElementById("next_d2")
+                nxt_event_element.innerHTML = "NESTE EVENT: " + data["EVENT_NAME"]
+                if (data["D1"][1] == "green") {
+                    d1_content = "[" + data["D1"][0] + "]" + " <b>" + data["D1"][2] + "</b> VELGER BANE"
+                } else {
+                    d1_content = "[" + data["D1"][0] + "]" + " <b>" + data["D1"][2] + "</b>"
+                }
+                if (data["D2"][1] == "green") {
+                    d2_content = "[" + data["D2"][0] + "]" + " <b>" + data["D2"][2] + "</b> VELGER BANE"
+                } else {
+                    d2_content = "[" + data["D2"][0] + "]" + " <b>" + data["D2"][2] + "</b>"
+                }
+
+
+                nxt_d1_element.innerHTML = d1_content
+                nxt_d2_element.innerHTML = d2_content
+            
+                }
+                
+            } else {
+                document.getElementById("nxt_event_state").style.display = "none"
+            }
+        },
+        error: function() {
+            console.log('Error fetching data from API');
+        }
+    });
 }
 
 function display_results(data) {

@@ -217,9 +217,9 @@ async def data_clean(data, db_handler):
         update_event = True
 
     if update_event  == True:
-        print("Updating....")
-
         if str(use_inter) != "1" or old_main_driver != data_sock["Driver1"]["bid"]:
+        
+            print("Updating....")
             asyncio.create_task(async_update_event(listen_ip))
             old_main_driver = data_sock["Driver1"]["bid"]
 

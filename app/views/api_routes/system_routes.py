@@ -34,6 +34,7 @@ def register_system_routes(api_bp):
 
         data = {"D1":["21","green"],"D2":["52","green"]}
 
-        data = get_upcoming_drivers()
+        data = get_upcoming_drivers(return_driver_context=False)
+
         mqtt_client.publish("prestage_drivers", json.dumps(data))
         return data

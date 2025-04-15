@@ -179,10 +179,17 @@
       border-radius: 0;
     }
 
+    #nxt_event_state {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0px;
+    }
+
     /* Top driver bar styles */
     #top_driver_bar {
       display: flex;
       justify-content: space-between;
+      margin-bottom: 0px;
     }
 
     #top_driver_bar span {
@@ -190,6 +197,13 @@
       vertical-align: middle;
       padding: 0 2%;
     }
+
+    #nxt_event_state span {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 0 2%;
+    }
+
 
     .strikethrough {
       text-decoration: line-through;
@@ -210,6 +224,12 @@
         <span id="currentHeat"></span>
         <span id="eventTitle"></span>
         <span id="dayTitle"></span>
+    </div>
+
+    <div class="alert alert-success" role="alert" style="padding:5px; font-size: 15px;" id="nxt_event_state">
+        <span id="next_event"></span>
+        <span id="next_d1"></span>
+        <span id="next_d2"></span>
     </div>
     
       </div>
@@ -408,6 +428,67 @@
 <script>
 
 let title_name = []
+
+function nxt_event_pair(data) {
+    nxt_event_element = document.getElementById("next_event")
+    nxt_d1_element = document.getElementById("next_d1")
+    nxt_d2_element = document.getElementById("next_d2")
+}
+
+function check_for_nxt_event(current_event) {
+    $.ajax({
+        url: '/api/test',
+        type: 'GET',
+        success: function(data) {
+            if (data["EVENT_NAME"] != current_event) {
+                if (data["D1"][0] == "X" && data["D2"][0] == "X") {
+
+                    nxt_header = document.getElementById("nxt_event_state")
+                    
+                    
+                    
+                    nxt_header.style.display = "flex"
+                    nxt_header.style.justifyContent = "center"
+                    console.log(data["EVENT_NAME"])
+                    if (data["EVENT_NAME"] !== undefined) {
+                        nxt_header.innerHTML = "Startliste for " + data["EVENT_NAME"] + " er IKKE klar!"
+                    } else {
+                        nxt_header.innerHTML = "Neste event er IKKE klar!"
+                    }
+                } else {
+                
+                document.getElementById("nxt_event_state").style.display = "flex"
+                 
+                nxt_event_element = document.getElementById("next_event")
+                nxt_d1_element = document.getElementById("next_d1")
+                nxt_d2_element = document.getElementById("next_d2")
+                nxt_event_element.innerHTML = "NESTE EVENT: " + data["EVENT_NAME"]
+                if (data["D1"][1] == "green") {
+                    d1_content = "[" + data["D1"][0] + "]" + " <b>" + data["D1"][2] + "</b> VELGER BANE"
+                } else {
+                    d1_content = "[" + data["D1"][0] + "]" + " <b>" + data["D1"][2] + "</b>"
+                }
+                if (data["D2"][1] == "green") {
+                    d2_content = "[" + data["D2"][0] + "]" + " <b>" + data["D2"][2] + "</b> VELGER BANE"
+                } else {
+                    d2_content = "[" + data["D2"][0] + "]" + " <b>" + data["D2"][2] + "</b>"
+                }
+
+
+                nxt_d1_element.innerHTML = d1_content
+                nxt_d2_element.innerHTML = d2_content
+            
+                }
+                
+            } else {
+                document.getElementById("nxt_event_state").style.display = "none"
+            }
+        },
+        error: function() {
+            console.log('Error fetching data from API');
+        }
+    });
+}
 
 function add_websocket_live_timer() {
     const ws = new WebSocket("ws://192.168.1.50:4444/");
@@ -644,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 displayActiveDrivers(data, title_name);
                 display_startlist(data);
                 display_results(data);
-
+                check_for_nxt_event(data[0]["race_config"]["TITLE_2"]);
                 if (data[1] == undefined) {
                     insert_alert("NO DRIVERS! (JOSTEIN STRESSER SANNSYNELIGVIS MED Å SETTE OPP STARTLISTENE)")
                 } else {
@@ -688,6 +769,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 validate_mode(data)
                 display_startlist(data);
                 display_results(data)
+                check_for_nxt_event(data[0]["race_config"]["TITLE_2"])
                 old_results = new_result
             } else {
                 console.log("Nope dude")
@@ -713,18 +795,14 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentPairIndex = 0;
 
 async function displayActiveDrivers(data, title_name) {
-    // Store all driver pairs
     driverPairs = data.filter(item => item.drivers);
 
-    // Find the index of the first pair with an active driver
     currentPairIndex = driverPairs.findIndex(pair => pair.drivers.some(driver => driver.active));
 
     if (currentPairIndex === -1) {
-        // If no active drivers are found, default to the first pair
         currentPairIndex = 0;
     }
 
-    // Call to update the display with the current pair
     await updateDriverDisplay(title_name);
 }
 
@@ -1324,7 +1402,6 @@ function removeDriver(cid) {
 
     // Transform data function for bracket
     function transformData(originalData) {
-        console.log(originalData, "GGGGGGGGGGGGGGGGGGGGGGGGGGG")
         let teams = [];
         let results = [];
         let driver_pair_order = driver_order_setting(originalData.Timedata);
@@ -1479,7 +1556,6 @@ function removeDriver(cid) {
         
         results = full_loc_array;
         data = {teams, results};
-        console.log(data, "ggggggggggggggggggggggggggggggggggggg")
         return data;
     }
 
@@ -1543,27 +1619,21 @@ function removeDriver(cid) {
             });
         }
         
-        // Initial load
         loadBracketData();
         
-        // Also add a resize handler to adjust scaling
-        //$(window).on('resize', adjustBracketScale);
     });
     
-    // Function to adjust bracket scale to fit the screen
     function adjustBracketScale() {
         const bracketWidth = $('div#doubleElimination .demo').width();
         const containerWidth = $('#bracket-container').width();
         
         if (bracketWidth > containerWidth) {
-            // Calculate scale factor
             const scale = containerWidth / bracketWidth * 0.95; // 95% to add some margin
             $('div#doubleElimination .demo').css({
                 'transform': 'scale(' + scale + ')',
                 'transform-origin': 'center top'
             });
         } else {
-            // Reset scale if not needed
             $('div#doubleElimination .demo').css({
                 'transform': 'scale(1)',
                 'transform-origin': 'center top'
@@ -1571,7 +1641,6 @@ function removeDriver(cid) {
         }
     }
 
-    // Function to load bracket data
     function loadBracketData() {
         const urlParams = new URLSearchParams(window.location.search);
         const event_filter = urlParams.get('event_filter');

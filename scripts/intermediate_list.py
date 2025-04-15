@@ -153,7 +153,6 @@ def monitor_files(source_dir, intermediate_dir, use_fifo=False, interval=1):
                                     print("Totale Heat: ", totale_heat)
                                     print("Active Heat: ", ACTIVE_STATE["heat"])
                                     curr_count = (int(totale_heat) - int(ACTIVE_STATE["heat"])) +1
-                                    print(curr_count, "dddddddddddddddddddd")
                                 
                                 query = "SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME FROM TTIMEINFOS_PARF_HEAT{0}_RUN1".format(str(curr_count))
                             else:

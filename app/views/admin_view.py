@@ -402,6 +402,7 @@ def global_config_tab():
                 for event in events:
 
                     event.sort_order = order_mapping[event.id]
+                    print(event)
                     
                 db.session.commit()
             

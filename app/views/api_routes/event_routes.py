@@ -35,8 +35,18 @@ def register_event_routes(api_bp):
     def get_current_startlist():
         return get_active_startlist()
     
+    @api_bp.route('/api/get_upcoming_drivers', methods=['GET'])
+    def get_upcoming_drivers():
+        from app.lib.utils import get_upcoming_drivers
+        data = get_upcoming_drivers(return_driver_context=True)
+        return data
+
+
     @api_bp.route('/api/active_event_update', methods=['GET'])
     def active_event_update():
+        from app import mqtt_client
+        from app.lib.utils import get_upcoming_drivers
+
         list_address = current_app.config['listen_address']
         if str(list_address) == "0.0.0.0":
             list_address = "localhost"
@@ -49,10 +59,17 @@ def register_event_routes(api_bp):
             send_data_to_room(event_data)
             
             current_app.config['event_content'] = event_data
+            mqtt_client.connect("localhost", 1883, 60)
+
+            upcoming_data = get_upcoming_drivers(return_driver_context=False)
+            print(upcoming_data)
+            mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
+
         remote_server_state = archive_server.query.first()
 
         if remote_server_state.enabled:
             requests.get(f'http://{list_address}:7777/api/upate_remote_data?type=single')
+
 
         return {"status": "success", "message": "Event data updated"}
     

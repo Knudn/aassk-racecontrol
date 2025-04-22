@@ -437,7 +437,7 @@ function nxt_event_pair(data) {
 
 function check_for_nxt_event(current_event) {
     $.ajax({
-        url: '/api/test',
+        url: '/api/get_upcoming_drivers',
         type: 'GET',
         success: function(data) {
             if (data["EVENT_NAME"] != current_event) {

@@ -171,6 +171,7 @@ class Session_Race_Records(db.Model):
     finishtime = db.Column(db.Integer, nullable=False)
     snowmobile = db.Column(db.String(84), nullable=True)
     penalty = db.Column(db.Integer, nullable=False)
+    reaction = db.Column(db.Integer, nullable=False, default=0)
     points = db.Column(db.Integer, nullable=False, default=0)
     
 

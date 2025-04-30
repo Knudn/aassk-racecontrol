@@ -1,7 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from app.lib.db_operation import map_database_files
 from flask_socketio import SocketIO, join_room, emit
 from os import getcwd, path
 import paho.mqtt.client as mqtt
@@ -12,7 +11,7 @@ db = SQLAlchemy()
 socketio = SocketIO()
 
 mqtt_client = mqtt.Client()
-mqtt_client.connect("localhost", 1883, 60)
+
 
 
 def create_app():
@@ -26,6 +25,8 @@ def create_app():
     # Configure SocketIO with CORS support
     socketio.init_app(app, cors_allowed_origins="*")  # Allow all origins for testing
     db.init_app(app)
+
+    
 
     # Register blueprints
     from app.views.index_view import index_bp

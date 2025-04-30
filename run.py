@@ -153,6 +153,8 @@ def create_tables(app):
 
 if __name__ == '__main__':
 
+    from app.lib.db_operation import get_active_startlist
+
 
     parser = argparse.ArgumentParser(description='Run the web server with specific host.')
     parser.add_argument('--host', type=str, default=config.DEFAULT_HOST,
@@ -167,8 +169,14 @@ if __name__ == '__main__':
     app.config['remote_result_page_state'] = False
     app.config['remote_result_page_enabled'] = False
     app.config['event_content'] = ""
+    app.config['stage_ready'] = 0
     
     configure_logging(app)
     app.logger.info('App started')
     create_tables(app)
+
+    with app.app_context():
+        event_data = get_active_startlist()
+        app.config['event_content'] = event_data
+
     socketio.run(app, debug=config.DEBUG, host=args.host, port=config.PORT)

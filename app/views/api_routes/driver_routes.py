@@ -21,7 +21,6 @@ def register_driver_routes(api_bp):
     @api_bp.route('/api/update_active_drivers', methods=['GET', 'POST'])
     def update_active_drivers():
         if request.method == 'POST':
-            # Process POST data to update active drivers
             return request.json
         else:
             return {"error": "Method not allowed"}, 405
@@ -379,3 +378,47 @@ def register_driver_routes(api_bp):
             pass
 
         return data
+    
+    @api_bp.route('/api/staging_state')
+    def staging_state():
+        from flask import current_app
+        from app.lib.utils import get_best_kvali_time
+
+        button = request.args.get('button', '')
+        status = request.args.get('status', '')
+
+        current_app.config['stage_ready'] = int(button)
+
+        return {
+            'success': True,
+            'message': f'Staging state updated: button={button}, status={status}'
+                }
+    
+    @api_bp.route('/api/staging_state_led')
+    def staging_state_led():
+        from flask import current_app
+        from app.lib.utils import get_best_kvali_time
+        import json
+
+        g_config = GetEnv()
+
+        title_2 = json.loads(current_app.config['event_content'])[0]["race_config"]["TITLE_2"]
+        if current_app.config['stage_ready'] == 1:
+            return json.dumps({"picker":None, "ready":True})
+        elif "stige" not in title_2.lower():
+            return json.dumps({"picker":None, "ready":True})
+        
+        else:
+            with sqlite3.connect(g_config["project_dir"]+"site.db") as conn:
+                cursor = conn.cursor()
+                active_drivers_sql = cursor.execute("SELECT D1, D2 FROM active_drivers").fetchall()
+                
+                active_drivers = {"D1":active_drivers_sql[0][0],"D2":active_drivers_sql[0][1]}
+
+                kval_title = current_app.config['current_title_2'].replace("Stige", "Kvalifisering")
+                active_driver_best_time = get_best_kvali_time(active_drivers, kval_title)
+
+                return json.dumps({"picker":active_driver_best_time[0], "ready":False})
+
+        print(active_driver_best_time)
+        return "asdasd"

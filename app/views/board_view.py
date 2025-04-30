@@ -90,7 +90,6 @@ def scoreboard_loop_old():
             Session_Race_Records.heat == func.max(Session_Race_Records.heat)
         )
 
-    # Execute the query to get the results
     results = query.all()
     max_len = len(results)
     event_int = random.randint(0, max_len-1)
@@ -116,10 +115,12 @@ def speaker():
 
 
     active_event = get_active_event()
+    
     query = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
     ActiveEvents.event_file == active_event[0]["db_file"]
     )
     results = query.first()
+    print(results)
     mode = results[2]
 
     SpeakerPageConfig = SpeakerPageSettings.query.first()
@@ -255,7 +256,6 @@ def scoreboard_cross():
             query = query.filter(Session_Race_Records.heat == event_entry[2])
 
         records = query.all()
-    print(records)
 
     results = [
         {

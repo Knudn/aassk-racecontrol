@@ -277,7 +277,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mockDataModalLabel">Kjør på nytt tabell</h5>
+                <h5 class="modal-title" id="mockDataModalLabel">Resultater CUP!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -440,13 +440,10 @@ function check_for_nxt_event(current_event) {
         url: '/api/get_upcoming_drivers',
         type: 'GET',
         success: function(data) {
-            if (data["EVENT_NAME"] != current_event) {
+            if (true) {
                 if (data["D1"][0] == "X" && data["D2"][0] == "X") {
 
                     nxt_header = document.getElementById("nxt_event_state")
-                    
-                    
-                    
                     nxt_header.style.display = "flex"
                     nxt_header.style.justifyContent = "center"
                     console.log(data["EVENT_NAME"])
@@ -458,7 +455,7 @@ function check_for_nxt_event(current_event) {
                 } else {
                 
                 document.getElementById("nxt_event_state").style.display = "flex"
-                 
+                console.log("sssssssssssssssss")
                 nxt_event_element = document.getElementById("next_event")
                 nxt_d1_element = document.getElementById("next_d1")
                 nxt_d2_element = document.getElementById("next_d2")
@@ -726,6 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 display_startlist(data);
                 display_results(data);
                 check_for_nxt_event(data[0]["race_config"]["TITLE_2"]);
+
                 if (data[1] == undefined) {
                     insert_alert("NO DRIVERS! (JOSTEIN STRESSER SANNSYNELIGVIS MED Å SETTE OPP STARTLISTENE)")
                 } else {

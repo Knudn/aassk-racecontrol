@@ -8,6 +8,19 @@ from app import socketio, mqtt_client
 def register_system_routes(api_bp):
     """Register all system-related routes with the API blueprint"""
 
+
+    # Helper function for sending data to a socket room
+    #@api_bp.route('/api/send_data')
+    #def send_data_to_room(msg, room=None):
+    #    """Sends data to a specified socket room"""
+    #    if request.args.get('room'):
+    #        room = request.args.get('room')
+    #    elif room is None:
+    #        room = SOCKET_ROOMS['default']
+    #        
+    #    emit_to_room(socketio, msg, room)
+    #    return {"message": f"Data sent to room: {room}"}
+
     @api_bp.route('/api/restart', methods=['GET', 'POST'])
     def restart():
         result = manage_process_screen("cross_clock_server.py", "restart")

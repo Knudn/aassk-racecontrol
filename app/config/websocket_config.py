@@ -4,6 +4,7 @@ from flask import request
 import json
 from collections import defaultdict
 import time
+from app import socketio
 
 # Socket room definitions
 SOCKET_ROOMS = {
@@ -25,6 +26,17 @@ SOCKET_EVENTS = {
 
 # In-memory storage for active sessions
 active_sessions = defaultdict(list)
+
+def send_data_to_room(msg, room=None):
+    """Sends data to a specified socket room"""
+    if request.args.get('room'):
+        room = request.args.get('room')
+    elif room is None:
+        room = SOCKET_ROOMS['default']
+        
+    emit_to_room(socketio, msg, room)
+    return {"message": f"Data sent to room: {room}"}
+
 
 # Function to emit data to a specific room
 def emit_to_room(socketio, data, room=None):

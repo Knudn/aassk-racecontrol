@@ -14,6 +14,10 @@ from sqlalchemy import func
 import json
 import requests
 from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
+from app.lib.utils import get_best_kvali_time
+from app import mqtt_client
+from app.lib.utils import GetEnv
+#from app.views.api_routes.system_routes import send_data_to_room
 
 def register_driver_routes(api_bp):
     """Register all driver-related routes with the API blueprint"""
@@ -78,7 +82,6 @@ def register_driver_routes(api_bp):
         db.session.commit()
         
         # Import the send_data_to_room function
-        from app.views.api_view import send_data_to_room
         send_data_to_room(get_active_startlist())
         
         return {"status": "success", "message": "Active state updated"}
@@ -322,11 +325,8 @@ def register_driver_routes(api_bp):
     
     @api_bp.route('/api/prestage_drivers', methods=['GET'])
     def prestage_drivers():
-        import json
         from random import randint
         from flask import current_app
-        from app.lib.utils import get_best_kvali_time
-        import json
 
         event = [{'db_file': 'Event082', 'SPESIFIC_HEAT': '4'}]
         with sqlite3.connect("site.db") as con:
@@ -381,44 +381,17 @@ def register_driver_routes(api_bp):
     
     @api_bp.route('/api/staging_state')
     def staging_state():
-        from flask import current_app
-        from app.lib.utils import get_best_kvali_time
+        from app.lib.utils import update_led_panel_state        
 
         button = request.args.get('button', '')
         status = request.args.get('status', '')
 
         current_app.config['stage_ready'] = int(button)
 
+        update_led_panel_state()
+            
         return {
             'success': True,
             'message': f'Staging state updated: button={button}, status={status}'
                 }
-    
-    @api_bp.route('/api/staging_state_led')
-    def staging_state_led():
-        from flask import current_app
-        from app.lib.utils import get_best_kvali_time
-        import json
 
-        g_config = GetEnv()
-
-        title_2 = json.loads(current_app.config['event_content'])[0]["race_config"]["TITLE_2"]
-        if current_app.config['stage_ready'] == 1:
-            return json.dumps({"picker":None, "ready":True})
-        elif "stige" not in title_2.lower():
-            return json.dumps({"picker":None, "ready":True})
-        
-        else:
-            with sqlite3.connect(g_config["project_dir"]+"site.db") as conn:
-                cursor = conn.cursor()
-                active_drivers_sql = cursor.execute("SELECT D1, D2 FROM active_drivers").fetchall()
-                
-                active_drivers = {"D1":active_drivers_sql[0][0],"D2":active_drivers_sql[0][1]}
-
-                kval_title = current_app.config['current_title_2'].replace("Stige", "Kvalifisering")
-                active_driver_best_time = get_best_kvali_time(active_drivers, kval_title)
-
-                return json.dumps({"picker":active_driver_best_time[0], "ready":False})
-
-        print(active_driver_best_time)
-        return "asdasd"

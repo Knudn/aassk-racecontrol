@@ -27,6 +27,9 @@ import json
 import random
 from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
 
+from app import mqtt_client
+from app.lib.utils import get_upcoming_drivers
+
 def register_event_routes(api_bp):
     """Register all event-related routes with the API blueprint"""
     
@@ -36,16 +39,14 @@ def register_event_routes(api_bp):
         return get_active_startlist()
     
     @api_bp.route('/api/get_upcoming_drivers', methods=['GET'])
-    def get_upcoming_drivers():
-        from app.lib.utils import get_upcoming_drivers
+    def get_upcoming_driverss():
         data = get_upcoming_drivers(return_driver_context=True)
         return data
 
 
     @api_bp.route('/api/active_event_update', methods=['GET'])
     def active_event_update():
-        from app import mqtt_client
-        from app.lib.utils import get_upcoming_drivers
+        from app.views.api_view import send_data_to_room 
 
         list_address = current_app.config['listen_address']
         if str(list_address) == "0.0.0.0":
@@ -54,22 +55,24 @@ def register_event_routes(api_bp):
 
         event_data = get_active_startlist()
         if current_app.config['event_content'] != event_data:
-            # Import the send_data_to_room function from parent module
-            from app.views.api_view import send_data_to_room
+            from app.lib.utils import update_led_panel_state
             send_data_to_room(event_data)
             
             current_app.config['event_content'] = event_data
             mqtt_client.connect("localhost", 1883, 60)
 
+
             upcoming_data = get_upcoming_drivers(return_driver_context=False)
+            
             print(upcoming_data)
             mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
+
+            update_led_panel_state() 
 
         remote_server_state = archive_server.query.first()
 
         if remote_server_state.enabled:
             requests.get(f'http://{list_address}:7777/api/upate_remote_data?type=single')
-
 
         return {"status": "success", "message": "Event data updated"}
     

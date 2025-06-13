@@ -555,3 +555,177 @@ def get_event_order_vmix():
 @vmix_bp.route('/vmix/get_active_ladder', methods=['GET'])
 def get_active_ladder():
     return render_template('vmix/active_ladder.html')
+
+@vmix_bp.route('/vmix/results_event_kvali_loop', methods=['GET'])
+def get_current_startlist_w_data():
+    from app.models import Session_Race_Records, EventKvaliRate
+    from app import db
+    from sqlalchemy import func, and_
+    from flask import session, render_template, redirect, url_for, request
+
+    # Check if we should force a reset
+    reset = request.args.get('reset', 'false') == 'true'
+    if reset:
+        if 'index' in session:
+            del session['index']
+        return redirect(url_for('vmix_bp.get_current_startlist_w_data'))
+
+    # Initialize session index if not already set
+    if 'index' not in session:
+        session['index'] = 0  # Start at 0 instead of 1
+
+    # Get all qualification events
+    events = EventKvaliRate.query.all()
+    event_count = len(events)
+    
+    if event_count == 0:
+        return "No qualification events found in database"
+
+    print(f"Total events: {event_count}, Current index: {session['index']}")
+    
+    # Try all events if none have data
+    valid_results_found = False
+    attempts = 0
+    original_index = session['index']
+    
+    while not valid_results_found and attempts < event_count:
+        # Get current event based on session index
+        current_event = events[session['index']]
+        
+        print(f"Checking event: {current_event.event}, Kvali number: {current_event.kvalinr}")
+        
+        # Get all qualification records for the current event
+        records = Session_Race_Records.query.filter(
+            Session_Race_Records.title_2.like(f"%{current_event.event}%"),
+        ).all()
+        
+        if len(records) > 0:
+            print(f"Found {len(records)} records for event: {current_event.event}")
+            
+            # Check if any records have valid finish times or penalties
+            has_valid_data = False
+            for record in records:
+                if record.finishtime > 0 or record.penalty > 0:
+                    has_valid_data = True
+                    break
+            
+            if has_valid_data:
+                valid_results_found = True
+                print("Event has valid results (finish times or penalties)")
+            else:
+                print("Event only has 'No Time' entries, skipping")
+                session['index'] = (session['index'] + 1) % event_count
+                attempts += 1
+        else:
+            # Try the next event
+            session['index'] = (session['index'] + 1) % event_count
+            attempts += 1
+    
+    # If we checked all events and found nothing, show a message
+    if not valid_results_found:
+        session['index'] = (original_index + 1) % event_count
+        return "No events with valid finish times or penalties found"
+    
+    # Group records by driver
+    drivers = {}
+    for record in records:
+        # Log record details for debugging
+        print(f"Processing: {record.first_name} {record.last_name}, Time: {record.finishtime}, Penalty: {record.penalty}")
+        
+        # Create a unique driver identifier
+        driver_id = f"{record.first_name}_{record.last_name}_{record.cid}"
+        
+        if driver_id not in drivers:
+            drivers[driver_id] = {
+                'cid': record.cid,
+                'first_name': record.first_name,
+                'last_name': record.last_name,
+                'title_1': record.title_1,
+                'title_2': record.title_2,
+                'snowmobile': record.snowmobile,
+                'best_time': None,
+                'penalty': 0,
+                'has_finish': False,
+                'has_penalty': False,
+                'points': record.points
+            }
+        
+        # Process finish times - only consider valid finish times (> 0)
+        if record.finishtime > 0:
+            drivers[driver_id]['has_finish'] = True
+            # Update best time if this is better or if no best time recorded yet
+            if drivers[driver_id]['best_time'] is None or record.finishtime < drivers[driver_id]['best_time']:
+                drivers[driver_id]['best_time'] = record.finishtime
+        
+        # Record penalty status regardless of finish time
+        if record.penalty > 0:
+            drivers[driver_id]['has_penalty'] = True
+            # Only update the penalty value if the driver has no finish time
+            if not drivers[driver_id]['has_finish']:
+                if drivers[driver_id]['penalty'] == 0 or record.penalty > drivers[driver_id]['penalty']:
+                    drivers[driver_id]['penalty'] = record.penalty
+    
+    # Convert to list for sorting
+    results = list(drivers.values())
+    
+    # Include all drivers in the results, including those with only penalties
+    final_results = []
+    for driver in results:
+        # Include drivers with valid finish times
+        if driver['has_finish']:
+            final_results.append(driver)
+        # Include drivers with penalties but no finish time
+        elif driver['has_penalty'] or driver['penalty'] > 0:
+            final_results.append(driver)
+        # Include drivers with no finish time and no penalty (they've been registered but haven't completed)
+        else:
+            final_results.append(driver)
+    
+    # Sort results according to criteria
+    def sort_key(driver):
+        if driver['has_finish']:
+            return (0, driver['best_time'])  # Top group, sorted by time
+        elif not driver['has_penalty'] and driver['penalty'] == 0:
+            return (1, 0)  # Middle group (no finish but no penalty)
+        else:
+            return (2, driver['penalty'])  # Bottom group, sorted by penalty type
+    
+    final_results.sort(key=sort_key)
+    
+    # Format finish times for display
+    for result in final_results:
+        if result['has_finish'] and result['best_time']:
+            # Convert milliseconds to a formatted time string
+            total_seconds = result['best_time'] / 1000
+            minutes = int(total_seconds // 60)
+            seconds = total_seconds % 60
+            result['display_time'] = f"{minutes}:{seconds:.3f}" if minutes > 0 else f"{seconds:.3f}"
+        elif result['penalty'] == 1:
+            result['display_time'] = "DNS"  # Did Not Start
+        elif result['penalty'] == 2:
+            result['display_time'] = "DNF"  # Did Not Finish
+        elif result['penalty'] == 3:
+            result['display_time'] = "DSQ"  # Disqualified
+        else:
+            result['display_time'] = "Ikke Startet"
+    
+    # Get event information
+    event_info = {
+        'name': current_event.event,
+        'kvali_nr': current_event.kvalinr
+    }
+    
+    print(f"Displaying results for event: {event_info['name']}")
+    print(f"Number of results: {len(results)}")
+    
+    # Increment the index for next page load AFTER we've found data
+    session['index'] = (session['index'] + 1) % event_count
+    
+    # Ensure 'now' function is available in the template
+    from datetime import datetime
+    
+    # Pass the current date/time to the template
+    return render_template('vmix/qualification_results.html', 
+                         results=final_results, 
+                         event=event_info,
+                         now=datetime.now)

@@ -144,3 +144,17 @@ def register_archive_routes(api_bp):
         except Exception as e:
             current_app.logger.error(f"Error archiving race: {str(e)}")
             return {"error": f"Failed to archive race: {str(e)}"}, 500
+
+    @api_bp.route('/api/get_cup_results', methods=['GET'])
+    def get_cup_results():
+        url = f'https://resultatliste.aseralssk.no/cup?output=json'
+        
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {"error": f"Failed to get cup results: {response.status_code}"}, response.status_code
+        except Exception as e:
+            current_app.logger.error(f"Error getting cup results: {str(e)}")
+            return {"error": f"Failed to get cup results: {str(e)}"}, 500

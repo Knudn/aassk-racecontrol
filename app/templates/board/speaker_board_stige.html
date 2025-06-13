@@ -260,7 +260,7 @@
             </button>
             
 
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mockDataModal">
+            <button type="button" class="btn btn-primary" id="cup_results" data-bs-toggle="modal" data-bs-target="#mockDataModal">
                 <span id="boot-icon" class="bi bi-arrow-clockwise" style="font-size: 28px; opacity: 1; -webkit-text-stroke-width: 0px;"></span>
             </button>
 
@@ -271,34 +271,31 @@
         </div>
     </div>
 
-
-<!-- Mock Data Modal -->
 <div class="modal fade" id="mockDataModal" tabindex="-1" role="dialog" aria-labelledby="mockDataModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mockDataModalLabel">Resultater CUP!</h5>
+                <h5 class="modal-title" id="mockDataModalLabel">Resultater NORGES CUP 2025</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Driver Name</th>
-                            <th>Title</th>
-                            <th>CID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be dynamically added here -->
-                    </tbody>
-                </table>
+            <div class="modal-body p-0">
+                <!-- Main content - Championship Standings -->
+                <div id="cup-results-container" class="space-y-3 p-3">
+                    <!-- Classes will be dynamically inserted here -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading results...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>    
+</div>
+
 <!-- EVENT ORDER MODEL -->
 <div class="modal fade" id="eventsModal" tabindex="-1" role="dialog" aria-labelledby="eventsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document" style="width: 80%;">
@@ -455,7 +452,6 @@ function check_for_nxt_event(current_event) {
                 } else {
                 
                 document.getElementById("nxt_event_state").style.display = "flex"
-                console.log("sssssssssssssssss")
                 nxt_event_element = document.getElementById("next_event")
                 nxt_d1_element = document.getElementById("next_d1")
                 nxt_d2_element = document.getElementById("next_d2")
@@ -536,6 +532,7 @@ document.getElementById('loadDataButton').addEventListener('click', function() {
 });
 
 table_entry_count = 0
+
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('top_driver_button').addEventListener('click', function() {
         fetch(`/api/get_timedata/?title_1=${title_name[0]}&title_2=${title_name[1]}&heat=${title_name[2]}&single_all=true&entries_per_filter=10&unique_names=true`)
@@ -623,13 +620,212 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error:', error));
     });
-
-
 });
 
-  </script>
+</script>
+
+<script>
+  // Add this to your existing js or include where appropriate
+  function loadCupResults() {
+    const resultsContainer = document.getElementById('cup-results-container');
+    
+    // Here's your fetch call:
+    fetch('/api/get_cup_results')
+      .then(response => response.json())
+      .then(data => {
+        // Clear the loading spinner
+        resultsContainer.innerHTML = '';
+        
+        // Get all class names from the aggregated points
+        const allClasses = Object.keys(data.aggregated_points || {});
+        
+        // Get all event names (excluding "aggregated_points")
+        const allEvents = Object.keys(data).filter(key => key !== 'aggregated_points');
+        
+        // Create accordions for each class
+        allClasses.forEach((className, index) => {
+          const classData = data.aggregated_points[className] || [];
+          
+          // Skip empty classes
+          if (classData.length === 0 || !classData.some(d => d.driver)) {
+            return;
+          }
+          
+          // Create the accordion div
+          const accordionDiv = document.createElement('div');
+          accordionDiv.className = 'bg-white rounded-lg shadow-sm overflow-hidden mb-3';
+          
+          // Create the accordion header/toggle
+          const toggleButton = document.createElement('button');
+          toggleButton.className = 'w-100 bg-dark text-white px-3 py-2 text-center d-flex align-items-center justify-content-between';
+          toggleButton.setAttribute('data-target', `category-${index}`);
+          toggleButton.innerHTML = `
+            <h6 class="m-0 font-weight-bold">${className.replace("- Stige", "")}</h6>
+            <i class="bi bi-chevron-down transition-transform"></i>
+          `;
+          
+          // Create the content container
+          const contentDiv = document.createElement('div');
+          contentDiv.id = `category-${index}`;
+          contentDiv.className = 'accordion-content';
+          contentDiv.style.display = 'none'; // Initially hidden
+          
+          // Create the table container
+          const tableContainer = document.createElement('div');
+          tableContainer.className = 'p-2 overflow-auto';
+          
+          // Create the table
+          const table = document.createElement('table');
+          table.className = 'table table-sm table-striped table-hover mb-0';
+          
+          // Create table header
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          headerRow.className = 'bg-light';
+          
+          // Add header cells
+          const headers = [
+            { text: '#', classes: 'text-center' },
+            { text: 'Driver', classes: 'text-left' },
+            { text: 'Total', classes: 'text-center' }
+          ];
+          
+          // Add event headers
+          allEvents.forEach(eventName => {
+            headers.push({ 
+              text: eventName.split(' - ')[0], // Just show the short event name
+              classes: 'text-center' 
+            });
+          });
+          
+          // Append header cells to header row
+          headers.forEach(header => {
+            const th = document.createElement('th');
+            th.className = header.classes;
+            th.textContent = header.text;
+            headerRow.appendChild(th);
+          });
+          
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+          
+          // Create table body
+          const tbody = document.createElement('tbody');
+          
+          // Sort drivers by total points (ascending - lowest points first)
+          const sortedDrivers = [...classData].filter(driver => driver.driver).sort((a, b) => a.total_points - b.total_points);
+          
+          sortedDrivers.forEach((driver, driverIndex) => {
+            const row = document.createElement('tr');
+            
+            // Add highlighting for lowest 3 points positions (since we're now sorting ascending)
+            // First place = lowest score, gets gold/yellow highlight
+            if (driverIndex === 0) {
+              row.className = 'bg-warning bg-opacity-25';
+            } else if (driverIndex === 1) {
+              row.className = 'bg-secondary bg-opacity-10';
+            } else if (driverIndex === 2) {
+              row.className = 'bg-warning bg-opacity-10';
+            }
+            
+            // Rank cell - still show in ascending order (1, 2, 3...)
+            const rankCell = document.createElement('td');
+            rankCell.className = 'text-center font-weight-bold';
+            rankCell.textContent = driverIndex + 1;
+            row.appendChild(rankCell);
+            
+            // Driver name cell
+            const nameCell = document.createElement('td');
+            nameCell.textContent = driver.driver;
+            row.appendChild(nameCell);
+            
+            // Total points cell
+            const pointsCell = document.createElement('td');
+            pointsCell.className = 'text-center font-weight-bold';
+            pointsCell.textContent = driver.total_points;
+            row.appendChild(pointsCell);
+            
+            // Event points cells
+            allEvents.forEach(eventName => {
+              const eventCell = document.createElement('td');
+              eventCell.className = 'text-center';
+              
+              // Find points for this driver in this event
+              let points = '';
+              if (data[eventName] && data[eventName][className]) {
+                const eventDriver = data[eventName][className].find(d => d.driver === driver.driver);
+                if (eventDriver) {
+                  points = eventDriver.points;
+                }
+              }
+              
+              eventCell.textContent = points;
+              row.appendChild(eventCell);
+            });
+            
+            tbody.appendChild(row);
+          });
+          
+          table.appendChild(tbody);
+          tableContainer.appendChild(table);
+          contentDiv.appendChild(tableContainer);
+          
+          // Append everything to the accordion div
+          accordionDiv.appendChild(toggleButton);
+          accordionDiv.appendChild(contentDiv);
+          
+          // Add the complete accordion to the results container
+          resultsContainer.appendChild(accordionDiv);
+          
+          // Add click event for this accordion toggle
+          toggleButton.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            
+            // Toggle display
+            if (content.style.display === 'block') {
+              content.style.display = 'none';
+              this.querySelector('i').classList.remove('bi-chevron-up');
+              this.querySelector('i').classList.add('bi-chevron-down');
+            } else {
+              content.style.display = 'block';
+              this.querySelector('i').classList.remove('bi-chevron-down');
+              this.querySelector('i').classList.add('bi-chevron-up');
+            }
+          });
+        });
+        
+        // Open the first accordion by default if there are any
+        if (resultsContainer.querySelector('button')) {
+          const firstAccordion = resultsContainer.querySelector('button');
+          const targetId = firstAccordion.getAttribute('data-target');
+          const content = document.getElementById(targetId);
+          content.style.display = 'block';
+          firstAccordion.querySelector('i').classList.remove('bi-chevron-down');
+          firstAccordion.querySelector('i').classList.add('bi-chevron-up');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        resultsContainer.innerHTML = `
+          <div class="alert alert-danger" role="alert">
+            Error loading results. Please try again later.
+          </div>
+        `;
+      });
+  }
   
-  <script>
+  // Connect this to your cup_results button
+  document.getElementById('cup_results').addEventListener('click', function() {
+    // Show the modal
+    $('#mockDataModal').modal('show');
+    
+    // Load the cup results
+    loadCupResults();
+  });
+</script>
+
+<script>
 
     var x;
     var arr = [];
@@ -641,9 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var D2_name = newData.Driver2.name
     }
     
-
-
-  </script>
+</script>
 
   <script>
     //Save changes inserted to model
@@ -743,10 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         socket.on('connect', function() {
             console.log('Connected to the server');
-            
-
             socket.emit('join', { username: 'default', room: 'default' });
-
         });
         add_websocket_live_timer()
 
@@ -834,6 +1025,7 @@ async function updateDriverDisplay(title_name) {
 
         $('#left-driver').html(websocket_driver_data(leftDriver, 1));
         $('#right-driver').html(websocket_driver_data(rightDriver, 2));
+        console.log(title_name[1])
         try {
             try {
             const top_speed_data = await get_top_driver_header(title_name);
@@ -853,6 +1045,7 @@ async function updateDriverDisplay(title_name) {
         }
     }
 }
+
 
 function get_top_driver_header(title_name) {
     return new Promise((resolve, reject) => {

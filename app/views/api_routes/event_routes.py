@@ -102,12 +102,14 @@ def register_event_routes(api_bp):
         heat = request.args.get('heat')
         event_comb = request.args.get('event_comb')
 
+        print(event_comb)
+
         if event_comb is not None:
             events = []
             active_event_current = get_active_event()
             query = db.session.query(ActiveEvents.event_file, ActiveEvents.run).distinct().filter(
                         ActiveEvents.event_name.like(f"%{event_comb}%")).all()
-
+            
             for a in query:
                 events.append([{'db_file': a.event_file, 'SPESIFIC_HEAT': a.run}])
 
@@ -244,6 +246,7 @@ def register_event_routes(api_bp):
 
         # Execute the query to get the results
         results = query.all()
+        print(results, "EVENT")
         max_len = len(results)
         if max_len == 0:
             return {"error": "No entries found"}, 404
@@ -260,6 +263,7 @@ def register_event_routes(api_bp):
         )  
 
         results = query.all()
+        print(results)
         heat_insert = ""
         event_mode = results[0][2]
         if heat_insert == '':

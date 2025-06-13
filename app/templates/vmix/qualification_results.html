@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Qualification Results</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: rgba(0, 0, 0, 0.8);
+            --secondary-color: rgba(0, 0, 0, 0.7);
+            --accent-color: rgba(190, 190, 190, 0.9);
+            --text-color: #dbdbdb;
+            --border-color: rgba(190, 190, 190, 0.3);
+            --highlight-color: rgba(200, 200, 200, 0.9);
+            --qualified-color: rgba(0, 150, 0, 0.3);
+            --penalty-color: rgba(150, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            color: var(--text-color);
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background-color: var(--primary-color);
+            padding: 20px;
+            border: 2px solid var(--highlight-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            max-width: 80%;
+            width: 80%;
+            overflow: hidden;
+            position: absolute;
+            top: 50px;
+            min-height: 900px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem; /* Smaller font size */
+            color: var(--text-color);
+            margin-bottom: 15px; /* Less bottom margin */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .header, .rows {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0; /* Reduced padding to make it more compact */
+        }
+
+        .header {
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--highlight-color);
+            margin-bottom: 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .rows {
+            position: relative;
+            margin-bottom: 2px;
+        }
+        .qualification-line {
+            margin-bottom: 20px;
+            border-bottom: none;
+            border-top: none;
+        }
+
+        .rows:nth-child(even) {
+            background-color: rgba(190, 190, 190, 0.1);
+        }
+
+        .qualified {
+        }
+        
+        .qualification-line {
+            position: relative;
+        }
+        
+        .qualification-marker {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            bottom: -15px;
+            left: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qualification-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: normal;
+            padding: 0 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        .line-decoration {
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.7);
+            width: 200px;
+        }
+
+        .penalty {
+            background-color: var(--penalty-color);
+        }
+
+        .cell_r, .count_column, .time_column {
+            text-align: left;
+            color: var(--text-color);
+        }
+
+        .count_column {
+            width: 10%;
+            text-align: center;
+            padding-left: 15px;
+        }
+
+        .cell_r {
+            width: 45%;
+        }
+
+        .time_column {
+            width: 20%;
+            text-align: right;
+            padding-right: 15px;
+        }
+
+        .cell_r h2, .count_column h2, .time_column h2 {
+            font-size: 17px; /* Slightly smaller font */
+            margin: 3px 0; /* Reduced margin */
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .count_column h2 {
+            font-size: 20px;
+            color: var(--highlight-color);
+            font-weight: bold;
+        }
+
+        .time_column h2 {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .penalty-text {
+            color: #ff6666;
+        }
+
+        /* Animations */
+        .animate__animated {
+            animation-duration: 0.8s;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                transform: translate3d(0, -100%, 0);
+                opacity: 0;
+            }
+            to {
+                transform: translate3d(0, 0, 0);
+                opacity: 1;
+            }
+        }
+        
+        .slide-in-down {
+            animation-name: slideInDown;
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        .fade-out {
+            animation-name: fadeOut;
+        }
+        
+        /* Custom animations for row transitions */
+        @keyframes rowInFromLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .row-in-from-left {
+            animation-name: rowInFromLeft;
+        }
+        
+        @keyframes rowOutToRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .row-out-to-right {
+            animation-name: rowOutToRight;
+        }
+
+        /* Auto-scaling for different sizes */
+        @media (max-height: 900px) {
+            .container {
+                max-width: 85%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 15px;
+            }
+            
+            .cell_r h2, .time_column h2 {
+                font-size: 16px;
+                margin: 3px 0;
+            }
+            
+            .count_column h2 {
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .container {
+                max-width: 90%;
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+            }
+            
+            .cell_r h2, .time_column h2 {
+                font-size: 14px;
+                margin: 2px 0;
+            }
+            
+            .count_column h2 {
+                font-size: 16px;
+            }
+            
+            .header, .rows {
+                padding: 5px 0;
+            }
+        }
+    </style>
+    <script>
+        // Auto-refresh logic
+        var urlParams = new URLSearchParams(window.location.search);
+        var timer = urlParams.get('timer')
+        if (timer == null) {
+            timer = 15000
+        } else {
+            timer = timer * 1000
+        }
+        
+        // Animation sequence control
+        let isAnimating = false;
+        
+        function refreshPage() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            // Sequential exit animation to the right
+            const rows = document.querySelectorAll('.rows');
+            let exitDelay = 0;
+            
+            // Start with the last row and move up
+            for (let i = rows.length - 1; i >= 0; i--) {
+                setTimeout(() => {
+                    rows[i].classList.remove('animate__fadeInLeft');
+                    rows[i].classList.add('animate__animated', 'animate__fadeOutRight');
+                }, exitDelay);
+                exitDelay += 100; // Time between each row's exit
+            }
+            
+            // After all rows have exited, reload the page
+            setTimeout(function(){
+                window.location.reload(1);
+            }, exitDelay + 300); // Add some buffer time
+        }
+        
+        // Set timer for auto-refresh
+        setTimeout(refreshPage, timer);
+        
+        // When document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate in the container
+            const container = document.querySelector('.container');
+            const header = document.querySelector('.header');
+            const titles = document.querySelectorAll('h1');
+            const rows = document.querySelectorAll('.rows');
+            
+            // Show container, title and header
+            container.style.opacity = '1';
+            titles.forEach(title => {
+                title.style.opacity = '1';
+            });
+            header.style.opacity = '1';
+            
+            // Hide all rows initially
+            rows.forEach(row => {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-100%)';
+            });
+            
+            // Bring in rows sequentially from the left
+            let entryDelay = 200; // Start after a small delay
+            
+            rows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.style.opacity = '1';
+                    row.classList.add('animate__animated', 'animate__fadeInLeft');
+                    row.style.transform = 'translateX(0)';
+                }, entryDelay + (index * 100)); // 100ms between each row
+            });
+            
+            // Auto-scale based on content
+            adjustSizeForContent();
+        });
+        
+        // Dynamic sizing based on content amount
+        function adjustSizeForContent() {
+            const rows = document.querySelectorAll('.rows');
+            
+            // If we have more than 10 entries, make everything more compact
+            if (rows.length > 10) {
+                document.documentElement.style.setProperty('--font-scale', '0.9');
+                rows.forEach(row => {
+                    row.style.padding = '6px 0';
+                });
+            }
+            
+            // If we have more than 15 entries, make everything even more compact
+            if (rows.length > 15) {
+                document.documentElement.style.setProperty('--font-scale', '0.8');
+                rows.forEach(row => {
+                    row.style.padding = '4px 0';
+                });
+                
+                const titles = document.querySelectorAll('h1');
+                titles.forEach(title => {
+                    title.style.marginBottom = '10px';
+                });
+            }
+        }
+        
+        // Handle window resize for responsive behavior
+        window.addEventListener('resize', adjustSizeForContent);
+        
+        // Execute when DOM is loaded
+        window.onload = function() {
+            adjustSizeForContent();
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 id="sub_title" style="font-size: 22px;">Kombinerte resultater</h1>
+
+        <h1 id="main_title">{{ event.name }}</h1>
+
+        <div class="header">
+            <div class="count_column"><h2>#</h2></div>
+            <div class="cell_r"><h2>Navn</h2></div>
+            <div class="cell_r"><h2>Kjøretøy</h2></div>
+            <div class="time_column"><h2>Tid</h2></div>
+        </div>
+
+        <div id="results-container">
+            {% for result in results %}
+                {% set is_qualification_line = (loop.index == event.kvali_nr) %}
+                <div class="rows {% if result.penalty is not none and result.penalty > 0 %}penalty{% endif %} {% if is_qualification_line %}qualification-line{% endif %}">
+                    <div class="count_column">
+                        <h2>{{ loop.index }}</h2>
+                    </div>
+                    <div class="cell_r">
+                        <h2>{{ result.first_name }} {{ result.last_name }}</h2>
+                    </div>
+                    <div class="cell_r">
+                        <h2>{{ result.snowmobile }}</h2>
+                    </div>
+                    <div class="time_column">
+                        <h2 class="{% if result.penalty is not none and result.penalty > 0 %}penalty-text{% endif %}">{{ result.display_time }}</h2>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

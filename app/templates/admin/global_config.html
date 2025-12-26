@@ -42,7 +42,6 @@
 </div>
 
 <h3>Global Config</h3>
-
 <form method="post" id="configForm">
     {{ form.hidden_tag() }}
     <div class="table-responsive">
@@ -55,6 +54,14 @@
             </thead>
             <tbody>
                 {% for config in global_config %}
+                <tr>
+                    <td>Software Backend</td>
+                    <td>
+                      <input type="hidden" name="msport_tm" id="msport_tm" value="{{ 'true' if config.msport_tm else 'false' }}">
+                      <button type="button" style="border-radius: 0px; width: 49%" class="btn btn-primary btn-lg" id="msports_btn" onclick="toggleBackend('msports')">Msports</button>
+                      <button type="button" style="border-radius: 0px; width: 49%" class="btn btn-primary btn-lg" id="mylaps_btn" onclick="toggleBackend('mylaps')">Mylaps</button>
+                    </td>
+                </tr>
                 <tr>
                     <td>Session Name</td>
                     <td><input type="text" class="form-control" name="session_name" value="{{ config.session_name }}"></td>
@@ -169,6 +176,38 @@
 </form>
 
 <script>
+  function toggleBackend(backend) {
+    const msportsBtn = document.getElementById('msports_btn');
+    const mylapsBtn = document.getElementById('mylaps_btn');
+    const hiddenInput = document.getElementById('msport_tm');
+    
+    if (backend === 'msports') {
+        msportsBtn.classList.add('disabled');
+        mylapsBtn.classList.remove('disabled');
+        hiddenInput.value = 'true';
+    } else {
+        msportsBtn.classList.remove('disabled');
+        mylapsBtn.classList.add('disabled');
+        hiddenInput.value = 'false';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const hiddenInput = document.getElementById('msport_tm');
+    const isMsports = hiddenInput.value === 'true';
+    
+    if (isMsports) {
+        document.getElementById('msports_btn').classList.add('disabled');
+        document.getElementById('mylaps_btn').classList.remove('disabled');
+    } else {
+        document.getElementById('msports_btn').classList.remove('disabled');
+        document.getElementById('mylaps_btn').classList.add('disabled');
+    }
+});
+
+
+
     document.addEventListener('DOMContentLoaded', function() {
         toggleCrossWhitelist();
         toggleIntermediatePath();

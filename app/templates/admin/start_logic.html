@@ -1,0 +1,243 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Start Logic Configuration</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="start_logic" enctype="multipart/form-data" id="configForm">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Start Light IP</label>
+                        <input type="text" class="form-control" name="start_light_ip" value="{{ config.start_light_ip or '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Matrix Size (widthxheight)</label>
+                        <input type="text" class="form-control" name="sl_matric_size" value="{{ config.sl_matric_size or '24x32' }}" placeholder="24x32">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Start Delay Range</label>
+                        <input type="text" class="form-control" name="sl_start_delay" value="{{ config.sl_start_delay or '1.2-2.5' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Active Timer (seconds)</label>
+                        <input type="number" class="form-control" name="sl_active_timer" value="{{ config.sl_active_timer or 3 }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Brightness</label>
+                        <input type="range" class="form-range" name="sl_brightness" min="0" max="255" value="{{ config.sl_brightness }}">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Halt Color</label>
+                        <input type="color" class="form-control form-control-color" name="sl_halt_color" value="{{ halt_color_hex or '#ff0000' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Start Color</label>
+                        <input type="color" class="form-control form-control-color" name="sl_start_color" value="{{ start_color_hex or '#00ff00' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Stop Color</label>
+                        <input type="color" class="form-control form-control-color" name="sl_stop_color" value="{{ stop_color_hex or '#0000ff' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ready Color</label>
+                        <input type="color" class="form-control form-control-color" name="sl_ready_color" value="{{ ready_color_hex or '#000000' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <h5>Warmup Image Editor ({{ matrix_width }}x{{ matrix_height }} pixels, scaled 5x for editing)</h5>
+                    <div class="mb-2">
+                        <label class="form-label">Upload New Image</label>
+                        <input type="file" class="form-control" id="imageUpload" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label">Draw Color</label>
+                        <input type="color" id="drawColor" value="#ffffff" class="form-control form-control-color" style="width: 100px; display: inline-block;">
+                        <label class="form-label ms-3">Line Color</label>
+                        <input type="color" id="lineColor" value="#ffffff" class="form-control form-control-color" style="width: 100px; display: inline-block;">
+                        <label class="form-label ms-3">Line Width</label>
+                        <input type="number" id="lineWidth" value="1" min="1" max="5" class="form-control" style="width: 80px; display: inline-block;">
+                        <button type="button" class="btn btn-warning btn-sm ms-2" id="clearCanvas">Clear All</button>
+                    </div>
+                    
+                    <div class="border p-2" style="background: #333; display: inline-block;">
+                        <canvas id="imageCanvas" style="border: 1px solid #ccc; cursor: crosshair; image-rendering: pixelated;"></canvas>
+                    </div>
+                    <div class="mt-2 text-muted small">Click to draw pixels. Shift+Click to start line, click again to end line</div>
+                    
+                    <input type="hidden" name="sl_warmup_image_data" id="imageData">
+                </div>
+                
+                <div class="col-md-6 mt-3">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="fc_req_ready" {% if config.fc_req_ready %}checked{% endif %}>
+                        <label class="form-check-label">Field Controller Ready</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="cr_req_ready" {% if config.cr_req_ready %}checked{% endif %}>
+                        <label class="form-check-label">Control Room Ready</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="sl_start_using_relay" {% if config.sl_start_using_relay %}checked{% endif %}>
+                        <label class="form-check-label">Trigger Start Using Relay</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="fc_can_start" {% if config.fc_can_start %}checked{% endif %}>
+                        <label class="form-check-label">Field Controller Can Start</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="cr_can_start" {% if config.cr_can_start %}checked{% endif %}>
+                        <label class="form-check-label">Control Room Can Start</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary mt-3">Save Configuration</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const PIXEL_SCALE = 10;
+const MATRIX_WIDTH = {{ matrix_width }};
+const MATRIX_HEIGHT = {{ matrix_height }};
+
+const canvas = document.getElementById('imageCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = MATRIX_WIDTH * PIXEL_SCALE;
+canvas.height = MATRIX_HEIGHT * PIXEL_SCALE;
+
+let img = new Image();
+let isDrawingLine = false;
+let startX, startY;
+
+// Initialize with white background or existing image
+ctx.fillStyle = '#000000';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+{% if config.sl_warmup_image %}
+img.src = 'data:image/png;base64,{{ warmup_image_b64 }}';
+img.onload = function() {
+    ctx.drawImage(img, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, 0, 0, canvas.width, canvas.height);
+};
+{% endif %}
+
+// Upload new image
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Drawing functionality
+canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / PIXEL_SCALE);
+    const y = Math.floor((e.clientY - rect.top) / PIXEL_SCALE);
+    
+    if (e.shiftKey) {
+        // Line mode
+        if (!isDrawingLine) {
+            startX = x;
+            startY = y;
+            isDrawingLine = true;
+        } else {
+            drawLine(startX, startY, x, y);
+            isDrawingLine = false;
+        }
+    } else {
+        // Single pixel mode
+        const color = document.getElementById('drawColor').value;
+        ctx.fillStyle = color;
+        ctx.fillRect(x * PIXEL_SCALE, y * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+    }
+});
+
+function drawLine(x0, y0, x1, y1) {
+    const color = document.getElementById('lineColor').value;
+    const width = parseInt(document.getElementById('lineWidth').value);
+    
+    // Bresenham's line algorithm
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+    
+    ctx.fillStyle = color;
+    
+    while (true) {
+        // Draw pixel with width
+        for (let i = -Math.floor(width/2); i <= Math.floor(width/2); i++) {
+            for (let j = -Math.floor(width/2); j <= Math.floor(width/2); j++) {
+                const px = x0 + i;
+                const py = y0 + j;
+                if (px >= 0 && px < MATRIX_WIDTH && py >= 0 && py < MATRIX_HEIGHT) {
+                    ctx.fillRect(px * PIXEL_SCALE, py * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+                }
+            }
+        }
+        
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+// Clear canvas
+document.getElementById('clearCanvas').addEventListener('click', function() {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    isDrawingLine = false;
+});
+
+// Save canvas data on form submit
+document.getElementById('configForm').addEventListener('submit', function() {
+    // Create a temporary canvas at actual pixel size
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = MATRIX_WIDTH;
+    tempCanvas.height = MATRIX_HEIGHT;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.imageSmoothingEnabled = false;
+    
+    // Draw scaled-down version
+    tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT);
+    
+    const imageDataUrl = tempCanvas.toDataURL('image/png');
+    document.getElementById('imageData').value = imageDataUrl;
+});
+</script>
+
+{% endblock %}

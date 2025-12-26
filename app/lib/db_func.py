@@ -6,6 +6,7 @@ from app.lib.utils import GetEnv
 from typing import List, Dict, Union, Tuple
 from datetime import datetime, timedelta
 import traceback
+import xml.etree.ElementTree as ET
 
 
 def timevalue_convert(dateint):
@@ -14,12 +15,28 @@ def timevalue_convert(dateint):
     actual_date = base_date + timedelta(days=dateint - 2)
     return actual_date.strftime("%Y-%m-%d")
 
+def xml_to_dict(element):
+    result = dict(element.attrib)
+    
+    if element.text and element.text.strip():
+        result['_text'] = element.text.strip()
+    
+    for child in element:
+        child_data = xml_to_dict(child)
+        
+        if child.tag in result:
+            if not isinstance(result[child.tag], list):
+                result[child.tag] = [result[child.tag]]
+            result[child.tag].append(child_data)
+        else:
+            result[child.tag] = child_data
+    
+    return result
+
 def map_database_files(global_config, Event=None, event_only=False):
     
     db_data = []
     driver_db_data = {}
-
-    print(global_config)
 
     event_dir = global_config["event_dir"]
     wh_check = global_config["wl_bool"]
@@ -27,7 +44,23 @@ def map_database_files(global_config, Event=None, event_only=False):
     cross_check = global_config["cross"]
     cross_title = global_config["wl_cross_title"]
     exclude_title = global_config["exclude_title"]
+    
+    if global_config["msport_tm"] != True:
+        file_list = os.listdir(event_dir)
 
+        if "current.xml" in file_list:
+            with open(os.path.join(event_dir, "current.xml"), "r") as file:
+                current_data = str(file.readlines()[0])
+        
+        root = ET.fromstring(current_data)
+        current_data_dict = {root.tag: xml_to_dict(root)} 
+        
+        for b in current_data_dict:
+            for t in current_data_dict[b]["label"]:
+                print(t)
+                if t["type"] == "runname":
+                    print(t["_text"])
+        return
 
     if Event != None:
         events = [Event+".scdb"]
@@ -38,7 +71,7 @@ def map_database_files(global_config, Event=None, event_only=False):
         tmp_event_list = []
 
     #This for loop will enumerate a folder to find a bunch of database files
-
+    print(global_config)
     for filename in events:
         f = os.path.join(event_dir, filename)
         # checking if it is a file

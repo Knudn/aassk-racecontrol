@@ -19,6 +19,8 @@ def admin(tab_name):
         return home_tab()
     elif tab_name == 'global-config':
         return global_config_tab()
+    elif tab_name == 'start_logic':
+        return start_logic()
     elif tab_name == 's_set_active_driver':
         return s_set_active_driver()
     elif tab_name == 'cross_config':
@@ -64,6 +66,96 @@ def s_set_active_driver():
         return {"synced":"True"}
 
     return render_template('admin/s_set_active_driver.html') 
+
+
+def start_logic():
+    from app.lib.utils import GetEnv
+    from app.models import StartLogic
+    from flask import request, redirect, url_for, render_template
+    import json, base64
+    from PIL import Image
+    from app import db
+    import io
+    
+    g_conf = GetEnv()
+    start_data = StartLogic.query.first()
+    
+    if request.method == 'POST':
+        def hex_to_rgb_string(hex_color):
+            hex_color = hex_color.lstrip('#')
+            rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+            return str(list(rgb))
+        
+        start_data.start_light_ip = request.form['start_light_ip']
+        start_data.sl_matric_size = request.form['sl_matric_size']
+        start_data.sl_start_delay = request.form['sl_start_delay']
+        start_data.sl_active_timer = int(request.form['sl_active_timer'])
+        start_data.sl_halt_color = hex_to_rgb_string(request.form['sl_halt_color'])
+        start_data.sl_start_color = hex_to_rgb_string(request.form['sl_start_color'])
+        start_data.sl_stop_color = hex_to_rgb_string(request.form['sl_stop_color'])
+        start_data.sl_ready_color = hex_to_rgb_string(request.form['sl_ready_color'])
+        start_data.sl_brightness = request.form['sl_brightness']
+
+        if request.form.get('sl_warmup_image_data'):
+            image_data = request.form['sl_warmup_image_data']
+            image_data = image_data.split(',')[1]
+            image_bytes = base64.b64decode(image_data)
+            
+            width, height = map(int, start_data.sl_matric_size.split('x'))
+            
+            img = Image.open(io.BytesIO(image_bytes))
+            img = img.resize((width, height), Image.Resampling.NEAREST)
+            
+            img_io = io.BytesIO()
+            img.save(img_io, 'PNG')
+            start_data.sl_warmup_image = img_io.getvalue()
+        
+        start_data.sl_start_using_relay = 'sl_start_using_relay' in request.form
+        start_data.fc_req_ready = 'fc_req_ready' in request.form
+        start_data.cr_req_ready = 'cr_req_ready' in request.form
+        start_data.fc_can_start = 'fc_can_start' in request.form
+        start_data.cr_can_start = 'cr_can_start' in request.form
+
+        db.session.commit()
+
+        
+        try:
+            data = request.form.to_dict(flat=False)
+            data["sl_halt_color"] = start_data.sl_halt_color
+            data["sl_start_color"] = start_data.sl_start_color
+            data["sl_stop_color"] = start_data.sl_stop_color
+            data["sl_ready_color"] = start_data.sl_ready_color   
+            data["sl_warmup_image_data"] = StartLogic.query.first().get_rgb_values()
+
+            requests.post(f"http://{start_data.start_light_ip}/api/set_config",json=json.dumps(data))
+            
+        except Exception as err:
+            print(err)
+        
+        return redirect(url_for('admin.admin', tab_name='start_logic'))
+    
+    def rgb_to_hex(rgb_string):
+        try:
+            rgb = json.loads(rgb_string)
+            return '#{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+        except:
+            return '#000000'
+    
+    # Parse matrix size for canvas
+    matrix_size = start_data.sl_matric_size or '24x32'
+    matrix_width, matrix_height = map(int, matrix_size.split('x'))
+    
+    return render_template('admin/start_logic.html',
+        config=start_data,
+        matrix_width=matrix_width,
+        matrix_height=matrix_height,
+        halt_color_hex=rgb_to_hex(start_data.sl_halt_color) if start_data.sl_halt_color else '#ff0000',
+        start_color_hex=rgb_to_hex(start_data.sl_start_color) if start_data.sl_start_color else '#00ff00',
+        stop_color_hex=rgb_to_hex(start_data.sl_stop_color) if start_data.sl_stop_color else '#0000ff',
+        ready_color_hex=rgb_to_hex(start_data.sl_ready_color) if start_data.sl_ready_color else '#000000',
+        warmup_image_b64=base64.b64encode(start_data.sl_warmup_image).decode() if start_data.sl_warmup_image else None
+    )    
+
 
 def home_tab():
     from app.models import ActiveDrivers, ActiveEvents, Session_Race_Records, GlobalConfig, MicroServices, archive_server
@@ -207,7 +299,7 @@ def home_tab():
 
                 event_config = {"all_records":(valid_recorded_times + invalid_recorded_times + drivers_left), "p_times":invalid_recorded_times, "v_times":valid_recorded_times, "l_times":drivers_left, "drivers":amount_drivers, "heats":heat_num}
                 return event_config
-            
+             
         elif "service_state" in request.form:
             from app.lib.utils import GetEnv, is_screen_session_running, manage_process_screen
             
@@ -359,7 +451,8 @@ def global_config_tab():
                 
                 if form.event_dir.data[-1:] != "/":
                     form.event_dir.data += "/"
-
+                
+                config.msport_tm = bool(form.msport_tm.data)
                 config.session_name = form.session_name.data
                 config.project_dir = form.project_dir.data
                 config.db_location = form.db_location.data

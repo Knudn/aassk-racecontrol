@@ -30,7 +30,7 @@ def full_db_reload(add_intel_sort=False, sync=False, Event=None):
 
     delete_events(g_config["db_location"], event=Event)
     
-    
+    print(g_config) 
     if Event != None:
         db_data, driver_db_data = map_database_files(g_config, Event=Event)
         

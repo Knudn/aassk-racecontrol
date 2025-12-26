@@ -1,5 +1,5 @@
 from app import create_app, db, socketio
-from app.models import GlobalConfig, ActiveDrivers, SpeakerPageSettings, InfoScreenAssets, MicroServices, CrossConfig, ledpanel, archive_server
+from app.models import StartLogic, GlobalConfig, ActiveDrivers, SpeakerPageSettings, InfoScreenAssets, MicroServices, CrossConfig, ledpanel, archive_server
 from app.lib.db_operation import update_active_event
 import os
 import logging
@@ -49,6 +49,14 @@ def create_tables(app):
         MicroServices_db = MicroServices.query.all()
         ledpanel_db = ledpanel.query.all()
         archive_server_db = archive_server.query.all()
+        start_logic_db = StartLogic.query.all()
+        
+        #Init DB for start logic
+        if start_logic_db == []:
+            app.logger.info('Configuring DB for StartLogic')
+            default_config = StartLogic()
+            db.session.add(default_config)
+            db.session.commit()
 
         # Initialize archive server config if it doesn't exist
         if archive_server_db == []:
@@ -174,7 +182,8 @@ if __name__ == '__main__':
     configure_logging(app)
     app.logger.info('App started')
     create_tables(app)
-
+    
+    print(config.DEBUG)
     with app.app_context():
         event_data = get_active_startlist()
         app.config['event_content'] = event_data

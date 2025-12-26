@@ -4,6 +4,8 @@ from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime
 from app import db
 
+
+
 class InfoScreenInitMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(128), nullable=False)
@@ -67,6 +69,7 @@ class InfoScreenAssets(db.Model):
 
 class ConfigForm(FlaskForm):
     session_name = StringField('Session Name')
+    msport_tm = BooleanField('Timekeep software')
     project_dir = StringField('Project Directory')
     db_location = StringField('Database Location')
     event_dir = StringField('Event Directory')
@@ -91,6 +94,7 @@ class GlobalConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True, default=1)
     session_name = db.Column(db.String(100), nullable=True, default="Åseral")
     project_dir = db.Column(db.String(100), nullable=True, default="/home/rock/aassk/new_system")
+    msport_tm = db.Column(db.Boolean, default=True)
     db_location = db.Column(db.String(100), nullable=True, default="/home/rock/aassk/new_system/event_db/")
     event_dir = db.Column(db.String(100), nullable=True, default="/mnt/test/")
     wl_title = db.Column(db.String(100), nullable=True, default="Watercross")
@@ -111,6 +115,35 @@ class GlobalConfig(db.Model):
     autocommit = db.Column(db.Boolean, default=False)
     use_intermediate = db.Column(db.Boolean, default=False)
 
+class StartLogic(db.Model):
+    #fc = FieldController
+    #cr = control room
+    #sl = start light
+    id = db.Column(db.Integer, primary_key=True, default=1)
+
+    start_light_ip = db.Column(db.String(100), nullable=True, default="192.168.1.190")
+
+    sl_start_delay = db.Column(db.String(16), nullable=True, default="1.2-2.5") 
+    sl_active_timer = db.Column(db.Integer, nullable=True, default="3")     
+
+    sl_halt_color = db.Column(db.String(16), nullable=True, default="[255,0,0]")
+    sl_start_color = db.Column(db.String(16), nullable=True, default="[0,255,0]")
+    sl_stop_color = db.Column(db.String(16), nullable=True, default="[0,0,255]")
+    sl_ready_color = db.Column(db.String(16), nullable=True, default="[0,0,0]")
+    sl_warmup_image = db.Column(db.LargeBinary, nullable=True)
+    sl_start_using_relay = db.Column(db.Boolean, default=False)
+    sl_brightness = db.Column(db.Integer, nullable=True, default=150)     
+    #widthXheight
+    sl_matric_size = db.Column(db.String(16), nullable=True, default="24x32")
+
+    fc_req_ready = db.Column(db.Boolean, default=False)
+    cr_req_ready = db.Column(db.Boolean, default=False)
+    
+    fc_can_start = db.Column(db.Boolean, default=False)
+    cr_can_start = db.Column(db.Boolean, default=False)
+
+    def get_rgb_values(self):
+        return list(self.sl_warmup_image)
 
 class ActiveEvents(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

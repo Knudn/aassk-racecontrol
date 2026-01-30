@@ -18,7 +18,8 @@ def delete_events(directory_path, event=None):
         
         if os.path.isfile(file_path):
             os.remove(file_path)
-    
+
+
 
 def full_db_reload(add_intel_sort=False, sync=False, Event=None):
     from app.models import ActiveEvents, EventOrder, EventType
@@ -30,7 +31,6 @@ def full_db_reload(add_intel_sort=False, sync=False, Event=None):
 
     delete_events(g_config["db_location"], event=Event)
     
-    print(g_config) 
     if Event != None:
         db_data, driver_db_data = map_database_files(g_config, Event=Event)
         
@@ -151,13 +151,19 @@ def update_event(db, heat):
 
 def update_active_event_stats(Emit=True):
     from flask import current_app
-
+    from app.lib.db_func import clear_driver_table
+    
     g_config = GetEnv()
 
-    update_active_event(g_config)
     active_event = get_active_event()
+    
+    if g_config["msport_tm"]:
+        update_active_event(g_config)
+    else:
+        clear_driver_table(active_event, g_config)
 
     change_active_driver = False
+
 
 
     if current_app.config['current_event'] != active_event:
@@ -168,8 +174,12 @@ def update_active_event_stats(Emit=True):
     #db_data, driver_db_data = map_database_files(g_config, "Event008")
     #print(db_data, driver_db_data)
     try:
-
-        insert_start_list(active_event, g_config, init_mode=False, set_active_driver=change_active_driver)
+        if not g_config["msport_tm"]:
+            #This will updated the list of driver in the "drivers" table, needed to do this to make orbits happy
+            update_drivers = True
+        else:
+            update_drivers = False
+        insert_start_list(active_event, g_config, init_mode=False, set_active_driver=change_active_driver, update_drivers_table=update_drivers)
         insert_driver_stats(active_event, g_config, init_mode=False, exclude_lst=True)   
         
     except Exception as Error:
@@ -192,8 +202,12 @@ def get_active_startlist():
     event = get_active_event()
     event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
     event[0]["db_file"] = event_db_file
-    data = json.dumps(format_startlist(event))
-
+    try:
+        data = json.dumps(format_startlist(event))
+    except Exception as err:
+        print("Could not build event JSON:", event)
+        print(err)
+        return
     return data
 
 
@@ -246,9 +260,7 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
 
         event[0]["db_file"] = event_db_file
 
-
     else:
-        
         
         event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
 
@@ -270,7 +282,6 @@ def get_specific_event_data(event_filter=None):
     event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
     event[0]["db_file"] = event_db_file
     data = get_event_data_all(event)
-    print(data)
     #data = json.dumps(format_startlist(event, include_timedata=True))
     return data
 

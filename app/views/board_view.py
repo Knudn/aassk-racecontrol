@@ -139,8 +139,10 @@ def speaker():
     SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
     cross_state = g_config["cross"]
     
-    if str(cross_state) == "True":
+    if str(cross_state) == "True" and g_config["msport_tm"]:
         return render_template('board/speaker_board_cross.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
+    elif str(cross_state) == "True" and not g_config["msport_tm"]:
+        return render_template('board/speaker_board_cross_mylaps.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
     elif mode == 3:
         return render_template('board/speaker_board_stige.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
     elif mode == 1 or mode == 2:

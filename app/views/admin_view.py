@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, url_for, redirect, flash
 from app.lib.db_operation import *
 from app.lib.utils import GetEnv, intel_sort, update_info_screen, export_events
@@ -7,50 +6,52 @@ from werkzeug.utils import secure_filename
 import requests
 
 
-admin_bp = Blueprint('admin', __name__)
+admin_bp = Blueprint("admin", __name__)
 
-@admin_bp.route('/admin/', methods=['GET'])
+
+@admin_bp.route("/admin/", methods=["GET"])
 def admin_home():
     return home_tab()
 
-@admin_bp.route('/admin/<string:tab_name>', methods=['GET','POST'])
+
+@admin_bp.route("/admin/<string:tab_name>", methods=["GET", "POST"])
 def admin(tab_name):
-    if tab_name == 'home':
+    if tab_name == "home":
         return home_tab()
-    elif tab_name == 'global-config':
+    elif tab_name == "global-config":
         return global_config_tab()
-    elif tab_name == 'start_logic':
+    elif tab_name == "start_logic":
         return start_logic()
-    elif tab_name == 's_set_active_driver':
+    elif tab_name == "s_set_active_driver":
         return s_set_active_driver()
-    elif tab_name == 'cross_config':
+    elif tab_name == "cross_config":
         return cross_config_tab()
-    elif tab_name == 'infoscreen':
+    elif tab_name == "infoscreen":
         return infoscreen()
-    elif tab_name == 'active_events':
+    elif tab_name == "active_events":
         return active_events()
-    elif tab_name == 'active_events_driver_data':
+    elif tab_name == "active_events_driver_data":
         return active_events_driver_data()
-    elif tab_name == 'msport_proxy':
+    elif tab_name == "msport_proxy":
         return msport_proxy()
-    elif tab_name == 'export':
+    elif tab_name == "export":
         return export_data()
-    elif tab_name == 'clock_mgnt':
+    elif tab_name == "clock_mgnt":
         return clock_mgnt()
-    elif tab_name == 'time_keeper':
+    elif tab_name == "time_keeper":
         return timekeeperpage()
-    elif tab_name == 'ledpanel':
+    elif tab_name == "ledpanel":
         return led_panel()
-    elif tab_name == 'kvali_criteria':
+    elif tab_name == "kvali_criteria":
         return kvali_criteria()
     else:
         return "Invalid tab", 404
 
 
-
 def s_set_active_driver():
     from flask import current_app
-    list_address = current_app.config['listen_address']
+
+    list_address = current_app.config["listen_address"]
 
     DB_PATH = "site.db"
     if request.method == "POST":
@@ -58,14 +59,13 @@ def s_set_active_driver():
         with sqlite3.connect(DB_PATH) as con:
             cur = con.cursor()
             cur.execute("UPDATE active_drivers SET D1 = ?;", (active_driver_id,))
-            print(cur.execute("SELECT * FROM active_drivers").fetchall())
 
         requests.get("http://{0}:7777/api/active_event_update".format(list_address))
 
         con.commit()
-        return {"synced":"True"}
+        return {"synced": "True"}
 
-    return render_template('admin/s_set_active_driver.html') 
+    return render_template("admin/s_set_active_driver.html")
 
 
 def start_logic():
@@ -76,98 +76,149 @@ def start_logic():
     from PIL import Image
     from app import db
     import io
-    
+    from requests.exceptions import HTTPError
+    from app.lib.utils import manage_process_screen
+    import time
+
     g_conf = GetEnv()
     start_data = StartLogic.query.first()
-    
-    if request.method == 'POST':
-        def hex_to_rgb_string(hex_color):
-            hex_color = hex_color.lstrip('#')
-            rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-            return str(list(rgb))
-        
-        start_data.start_light_ip = request.form['start_light_ip']
-        start_data.sl_matric_size = request.form['sl_matric_size']
-        start_data.sl_start_delay = request.form['sl_start_delay']
-        start_data.sl_active_timer = int(request.form['sl_active_timer'])
-        start_data.sl_halt_color = hex_to_rgb_string(request.form['sl_halt_color'])
-        start_data.sl_start_color = hex_to_rgb_string(request.form['sl_start_color'])
-        start_data.sl_stop_color = hex_to_rgb_string(request.form['sl_stop_color'])
-        start_data.sl_ready_color = hex_to_rgb_string(request.form['sl_ready_color'])
-        start_data.sl_brightness = request.form['sl_brightness']
 
-        if request.form.get('sl_warmup_image_data'):
-            image_data = request.form['sl_warmup_image_data']
-            image_data = image_data.split(',')[1]
+    if request.method == "POST":
+
+        def hex_to_rgb_string(hex_color):
+            hex_color = hex_color.lstrip("#")
+            rgb = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+            return str(list(rgb))
+
+        start_data.start_light_ip = request.form["start_light_ip"]
+        start_data.sl_matric_size = request.form["sl_matric_size"]
+        start_data.sl_start_delay = request.form["sl_start_delay"]
+        start_data.sl_active_timer = int(request.form["sl_active_timer"])
+        start_data.sl_halt_color = hex_to_rgb_string(request.form["sl_halt_color"])
+        start_data.sl_start_color = hex_to_rgb_string(request.form["sl_start_color"])
+        start_data.sl_stop_color = hex_to_rgb_string(request.form["sl_stop_color"])
+        start_data.sl_ready_color = hex_to_rgb_string(request.form["sl_ready_color"])
+        start_data.sl_brightness = request.form["sl_brightness"]
+
+        if "sl_start_using_relay" in request.form:
+            start_data.sl_start_using_relay = True
+            print("sssssssssssssss")
+        else:
+            start_data.sl_start_using_relay = False
+
+        if request.form.get("sl_warmup_image_data"):
+            image_data = request.form["sl_warmup_image_data"]
+            image_data = image_data.split(",")[1]
             image_bytes = base64.b64decode(image_data)
-            
-            width, height = map(int, start_data.sl_matric_size.split('x'))
-            
+
             img = Image.open(io.BytesIO(image_bytes))
-            img = img.resize((width, height), Image.Resampling.NEAREST)
-            
+
             img_io = io.BytesIO()
-            img.save(img_io, 'PNG')
+            img.save(img_io, "PNG")
             start_data.sl_warmup_image = img_io.getvalue()
-        
-        start_data.sl_start_using_relay = 'sl_start_using_relay' in request.form
-        start_data.fc_req_ready = 'fc_req_ready' in request.form
-        start_data.cr_req_ready = 'cr_req_ready' in request.form
-        start_data.fc_can_start = 'fc_can_start' in request.form
-        start_data.cr_can_start = 'cr_can_start' in request.form
+
+        start_data.fc_req_ready = "fc_req_ready" in request.form
+        start_data.cr_req_ready = "cr_req_ready" in request.form
+        start_data.fc_can_start = "fc_can_start" in request.form
+        start_data.cr_can_start = "cr_can_start" in request.form
+        start_data.sl_use_warmup_image = "sl_use_warmup_image" in request.form
+
+        if "sl_start_using_relay" in request.form:
+            use_relay = str(True)
+        else:
+            use_relay = str(False)
 
         db.session.commit()
 
-        
         try:
             data = request.form.to_dict(flat=False)
+            data["sl_start_using_relay"] = use_relay
             data["sl_halt_color"] = start_data.sl_halt_color
             data["sl_start_color"] = start_data.sl_start_color
             data["sl_stop_color"] = start_data.sl_stop_color
-            data["sl_ready_color"] = start_data.sl_ready_color   
+            data["sl_ready_color"] = start_data.sl_ready_color
             data["sl_warmup_image_data"] = StartLogic.query.first().get_rgb_values()
 
-            requests.post(f"http://{start_data.start_light_ip}/api/set_config",json=json.dumps(data))
-            
+            requests.post(
+                f"http://{start_data.start_light_ip}/api/set_config",
+                json=json.dumps(data),
+            )
+
         except Exception as err:
             print(err)
-        
-        return redirect(url_for('admin.admin', tab_name='start_logic'))
-    
+
+        manage_process_screen("mqtt_middleware.py", "stop")
+        time.sleep(1)
+        manage_process_screen("mqtt_middleware.py", "start")
+        return redirect(url_for("admin.admin", tab_name="start_logic"))
+
     def rgb_to_hex(rgb_string):
         try:
             rgb = json.loads(rgb_string)
-            return '#{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+            return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
         except:
-            return '#000000'
-    
+            return "#000000"
+
     # Parse matrix size for canvas
-    matrix_size = start_data.sl_matric_size or '24x32'
-    matrix_width, matrix_height = map(int, matrix_size.split('x'))
-    
-    return render_template('admin/start_logic.html',
+    matrix_size = start_data.sl_matric_size or "24x32"
+    matrix_width, matrix_height = map(int, matrix_size.split("x"))
+    try:
+        requests.get("http://" + start_data.start_light_ip, timeout=2)
+        endpoint_state = True
+    except:
+        endpoint_state = False
+
+    return render_template(
+        "admin/start_logic.html",
         config=start_data,
+        endpoint_state=endpoint_state,
         matrix_width=matrix_width,
         matrix_height=matrix_height,
-        halt_color_hex=rgb_to_hex(start_data.sl_halt_color) if start_data.sl_halt_color else '#ff0000',
-        start_color_hex=rgb_to_hex(start_data.sl_start_color) if start_data.sl_start_color else '#00ff00',
-        stop_color_hex=rgb_to_hex(start_data.sl_stop_color) if start_data.sl_stop_color else '#0000ff',
-        ready_color_hex=rgb_to_hex(start_data.sl_ready_color) if start_data.sl_ready_color else '#000000',
-        warmup_image_b64=base64.b64encode(start_data.sl_warmup_image).decode() if start_data.sl_warmup_image else None
-    )    
+        halt_color_hex=rgb_to_hex(start_data.sl_halt_color)
+        if start_data.sl_halt_color
+        else "#ff0000",
+        start_color_hex=rgb_to_hex(start_data.sl_start_color)
+        if start_data.sl_start_color
+        else "#00ff00",
+        stop_color_hex=rgb_to_hex(start_data.sl_stop_color)
+        if start_data.sl_stop_color
+        else "#0000ff",
+        ready_color_hex=rgb_to_hex(start_data.sl_ready_color)
+        if start_data.sl_ready_color
+        else "#000000",
+        warmup_image_b64=base64.b64encode(start_data.sl_warmup_image).decode()
+        if start_data.sl_warmup_image
+        else None,
+    )
 
 
 def home_tab():
-    from app.models import ActiveDrivers, ActiveEvents, Session_Race_Records, GlobalConfig, MicroServices, archive_server
+    from app.models import (
+        ActiveDrivers,
+        ActiveEvents,
+        Session_Race_Records,
+        GlobalConfig,
+        MicroServices,
+        archive_server,
+    )
     from app import db
     from sqlalchemy import func
     import json
 
     archive_params = archive_server.query.first()
 
-    archive_params_json = {"password": archive_params.auth_token, "hostname": archive_params.hostname, "enabled": archive_params.enabled}
+    archive_params_json = {
+        "password": archive_params.auth_token,
+        "hostname": archive_params.hostname,
+        "enabled": archive_params.enabled,
+    }
 
-    g_conf = db.session.query(GlobalConfig.db_location, GlobalConfig.event_dir, GlobalConfig.use_intermediate, GlobalConfig.intermediate_path).all()[0]
+    g_conf = db.session.query(
+        GlobalConfig.db_location,
+        GlobalConfig.event_dir,
+        GlobalConfig.use_intermediate,
+        GlobalConfig.intermediate_path,
+    ).all()[0]
 
     db_location = g_conf[0]
     mount_path = g_conf[1]
@@ -183,7 +234,7 @@ def home_tab():
             inter_files = g_conf[3]
             dir = os.listdir(inter_files)
 
-            if len(dir) == 0: 
+            if len(dir) == 0:
                 mount_bool = str(3)
             else:
                 mount_bool = str(1)
@@ -191,39 +242,41 @@ def home_tab():
             mount_bool = str(1)
 
     # Query to get distinct event names and their counts
-    enabled_events = (ActiveEvents.query
-                        .filter(ActiveEvents.enabled == 1)
-                        .group_by(ActiveEvents.event_name)
-                        .with_entities(ActiveEvents.event_name, func.count(ActiveEvents.event_name))
-                        .count())
+    enabled_events = (
+        ActiveEvents.query.filter(ActiveEvents.enabled == 1)
+        .group_by(ActiveEvents.event_name)
+        .with_entities(ActiveEvents.event_name, func.count(ActiveEvents.event_name))
+        .count()
+    )
 
-    drivers = (Session_Race_Records.query
-                      .with_entities(Session_Race_Records.first_name, Session_Race_Records.last_name)
-                      .group_by(Session_Race_Records.first_name, Session_Race_Records.last_name)
-                      .count())
+    drivers = (
+        Session_Race_Records.query.with_entities(
+            Session_Race_Records.first_name, Session_Race_Records.last_name
+        )
+        .group_by(Session_Race_Records.first_name, Session_Race_Records.last_name)
+        .count()
+    )
 
-    services = (MicroServices.query.all())
-    
+    services = MicroServices.query.all()
 
-    number_runs = (ActiveEvents.query.filter(ActiveEvents.enabled == 1).count())
+    number_runs = ActiveEvents.query.filter(ActiveEvents.enabled == 1).count()
 
     unique_events = (
         db.session.query(
             ActiveEvents.event_name,
-            func.max(ActiveEvents.run).label('max_run'),
-            ActiveEvents.event_file
+            func.max(ActiveEvents.run).label("max_run"),
+            ActiveEvents.event_file,
         )
-        .group_by(ActiveEvents.event_name).order_by(ActiveEvents.sort_order)
+        .group_by(ActiveEvents.event_name)
+        .order_by(ActiveEvents.sort_order)
         .all()
     )
 
     if request.method == "POST":
-
         if "endpoint_server_update" in request.form:
-
-            hostname = request.form.get('hostname')
-            password = request.form.get('password')
-            state = request.form.get('state')
+            hostname = request.form.get("hostname")
+            password = request.form.get("password")
+            state = request.form.get("state")
 
             if password == "":
                 token = False
@@ -249,31 +302,32 @@ def home_tab():
 
                 db.session.commit()
 
-            return {"Success":"Updated configuration"}
-        
+            return {"Success": "Updated configuration"}
+
         elif "single_event" in request.form:
-            
-            if request.form.get('event_file') == "active_event":
+            if request.form.get("event_file") == "active_event":
                 active_event = get_active_event()
                 selectedEventFile = active_event[0]["db_file"]
                 selectedRun = active_event[0]["SPESIFIC_HEAT"]
             else:
-                selectedEventFile = request.form.get('single_event')
-                
-                sync_state = request.form.get('sync')
+                selectedEventFile = request.form.get("single_event")
+
+                sync_state = request.form.get("sync")
 
             if sync_state == "true":
                 from app.lib.utils import GetEnv
+
                 g_config = GetEnv()
 
-                event_name = request.form.get('event_name')
+                event_name = request.form.get("event_name")
 
-                #Delete local driver session entries for the spesific event
-                db.session.query(Session_Race_Records).filter((Session_Race_Records.title_1 + " " + Session_Race_Records.title_2)==event_name).delete()
+                db.session.query(Session_Race_Records).filter(
+                    (Session_Race_Records.title_1 + " " + Session_Race_Records.title_2)
+                    == event_name
+                ).delete()
                 db.session.commit()
                 print(selectedEventFile)
                 full_db_reload(add_intel_sort=False, Event=selectedEventFile)
-
 
             print("Getting:", selectedEventFile)
 
@@ -281,40 +335,70 @@ def home_tab():
                 cur = con.cursor()
                 cur.execute(f"SELECT COUNT() FROM drivers;")
                 amount_drivers = cur.fetchone()
-                cur.execute(f"SELECT COUNT() FROM sqlite_master WHERE type='table' AND name LIKE 'driver\_%' ESCAPE '\\';")
+                cur.execute(
+                    f"SELECT COUNT() FROM sqlite_master WHERE type='table' AND name LIKE 'driver\_%' ESCAPE '\\';"
+                )
                 heat_num = cur.fetchone()[0]
                 valid_recorded_times = 0
                 invalid_recorded_times = 0
                 drivers_left = 0
- 
-                for a in range(1,heat_num+1):
-                    cur.execute("SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME != 0 AND PENELTY = 0;".format(a))
+
+                for a in range(1, heat_num + 1):
+                    cur.execute(
+                        "SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME != 0 AND PENELTY = 0;".format(
+                            a
+                        )
+                    )
                     valid_recorded_times += cur.fetchone()[0]
 
-                    cur.execute("SELECT COUNT() FROM driver_stats_r{0} WHERE PENELTY != 0;".format(a))
+                    cur.execute(
+                        "SELECT COUNT() FROM driver_stats_r{0} WHERE PENELTY != 0;".format(
+                            a
+                        )
+                    )
                     invalid_recorded_times += cur.fetchone()[0]
 
-                    cur.execute("SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME = 0 AND PENELTY = 0;".format(a))
+                    cur.execute(
+                        "SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME = 0 AND PENELTY = 0;".format(
+                            a
+                        )
+                    )
                     drivers_left += cur.fetchone()[0]
 
-                event_config = {"all_records":(valid_recorded_times + invalid_recorded_times + drivers_left), "p_times":invalid_recorded_times, "v_times":valid_recorded_times, "l_times":drivers_left, "drivers":amount_drivers, "heats":heat_num}
+                event_config = {
+                    "all_records": (
+                        valid_recorded_times + invalid_recorded_times + drivers_left
+                    ),
+                    "p_times": invalid_recorded_times,
+                    "v_times": valid_recorded_times,
+                    "l_times": drivers_left,
+                    "drivers": amount_drivers,
+                    "heats": heat_num,
+                }
                 return event_config
-             
+
         elif "service_state" in request.form:
-            from app.lib.utils import GetEnv, is_screen_session_running, manage_process_screen
-            
+            from app.lib.utils import (
+                GetEnv,
+                is_screen_session_running,
+                manage_process_screen,
+            )
+
             from time import sleep
 
-            service_name = request.form.get('service_name')
-            service_state = request.form.get('service_state')
-            params = request.form.get('ip_address')
+            service_name = request.form.get("service_name")
+            service_state = request.form.get("service_state")
+            params = request.form.get("ip_address")
 
             if service_name == None:
                 return "None"
 
-            service_object = db.session.query(MicroServices).filter((MicroServices.name == service_name)).first()
+            service_object = (
+                db.session.query(MicroServices)
+                .filter((MicroServices.name == service_name))
+                .first()
+            )
             if service_object is not None:
-                
                 if bool(service_object.state) == False and service_state == "start":
                     service_object.state = True
 
@@ -328,7 +412,7 @@ def home_tab():
                         return "True"
                     else:
                         return "False"
-                    
+
                 elif bool(service_object.state) == True and service_state == "stop":
                     service_object.state = False
                     db.session.commit()
@@ -339,37 +423,44 @@ def home_tab():
                         return "True"
                     else:
                         return "False"
-                    
+
                 elif bool(service_object.state) == True and service_state == "restart":
                     print("Restart")
 
+    return render_template(
+        "admin/index.html",
+        drivercount=drivers,
+        num_run=number_runs,
+        num_events=enabled_events,
+        events=unique_events,
+        microservices=services,
+        mount_bool=mount_bool,
+        mount_path=mount_path,
+        archive_params_json=archive_params_json,
+    )
 
-    return render_template('admin/index.html', drivercount=drivers, num_run=number_runs, num_events=enabled_events, events=unique_events, microservices=services, mount_bool=mount_bool, mount_path=mount_path,  archive_params_json=archive_params_json)
 
 def kvali_criteria():
     from app.models import EventKvaliRate
     from app import db
 
-    
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json()
         EventKvaliRate.query.delete()
         data_len = len(data)
 
         for k, a in enumerate(dict(data).keys()):
             kvali_num = data[a]
-            new_entry = EventKvaliRate(
-                id= k+1,
-                event = a,
-                kvalinr = int(kvali_num)
-            )
+            new_entry = EventKvaliRate(id=k + 1, event=a, kvalinr=int(kvali_num))
             db.session.add(new_entry)
         db.session.commit()
         return {"Success": "True"}
 
     else:
         kvali_criteria = [event.to_dict() for event in EventKvaliRate.query.all()]
-        return render_template('admin/kval_criteria.html', kvali_criteria=kvali_criteria)
+        return render_template(
+            "admin/kval_criteria.html", kvali_criteria=kvali_criteria
+        )
 
 
 def cross_config_tab():
@@ -377,19 +468,18 @@ def cross_config_tab():
 
     cross_config = CrossConfig.query.first()
 
-    if request.method == 'POST':
-
+    if request.method == "POST":
         # Extract form data
-        dnf_point = request.form.get('dnf_point', type=int)
-        dns_point = request.form.get('dns_point', type=int)
-        dsq_point = request.form.get('dsq_point', type=int)
-        invert_score = request.form.get('invert_score') == 'true'
-        num_drivers = request.form.get('num_drivers', type=int)
-        
+        dnf_point = request.form.get("dnf_point", type=int)
+        dns_point = request.form.get("dns_point", type=int)
+        dsq_point = request.form.get("dsq_point", type=int)
+        invert_score = request.form.get("invert_score") == "true"
+        num_drivers = request.form.get("num_drivers", type=int)
+
         # Prepare driver_scores dictionary
         driver_scores = {}
         for i in range(1, num_drivers + 1):
-            score = request.form.get(f'driver_scores[{i}]', type=int)
+            score = request.form.get(f"driver_scores[{i}]", type=int)
             if score is not None:
                 driver_scores[i] = score
 
@@ -409,31 +499,39 @@ def cross_config_tab():
             db.session.add(cross_config)
         db.session.commit()
 
-
         # Redirect to avoid form resubmission issues
-        return redirect(url_for('admin.admin', tab_name='cross_config'))
+        return redirect(url_for("admin.admin", tab_name="cross_config"))
 
     # Render template at the end of the function, passing the cross_config
     driver_scores_json = json.dumps(cross_config.driver_scores)
-    return render_template('admin/cross_config_tab.html', cross_config=cross_config, driver_scores_json=driver_scores_json)
+    return render_template(
+        "admin/cross_config_tab.html",
+        cross_config=cross_config,
+        driver_scores_json=driver_scores_json,
+    )
+
 
 def global_config_tab():
-    from app.models import GlobalConfig, ConfigForm, ActiveDrivers, Session_Race_Records, MicroServices, ActiveEvents
+    from app.models import (
+        GlobalConfig,
+        ConfigForm,
+        ActiveDrivers,
+        Session_Race_Records,
+        MicroServices,
+        ActiveEvents,
+    )
     from app import db
     from app.lib.utils import manage_process_screen
     from sqlalchemy import asc
 
-
-
     global_config = GlobalConfig.query.all()
 
-
     form = ConfigForm()
-    
-    if request.method == 'POST':
-        if 'submit' in request.form:
+
+    if request.method == "POST":
+        if "submit" in request.form:
+            print(request.form)
             for config in global_config:
-                
                 if not form.wl_cross_title.data:
                     form.wl_cross_title.data = ""
 
@@ -448,10 +546,10 @@ def global_config_tab():
 
                 if form.db_location.data[-1:] != "/":
                     form.db_location.data += "/"
-                
+
                 if form.event_dir.data[-1:] != "/":
                     form.event_dir.data += "/"
-                
+
                 config.msport_tm = bool(form.msport_tm.data)
                 config.session_name = form.session_name.data
                 config.project_dir = form.project_dir.data
@@ -469,19 +567,24 @@ def global_config_tab():
                 config.autocommit = form.autocommit.data
                 config.keep_qualification = form.keep_qualification.data
 
-
                 if bool(form.cross.data):
-                    db.session.query(MicroServices).filter(MicroServices.name == "Cross Clock Server").update({"state": True})
+                    db.session.query(MicroServices).filter(
+                        MicroServices.name == "Cross Clock Server"
+                    ).update({"state": True})
                     db.session.commit()
                     manage_process_screen("cross_clock_server.py", "start")
                 db.session.commit()
-        elif 'update' in request.form: 
+        elif "update" in request.form:
             print("asdasd")
         else:
             keep_previous_sort = global_config[0].keep_previous_sort
 
             if global_config[0].keep_previous_sort == True:
-                ActiveEvents_entries = ActiveEvents.query.filter(ActiveEvents.id).order_by(asc(ActiveEvents.sort_order)).all()
+                ActiveEvents_entries = (
+                    ActiveEvents.query.filter(ActiveEvents.id)
+                    .order_by(asc(ActiveEvents.sort_order))
+                    .all()
+                )
                 ActiveEvents_list = []
                 for h in ActiveEvents_entries:
                     ActiveEvents_list.append(h.id)
@@ -489,88 +592,94 @@ def global_config_tab():
             db.session.query(Session_Race_Records).delete()
             full_db_reload(add_intel_sort=True)
             if global_config[0].keep_previous_sort == True:
-
-                order_mapping = {id_value: index for index, id_value in enumerate(ActiveEvents_list)}
-                events = ActiveEvents.query.filter(ActiveEvents.id.in_(ActiveEvents_list)).all()
+                order_mapping = {
+                    id_value: index for index, id_value in enumerate(ActiveEvents_list)
+                }
+                events = ActiveEvents.query.filter(
+                    ActiveEvents.id.in_(ActiveEvents_list)
+                ).all()
                 for event in events:
-
                     event.sort_order = order_mapping[event.id]
-                    print(event)
-                    
+
                 db.session.commit()
-            
-        return redirect(url_for('admin.admin', tab_name='global-config'))
 
+        return redirect(url_for("admin.admin", tab_name="global-config"))
 
-
-    return render_template('admin/global_config.html', global_config=global_config, form=form)
+    return render_template(
+        "admin/global_config.html", global_config=global_config, form=form
+    )
 
 
 def active_events():
     from app.models import ActiveEvents, EventType, EventOrder, GlobalConfig
     from app import db
+    from flask import current_app
+    import json
 
-    
-
-    if request.method == 'POST':
+    if request.method == "POST":
         # Handle the form data for table updates
-        table_data = request.form.get('table_data')
-        sort_data = request.form.get('eventOrderJson')
-
+        table_data = request.form.get("table_data")
+        sort_data = request.form.get("eventOrderJson")
+        request_src = request.form.get("src")
         # If table_data is provided, process it
         if table_data:
-            try:
-                table_data = json.loads(table_data)
-                for k, row in enumerate(table_data):
-                    k += 1
-                    event = ActiveEvents.query.get(row['id'])
-                    if event:
-                        event.event_name = row['name']
-                        event.run = row['run']
-                        event.enabled = row['enable']
-                        event.sort_order = k
-                db.session.commit()
-                flash('Active events updated successfully.', 'success')
-            except Exception as e:
-                db.session.rollback()  # Rollback in case of error
-                flash(f'An error occurred: {e}', 'error')
-        
+            table_data = json.loads(table_data)
+            for k, row in enumerate(table_data):
+                k += 1
+                if request_src == "orbits":
+                    title_1 = json.loads(current_app.config["event_content"])[0][
+                        "race_config"
+                    ]["TITLE_1"]
+                    event_name = title_1 + " " + row["name"]
+                    event = ActiveEvents.query.filter(
+                        ActiveEvents.event_name == event_name,
+                        ActiveEvents.run == row["run"],
+                    ).first()
+                    row["id"] = event.id
+                    row["name"] = event_name
+
+                event = ActiveEvents.query.get(row["id"])
+                if event:
+                    event.event_name = row["name"]
+                    event.run = row["run"]
+                    if "enable" in row:
+                        event.enabled = row["enable"]
+                    event.sort_order = k
+            db.session.commit()
+            flash("Active events updated successfully.", "success")
+
         # If sort_data is provided, process it to update the sort order
         elif sort_data:
-            
             try:
                 EventType.query.delete()
                 EventOrder.query.delete()
                 # Insert EventTypes
                 sort_data = json.loads(sort_data)
-                for event_type in sort_data['eventTypes']:
-
+                for event_type in sort_data["eventTypes"]:
                     new_event_type = EventType(
-                        order=event_type['order'],
-                        name=event_type['name'],
-                        finish_heat=event_type['finishHeat']
+                        order=event_type["order"],
+                        name=event_type["name"],
+                        finish_heat=event_type["finishHeat"],
                     )
                     db.session.add(new_event_type)
-                
+
                 # Insert EventOrders
-                for event_order in sort_data['eventOrder']:
-                    print(event_order)
+                for event_order in sort_data["eventOrder"]:
                     new_event_order = EventOrder(
-                        order=event_order['order'],
-                        name=event_order['name']
+                        order=event_order["order"], name=event_order["name"]
                     )
                     db.session.add(new_event_order)
-                
+
                 # Commit the session to save changes
                 db.session.commit()
-                
+
             except Exception as e:
                 db.session.rollback()  # Rollback in case of error
-                flash(f'An error occurred while updating the sort order: {e}', 'error')
+                flash(f"An error occurred while updating the sort order: {e}", "error")
             intel_sort()
 
         elif "smartSortingEnabled" in request.get_json():
-            data = request.get_json()['smartSortingEnabled']
+            data = request.get_json()["smartSortingEnabled"]
             global_config = GlobalConfig.query.first()
             global_config.Smart_Sorting = bool(data)
             db.session.commit()
@@ -584,15 +693,22 @@ def active_events():
 
                 # Commit the changes to the database
                 db.session.commit()
-                
-        return redirect(url_for('admin.admin', tab_name='active_events'))
+
+        return redirect(url_for("admin.admin", tab_name="active_events"))
 
     # For GET requests or after POST processing, retrieve and display the active events
     active_events = ActiveEvents.query.order_by(ActiveEvents.sort_order).all()
     event_types = EventType.query.order_by(EventType.order).all()
     event_order = EventOrder.query.order_by(EventOrder.order).all()
     global_config_new = GlobalConfig.query.first()
-    return render_template('admin/active_events.html', active_events=active_events, event_types=event_types, event_order=event_order, global_config_new=global_config_new)
+    return render_template(
+        "admin/active_events.html",
+        active_events=active_events,
+        event_types=event_types,
+        event_order=event_order,
+        global_config_new=global_config_new,
+    )
+
 
 def active_events_driver_data():
     from app.models import ActiveEvents, GlobalConfig, LockedEntry
@@ -607,34 +723,52 @@ def active_events_driver_data():
     unique_events = (
         db.session.query(
             ActiveEvents.event_name,
-            func.max(ActiveEvents.run).label('max_run'),
-            ActiveEvents.event_file
+            func.max(ActiveEvents.run).label("max_run"),
+            ActiveEvents.event_file,
         )
-        .group_by(ActiveEvents.event_name).order_by(ActiveEvents.sort_order)
+        .group_by(ActiveEvents.event_name)
+        .order_by(ActiveEvents.sort_order)
         .all()
     )
 
-    if request.method == 'POST':
-        if request.form.get('event_file') is not None:
-            if request.form.get('event_file') == "active_event":
+    if request.method == "POST":
+        if request.form.get("event_file") is not None:
+            if request.form.get("event_file") == "active_event":
                 active_event = get_active_event()
                 selectedEventFile = active_event[0]["db_file"]
                 selectedRun = active_event[0]["SPESIFIC_HEAT"]
             else:
-                selectedEventFile = request.form.get('event_file')
-                selectedRun = request.form.get('run')
+                selectedEventFile = request.form.get("event_file")
+                selectedRun = request.form.get("run")
             event_entry_file_picked = {"file": selectedEventFile, "run": selectedRun}
             print("Getting:", selectedEventFile, selectedRun)
             with sqlite3.connect(db_location + selectedEventFile + ".sqlite") as con:
                 cur = con.cursor()
                 cur.execute(f"SELECT * FROM driver_stats_r{selectedRun}")
 
-                data = [dict((cur.description[i][0], value) for i, value in enumerate(row)) for row in cur.fetchall()]
+                data = [
+                    dict((cur.description[i][0], value) for i, value in enumerate(row))
+                    for row in cur.fetchall()
+                ]
                 cur.execute(f"SELECT TITLE1, TITLE2, MODE FROM db_index")
                 event_title = cur.fetchall()
-                event_info = event_title[0][0]+" "+event_title[0][1]+" - Heat: " + str(selectedRun)  + " - Mode: "+ str(event_title[0][2])
+                event_info = (
+                    event_title[0][0]
+                    + " "
+                    + event_title[0][1]
+                    + " - Heat: "
+                    + str(selectedRun)
+                    + " - Mode: "
+                    + str(event_title[0][2])
+                )
 
-            return render_template('admin/active_events_driver_data.html', unique_events=unique_events, sqldata=data, event_entry_file=event_entry_file_picked, returned_event_info=event_info)
+            return render_template(
+                "admin/active_events_driver_data.html",
+                unique_events=unique_events,
+                sqldata=data,
+                event_entry_file=event_entry_file_picked,
+                returned_event_info=event_info,
+            )
 
         else:
             data = request.get_json()
@@ -644,63 +778,94 @@ def active_events_driver_data():
             db_location = db.session.query(GlobalConfig.db_location).all()[0][0]
             sql_con = sqlite3.connect(db_location + file + ".sqlite")
             sql_cur = sql_con.cursor()
-            sql_cur.execute(f'DELETE FROM driver_stats_r{run}')
+            sql_cur.execute(f"DELETE FROM driver_stats_r{run}")
 
             for a in data["data"]:
                 if "LOCKED" in a.keys() and a["LOCKED"] == True:
                     locked = "1"
                 else:
                     locked = "0"
-                sql_cur.execute(f'''
+                sql_cur.execute(
+                    f"""
                     INSERT INTO driver_stats_r{run} (INTER_1, INTER_2, INTER_3, SPEED, PENELTY, FINISHTIME, CID, LOCKED)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (a['INTER_1'], a['INTER_2'], a['INTER_3'], a['SPEED'], a['PENELTY'], a['FINISHTIME'], int(a['CID']), locked)
-                )  
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        a["INTER_1"],
+                        a["INTER_2"],
+                        a["INTER_3"],
+                        a["SPEED"],
+                        a["PENELTY"],
+                        a["FINISHTIME"],
+                        int(a["CID"]),
+                        locked,
+                    ),
+                )
             sql_con.commit()
             sql_con.close()
-        
-        return render_template('admin/active_events_driver_data.html', unique_events=unique_events, sqldata=data, event_entry_file="None")
 
-    return render_template('admin/active_events_driver_data.html', unique_events=unique_events, sqldata="None", event_entry_file="None")
+        return render_template(
+            "admin/active_events_driver_data.html",
+            unique_events=unique_events,
+            sqldata=data,
+            event_entry_file="None",
+        )
+
+    return render_template(
+        "admin/active_events_driver_data.html",
+        unique_events=unique_events,
+        sqldata="None",
+        event_entry_file="None",
+    )
+
 
 def msport_proxy():
+    return render_template("pdfconverter.html")
 
-    return render_template('pdfconverter.html')
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+    }
 
 
 def infoscreen():
     from app import db
-    from app.models import InfoScreenInitMessage, GlobalConfig, InfoScreenAssets, InfoScreenAssetAssociations
+    from app.models import (
+        InfoScreenInitMessage,
+        GlobalConfig,
+        InfoScreenAssets,
+        InfoScreenAssetAssociations,
+    )
     import html
 
     global_config = db.session.query(GlobalConfig).all()[0]
-    full_asset_path = global_config.project_dir[:-1] + global_config.infoscreen_asset_path
+    full_asset_path = (
+        global_config.project_dir[:-1] + global_config.infoscreen_asset_path
+    )
 
-    if request.method == 'POST':
-        
+    if request.method == "POST":
         content_type = request.content_type
 
-        
         if content_type.startswith("multipart/form-data"):
-
             # Decode HTML entities in the form data
-            name = html.unescape(request.form.get('name'))
-            file = request.files.get('file')
-            url = html.unescape(request.form.get('url'))
-            
-            check_name = InfoScreenAssets.query.filter_by(name=name).first()
-            
-            if file and allowed_file(file.filename):
+            name = html.unescape(request.form.get("name"))
+            file = request.files.get("file")
+            url = html.unescape(request.form.get("url"))
 
-                check_asset = InfoScreenAssets.query.filter_by(asset=file.filename).first()
+            check_name = InfoScreenAssets.query.filter_by(name=name).first()
+
+            if file and allowed_file(file.filename):
+                check_asset = InfoScreenAssets.query.filter_by(
+                    asset=file.filename
+                ).first()
 
                 if check_asset is not None or check_name is not None:
                     print("Asset already exists")
-                    return 'Asset already exists'
-                
+                    return "Asset already exists"
+
                 new_message = InfoScreenAssets(name=name, asset=file.filename)
                 db.session.add(new_message)
                 db.session.commit()
@@ -711,31 +876,33 @@ def infoscreen():
 
                 if check_asset is not None or check_name is not None:
                     print("Asset already exists")
-                    return 'Asset already exists'
-                
+                    return "Asset already exists"
+
                 new_message = InfoScreenAssets(name=name, asset=url)
                 db.session.add(new_message)
                 db.session.commit()
-                                
-                return 'File uploaded successfully'
-                
-            if url:                
-                return 'URL saved successfully'
-            return 'No valid asset provided'
-        print(request.get_json()["operation"])
+
+                return "File uploaded successfully"
+
+            if url:
+                return "URL saved successfully"
+            return "No valid asset provided"
         if request.get_json()["operation"] == 1:
-            print("asd")
             id = request.get_json()["id"]
-            
+
             if request.get_json()["action"] == "approve":
-                query = InfoScreenInitMessage.query.filter_by(unique_id=id).update({"approved": True})
+                query = InfoScreenInitMessage.query.filter_by(unique_id=id).update(
+                    {"approved": True}
+                )
 
             elif request.get_json()["action"] == "remove":
                 query = InfoScreenInitMessage.query.filter_by(unique_id=id)
                 query.delete()
 
             elif request.get_json()["action"] == "deactivate":
-                query = InfoScreenInitMessage.query.filter_by(unique_id=id).update({"approved": False})
+                query = InfoScreenInitMessage.query.filter_by(unique_id=id).update(
+                    {"approved": False}
+                )
 
             elif request.get_json()["action"] == "delete":
                 query = InfoScreenAssets.query.filter_by(id=id)
@@ -743,32 +910,39 @@ def infoscreen():
                 asset_query.delete()
                 query.delete()
             db.session.commit()
-            return {"OP":"Done"}
-        
+            return {"OP": "Done"}
+
         elif request.get_json()["operation"] == 2:
             if request.get_json()["action"] == "add":
                 data = request.get_json()
-                if data["timer"] == '':
+                if data["timer"] == "":
                     data["timer"] == 0
-                new_message = InfoScreenAssetAssociations(asset=data["selectedAsset"], infoscreen=data["infoscreen"], timer=data["timer"])
+                new_message = InfoScreenAssetAssociations(
+                    asset=data["selectedAsset"],
+                    infoscreen=data["infoscreen"],
+                    timer=data["timer"],
+                )
                 db.session.add(new_message)
                 db.session.commit()
         elif request.get_json()["operation"] == 3:
             data = request.get_json()
             infoscreen = data["messageID"]
-            asset_query = InfoScreenAssetAssociations.query.filter_by(infoscreen=infoscreen)
+            asset_query = InfoScreenAssetAssociations.query.filter_by(
+                infoscreen=infoscreen
+            )
             asset_query.delete()
             for a in request.get_json()["data"]:
                 asset = InfoScreenAssets.query.filter_by(name=a["name"]).first()
-                new_message = InfoScreenAssetAssociations(asset=asset.id, infoscreen=infoscreen, timer=a["timer"])
+                new_message = InfoScreenAssetAssociations(
+                    asset=asset.id, infoscreen=infoscreen, timer=a["timer"]
+                )
                 db.session.add(new_message)
             db.session.commit()
             print(infoscreen, "asdasd")
             update_info_screen(infoscreen)
 
-        return {"OP":"None"}
+        return {"OP": "None"}
 
-    
     info_screen_msg = InfoScreenInitMessage.query.all()
     info_screen_assents = InfoScreenAssets.query.all()
     info_screen_associations = InfoScreenAssetAssociations.query.all()
@@ -778,32 +952,34 @@ def infoscreen():
         for assent in info_screen_assents
     ]
     info_screen_assents_json = json.dumps(info_screen_assents_list, default=str)
-    info_screen_approved = InfoScreenInitMessage.query.filter_by(approved=True).all() 
-
-
-
+    info_screen_approved = InfoScreenInitMessage.query.filter_by(approved=True).all()
 
     return render_template(
-        'admin/infoscreen.html',
+        "admin/infoscreen.html",
         info_screen_msg=info_screen_msg,
         info_screen_approved=info_screen_approved,
         info_screen_assents_json=info_screen_assents_json,
         info_screen_assents=info_screen_assents,
-        info_screen_associations=info_screen_associations
+        info_screen_associations=info_screen_associations,
     )
+
 
 def export_data():
     from app.models import ActiveEvents, GlobalConfig, LockedEntry, archive_server
     from app import db
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         content_type = request.content_type
-        
+
         if content_type.startswith("application/json"):
             if request.get_json()["action"] == "config":
                 archive_params = archive_server.query.first()
                 if archive_params == None:
-                    archive_params = archive_server(hostname=request.get_json()["endpoint_url"], auth_token=request.get_json()["auth_token"], use_use_token=request.get_json()["use_auth_token"])
+                    archive_params = archive_server(
+                        hostname=request.get_json()["endpoint_url"],
+                        auth_token=request.get_json()["auth_token"],
+                        use_use_token=request.get_json()["use_auth_token"],
+                    )
                     db.session.add(archive_params)
                     db.session.commit()
                 else:
@@ -811,29 +987,38 @@ def export_data():
                     archive_params.auth_token = request.get_json()["auth_token"]
                     archive_params.use_use_token = request.get_json()["use_auth_token"]
                     db.session.commit()
-                return {"Success":"Updated configuration"}
+                return {"Success": "Updated configuration"}
 
     archive_params = archive_server.query.first()
-    
 
     if archive_params == None:
         status = "2"
         current_driver = None
         archive_params_state = None
     else:
-        archive_params_state = {"hostname":archive_params.hostname, "auth_token":archive_params.auth_token, "use_token":archive_params.use_use_token}
-        
+        archive_params_state = {
+            "hostname": archive_params.hostname,
+            "auth_token": archive_params.auth_token,
+            "use_token": archive_params.use_use_token,
+        }
+
         try:
-            response = requests.get(archive_params.hostname+"/get_drivers")
+            response = requests.get(archive_params.hostname + "/get_drivers")
             current_driver = response.json()
             status = "0"
         except:
             current_driver = "None"
             status = "1"
-    
-    
+
     event_export = export_events()
-    return render_template('admin/export.html', current_events=event_export, current_driver=current_driver, archive_params_state=archive_params_state, status=status)
+    return render_template(
+        "admin/export.html",
+        current_events=event_export,
+        current_driver=current_driver,
+        archive_params_state=archive_params_state,
+        status=status,
+    )
+
 
 def clock_mgnt():
     from flask import Markup, current_app
@@ -842,40 +1027,44 @@ def clock_mgnt():
 
     global_config = db.session.query(GlobalConfig).first()
 
-
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json()
         global_config.auto_commit_manual_clock = bool(data.get("autoCommit"))
         global_config.dual_start_manual_clock = bool(data.get("duelStart"))
         db.session.commit()
         return "Updates"
 
-    toggles = {"AutoCommit":global_config.auto_commit_manual_clock, "DualStart":global_config.dual_start_manual_clock}
+    toggles = {
+        "AutoCommit": global_config.auto_commit_manual_clock,
+        "DualStart": global_config.dual_start_manual_clock,
+    }
 
+    current_timestamps = current_app.config["timestamp_tracket"]
 
-    current_timestamps = current_app.config['timestamp_tracket']
-    
     event_data_json = Markup(json.dumps(current_timestamps))
-    
-    return render_template('admin/clock_mgnt.html', event_data=event_data_json, toggles=toggles)
+
+    return render_template(
+        "admin/clock_mgnt.html", event_data=event_data_json, toggles=toggles
+    )
+
 
 def timekeeperpage():
-    return render_template('admin/timekeeperpage.html')
+    return render_template("admin/timekeeperpage.html")
+
 
 def led_panel():
     from app.models import ledpanel
     from app import db
 
-
     def clear_display(endpoint):
         requests.get(f"http://{endpoint}:5000/stop")
         requests.get(f"http://{endpoint}/api/overlays/model/LED%20Panels/clear")
         requests.get(f"http://{endpoint}/api/playlists/stop")
-        
 
     def enable_display(endpoint):
-
-        data = requests.request("GET", "http://{0}/api/overlays/model/LED%20Panels/state".format(endpoint))
+        data = requests.request(
+            "GET", "http://{0}/api/overlays/model/LED%20Panels/state".format(endpoint)
+        )
         data = json.loads(data.content)
         active_state = data["isActive"]
         if active_state == 0:
@@ -890,7 +1079,7 @@ def led_panel():
                 "Origin": "http://192.168.20.219",
                 "Referer": "http://192.168.20.219/plugin.php?_menu=status&plugin=fpp-matrixtools&page=matrixtools.php",
                 "Accept-Encoding": "gzip, deflate, br",
-                "Connection": "keep-alive"
+                "Connection": "keep-alive",
             }
 
             data = {"State": 1}
@@ -898,37 +1087,42 @@ def led_panel():
             response = requests.put(url, json=data, headers=headers)
 
     if request.method == "POST":
-        print(request.json["command"])
-
         if request.json["command"] == "save_endpoint":
             endpoint = request.json["endpoint"]
             entry_id = request.json["panel_id"]
 
-            db.session.query(ledpanel).filter_by(id=entry_id).update({
-                "endpoint": endpoint,
-            })
+            db.session.query(ledpanel).filter_by(id=entry_id).update(
+                {
+                    "endpoint": endpoint,
+                }
+            )
             db.session.commit()
-            return json.dumps({"success": True, "message": "Endpoint added successfully"}), 200
+            return json.dumps(
+                {"success": True, "message": "Endpoint added successfully"}
+            ), 200
 
         elif request.json["command"] == "save_mode_config":
-        
             ledpanel_db = db.session.query(ledpanel).all()
 
             if request.json["mode"] == "parallel":
                 mode = 2
                 for b in range(1, 3):
-                    db.session.query(ledpanel).filter_by(id=b).update({
-                        "track": request.json["display{0}_driver".format(str(b))],
-                        "mode": mode,
-                    })
+                    db.session.query(ledpanel).filter_by(id=b).update(
+                        {
+                            "track": request.json["display{0}_driver".format(str(b))],
+                            "mode": mode,
+                        }
+                    )
                 db.session.commit()
             else:
                 mode = 1
                 for b in range(1, 3):
-                    db.session.query(ledpanel).filter_by(id=b).update({
-                        "track": request.json["display"],
-                        "mode": mode,
-                        })
+                    db.session.query(ledpanel).filter_by(id=b).update(
+                        {
+                            "track": request.json["display"],
+                            "mode": mode,
+                        }
+                    )
                 db.session.commit()
 
             for a in ledpanel_db:
@@ -939,86 +1133,80 @@ def led_panel():
 
                 track = a.track
 
-                config_data = {
-                    "mode": mode,
-                    "track": track
-                }
+                config_data = {"mode": mode, "track": track}
 
                 try:
                     response = requests.post(
                         "http://{0}:5000/update_config".format(a.endpoint),
                         json=config_data,
                         timeout=1.5,
-                        headers={'Content-Type': 'application/json'}
+                        headers={"Content-Type": "application/json"},
                     )
                 except requests.RequestException as e:
                     print("Failed to send config to {0}".format(a.endpoint))
-                
-            return json.dumps({"success": True, "message": "Mode updated successfully"}), 200
 
-
+            return json.dumps(
+                {"success": True, "message": "Mode updated successfully"}
+            ), 200
 
         elif request.json["command"] == "set_playlist":
+            endpoint = request.json["endpoint"]
+            args = request.json["args"]
 
-
-            endpoint = request.json['endpoint']
-            args = request.json['args']
-
-            payload = {
-                "command": "Start Playlist At Item",
-                "args": args
-            }
+            payload = {"command": "Start Playlist At Item", "args": args}
 
             clear_display(endpoint)
-            
-            try:
 
+            try:
                 response = requests.post(f"http://{endpoint}/api/command", json=payload)
                 response.raise_for_status()
-                return json.dumps({"success": True, "message": "Playlist started successfully"}), 200
+                return json.dumps(
+                    {"success": True, "message": "Playlist started successfully"}
+                ), 200
             except requests.RequestException as e:
                 return json.dumps({"success": False, "message": str(e)}), 500
-                
+
         elif request.json["command"] == "edit_db_data":
             pass
 
         elif request.json["command"] == "display_text":
-
             endpoint = request.json["endpoint"]
 
-            headers = {
-                'Content-Type': 'application/json'
-            }
+            headers = {"Content-Type": "application/json"}
 
             clear_display(endpoint)
             enable_display(endpoint)
-        
-
-
 
             payload = request.json
             font_size = request.json["FontSize"]
             Color = request.json["Color"]
             Message = request.json["Message"]
 
-            payload = json.dumps({
-                "Message": Message,
-                "Position": "center",
-                "Font": "Helvetica",
-                "FontSize": font_size,
-                "AntiAlias": False,
-                "PixelsPerSecond": 20,
-                "Color": Color,
-                "AutoEnable": True
-                })
-
+            payload = json.dumps(
+                {
+                    "Message": Message,
+                    "Position": "center",
+                    "Font": "Helvetica",
+                    "FontSize": font_size,
+                    "AntiAlias": False,
+                    "PixelsPerSecond": 20,
+                    "Color": Color,
+                    "AutoEnable": True,
+                }
+            )
 
             try:
-
-                response = requests.request("PUT", "http://{0}/api/overlays/model/LED Panels/text".format(endpoint), headers=headers, data=payload)
+                response = requests.request(
+                    "PUT",
+                    "http://{0}/api/overlays/model/LED Panels/text".format(endpoint),
+                    headers=headers,
+                    data=payload,
+                )
 
                 response.raise_for_status()
-                return json.dumps({"success": True, "message": "Playlist started successfully"}), 200
+                return json.dumps(
+                    {"success": True, "message": "Playlist started successfully"}
+                ), 200
 
             except requests.RequestException as e:
                 return json.dumps({"success": False, "message": str(e)}), 500
@@ -1032,12 +1220,17 @@ def led_panel():
             return json.dumps({"success": False, "message": str("asd")})
 
     else:
-
         ledpanel_db = db.session.query(ledpanel).all()
         panels = {}
         mode_config = {}
         for b in ledpanel_db:
-            panels[b.id] = [b.endpoint, b.active_playlist, b.brightness, b.mode, b.track]
+            panels[b.id] = [
+                b.endpoint,
+                b.active_playlist,
+                b.brightness,
+                b.mode,
+                b.track,
+            ]
             if b.id == 1:
                 if b.mode == 1:
                     mode_config["mode"] = "single"
@@ -1050,5 +1243,6 @@ def led_panel():
             else:
                 mode_config["display2_driver"] = b.track
 
-        print(mode_config)
-        return render_template('admin/ledpanel.html', panels=panels, mode_config=mode_config)
+        return render_template(
+            "admin/ledpanel.html", panels=panels, mode_config=mode_config
+        )

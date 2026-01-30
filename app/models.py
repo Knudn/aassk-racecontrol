@@ -121,7 +121,7 @@ class StartLogic(db.Model):
     #sl = start light
     id = db.Column(db.Integer, primary_key=True, default=1)
 
-    start_light_ip = db.Column(db.String(100), nullable=True, default="192.168.1.190")
+    start_light_ip = db.Column(db.String(100), nullable=True, default="192.168.1.32:5000")
 
     sl_start_delay = db.Column(db.String(16), nullable=True, default="1.2-2.5") 
     sl_active_timer = db.Column(db.Integer, nullable=True, default="3")     
@@ -132,7 +132,9 @@ class StartLogic(db.Model):
     sl_ready_color = db.Column(db.String(16), nullable=True, default="[0,0,0]")
     sl_warmup_image = db.Column(db.LargeBinary, nullable=True)
     sl_start_using_relay = db.Column(db.Boolean, default=False)
-    sl_brightness = db.Column(db.Integer, nullable=True, default=150)     
+    sl_brightness = db.Column(db.Integer, nullable=True, default=150)
+
+    
     #widthXheight
     sl_matric_size = db.Column(db.String(16), nullable=True, default="24x32")
 
@@ -142,6 +144,8 @@ class StartLogic(db.Model):
     fc_can_start = db.Column(db.Boolean, default=False)
     cr_can_start = db.Column(db.Boolean, default=False)
 
+    sl_use_warmup_image = db.Column(db.Boolean, default=False)
+    
     def get_rgb_values(self):
         return list(self.sl_warmup_image)
 
@@ -206,6 +210,7 @@ class Session_Race_Records(db.Model):
     penalty = db.Column(db.Integer, nullable=False)
     reaction = db.Column(db.Integer, nullable=False, default=0)
     points = db.Column(db.Integer, nullable=False, default=0)
+    laps = db.Column(db.Integer, nullable=False, default=0)
     
 
 class Session_Drivers(db.Model):

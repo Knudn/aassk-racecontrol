@@ -57,15 +57,17 @@ def register_driver_routes(api_bp):
     
     @api_bp.route('/api/set_active_state', methods=['POST'])
     def set_active_state():
+        from app.views.api_view import send_data_to_room
+        
         data = request.json
         driver_one = data.get("driver_one")
         driver_two = data.get("driver_two")
         event = data.get("event")
         heat = data.get("event_heat")
-        
+
         event_file = ActiveEvents.query.filter(
             ActiveEvents.event_name == data.get("event")).first()
-
+        
         event_file_id = event_file.event_file[-3:]
 
         if int(event_file_id[0]) == 0 and int(event_file_id[1]) == 0:
@@ -74,7 +76,6 @@ def register_driver_routes(api_bp):
             event_file_id = event_file_id[-2:]
 
         current_active_state = ActiveDrivers.query.first()
-
         current_active_state.Event = event_file_id
         current_active_state.Heat = heat
         current_active_state.D1 = driver_one
@@ -309,8 +310,8 @@ def register_driver_routes(api_bp):
                         Set_active_driver(cid_1=a["drivers"][0]["id"])
                         event_data = get_active_startlist()
                         
-                        # Import the send_data_to_room function
                         from app.views.api_view import send_data_to_room
+                        # Import the send_data_to_room function
                         send_data_to_room(event_data)
                         
                         requests.get("http://127.0.0.1:7777/api/active_event_update")

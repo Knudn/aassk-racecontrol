@@ -177,10 +177,12 @@ def register_timedata_routes(api_bp):
                 "title_1": record.title_1,
                 "title_2": record.title_2,
                 "heat": record.heat,
-                "finishtime": record.finishtime / 1_000,  # Convert to seconds
+                "finishtime": record.finishtime,  # Convert to seconds
                 "snowmobile": record.snowmobile,
                 "penalty": record.penalty,
-                "points": record.points
+                "points": record.points,
+                "laps": record.laps,
+                "reaction": record.reaction
             } for record in records
         ]
 
@@ -188,40 +190,51 @@ def register_timedata_routes(api_bp):
     
     @api_bp.route('/api/driver-points', methods=['GET'])
     def get_driver_points():
-        query = db.session.query(
-            Session_Race_Records.first_name,
-            Session_Race_Records.last_name,
-            func.sum(Session_Race_Records.points).label('total_points'),
-            func.min(
-                db.case(
-                    (Session_Race_Records.finishtime == 0, None),
-                    (Session_Race_Records.penalty != 0, None),
-                    else_=Session_Race_Records.finishtime
-                )
-            ).label('lowest_finishtime')
-        ).group_by(
-            Session_Race_Records.first_name,
-            Session_Race_Records.last_name
-        ).order_by(
-            func.sum(Session_Race_Records.points).desc(),
-            db.case(
-                (func.min(
+        global_config = GetEnv()
+        if not global_config["msport_tm"]:
+            query = db.session.query(
+                Session_Race_Records.cid,
+                Session_Race_Records.first_name,
+                Session_Race_Records.last_name,
+                Session_Race_Records.reaction,
+                Session_Race_Records.points)
+
+            print(query)
+        else:
+            query = db.session.query(
+                Session_Race_Records.first_name,
+                Session_Race_Records.last_name,
+                func.sum(Session_Race_Records.points).label('total_points'),
+                func.min(
                     db.case(
                         (Session_Race_Records.finishtime == 0, None),
                         (Session_Race_Records.penalty != 0, None),
                         else_=Session_Race_Records.finishtime
                     )
-                ) == None, 1),
-                else_=0
-            ),
-            func.min(
+                ).label('lowest_finishtime')
+            ).group_by(
+                Session_Race_Records.first_name,
+                Session_Race_Records.last_name
+            ).order_by(
+                func.sum(Session_Race_Records.points).desc(),
                 db.case(
-                    (Session_Race_Records.finishtime == 0, None),
-                    (Session_Race_Records.penalty != 0, None),
-                    else_=Session_Race_Records.finishtime
+                    (func.min(
+                        db.case(
+                            (Session_Race_Records.finishtime == 0, None),
+                            (Session_Race_Records.penalty != 0, None),
+                            else_=Session_Race_Records.finishtime
+                        )
+                    ) == None, 1),
+                    else_=0
+                ),
+                func.min(
+                    db.case(
+                        (Session_Race_Records.finishtime == 0, None),
+                        (Session_Race_Records.penalty != 0, None),
+                        else_=Session_Race_Records.finishtime
+                    )
                 )
             )
-        )
 
         combined_title = request.args.get('combined_title')
         if combined_title:
@@ -249,14 +262,38 @@ def register_timedata_routes(api_bp):
             ))
 
         results = query.all()
-        output = [
-            {
-                "first_name": result.first_name,
-                "last_name": result.last_name,
-                "total_points": result.total_points,
-                "lowest_finishtime": result.lowest_finishtime / 1_000 if result.lowest_finishtime else None  # Convert microseconds to seconds
-            } for result in results
-        ]
+        if global_config["msport_tm"]:
+            output = [
+                {
+                    "first_name": result.first_name,
+                    "last_name": result.last_name,
+                    "total_points": result.total_points,
+                    "lowest_finishtime": result.lowest_finishtime / 1000 if result.lowest_finishtime else None 
+                } for result in results
+            ]
+        else:
+            
+            entries = {}
+            for a in results:
+                if a[0] not in entries:
+                    entries[a[0]] = {"points":0, "lowest_finishtime":0,"first_name":a[1], "last_name":a[2]}
+                if a[3] != '':
+                    if entries[a[0]]["lowest_finishtime"] > a[3] or entries[a[0]]["lowest_finishtime"] == 0:
+                        entries[a[0]]["lowest_finishtime"] = a[3]
+                    
+                entries[a[0]]["points"] += a[4]
+            
+            entries = dict(sorted(entries.items(), key=lambda item: (item[1]['points'], -item[1]['lowest_finishtime']), reverse=True))
+            
+            output = [
+                {
+                    "first_name": entries[cid]["first_name"],
+                    "last_name": entries[cid]["last_name"],
+                    "total_points": entries[cid]["points"],
+                    "lowest_finishtime": entries[cid]["lowest_finishtime"] if entries[cid]["lowest_finishtime"] else None 
+                } for cid in entries
+            ]
+
 
         return output
     

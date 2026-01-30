@@ -103,6 +103,7 @@ def create_tables(app):
         # Initialize microservices if they don't exist
         if MicroServices_db == []:
             app.logger.info('MicroService DB init')
+
             
             for service_config in config.DEFAULT_MICROSERVICES:
                 # Replace {host} placeholder with actual host value
@@ -187,5 +188,5 @@ if __name__ == '__main__':
     with app.app_context():
         event_data = get_active_startlist()
         app.config['event_content'] = event_data
-
+    
     socketio.run(app, debug=config.DEBUG, host=args.host, port=config.PORT)

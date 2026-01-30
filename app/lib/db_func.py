@@ -9,11 +9,34 @@ import traceback
 import xml.etree.ElementTree as ET
 
 
-def timevalue_convert(dateint):
+def clear_driver_table(active_event, g_config):
+    db_path = g_config["event_dir"]+active_event[0]["db_file"]+".scdb"
 
+    db_location = g_config["db_location"]
+    local_event_db = db_location+active_event[0]["db_file"]+".sqlite"
+    driver_entries = []
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT C_NUM, C_FIRST_NAME, C_LAST_NAME, C_CLUB, C_TEAM FROM TCOMPETITORS;")
+        driver_rows = cursor.fetchall()
+
+
+    for h in driver_rows:
+        driver_entries.append((h[0], h[1], h[2], h[3], h[4]))
+    
+    with sqlite3.connect(local_event_db) as conn:
+        cursor = conn.cursor()
+        sql = "INSERT OR IGNORE INTO drivers (CID, FIRST_NAME, LAST_NAME, CLUB, SNOWMOBILE) VALUES (?, ?, ?, ?, ?);"
+        cursor.execute(f'DELETE FROM drivers;')
+        cursor.executemany(sql, driver_entries)
+
+
+def timevalue_convert(dateint):
+    dateint = 4362
     base_date = datetime(1900, 1, 1)
     actual_date = base_date + timedelta(days=dateint - 2)
     return actual_date.strftime("%Y-%m-%d")
+    
 
 def xml_to_dict(element):
     result = dict(element.attrib)
@@ -45,23 +68,6 @@ def map_database_files(global_config, Event=None, event_only=False):
     cross_title = global_config["wl_cross_title"]
     exclude_title = global_config["exclude_title"]
     
-    if global_config["msport_tm"] != True:
-        file_list = os.listdir(event_dir)
-
-        if "current.xml" in file_list:
-            with open(os.path.join(event_dir, "current.xml"), "r") as file:
-                current_data = str(file.readlines()[0])
-        
-        root = ET.fromstring(current_data)
-        current_data_dict = {root.tag: xml_to_dict(root)} 
-        
-        for b in current_data_dict:
-            for t in current_data_dict[b]["label"]:
-                print(t)
-                if t["type"] == "runname":
-                    print(t["_text"])
-        return
-
     if Event != None:
         events = [Event+".scdb"]
     else:
@@ -71,30 +77,47 @@ def map_database_files(global_config, Event=None, event_only=False):
         tmp_event_list = []
 
     #This for loop will enumerate a folder to find a bunch of database files
-    print(global_config)
     for filename in events:
         f = os.path.join(event_dir, filename)
         # checking if it is a file
-        if os.path.isfile(f):
+        if os.path.isfile(f) and f.endswith(".scdb"):
             if "ex.scdb" not in f.capitalize() and "online" not in f.capitalize():
-                with sqlite3.connect(f) as conn:
-                    
-
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT C_VALUE FROM TPARAMETERS WHERE C_PARAM='DATE' OR C_PARAM='MODULE' OR C_PARAM='TITLE1' OR C_PARAM='TITLE2' OR C_PARAM='HEAT_NUMBER';")
-                    rows = cursor.fetchall()
-                    if len(rows) <= 4:
-                        continue
-                    elif rows[3][0] == "COMPETITORS LIST":
-                        continue
-                    
-                    cursor.execute("SELECT C_NUM, C_FIRST_NAME, C_LAST_NAME, C_CLUB, C_TEAM FROM TCOMPETITORS;")
-                    driver_rows = cursor.fetchall()
-                    if len(rows) >= 4:
-                        if exclude_title.upper() in str(rows[3][0] + " " + rows[4][0]).upper() and exclude_title != "":
+                try:
+                    with sqlite3.connect(f) as conn:
+                        
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT C_VALUE FROM TPARAMETERS WHERE C_PARAM='DATE' OR C_PARAM='MODULE' OR C_PARAM='TITLE1' OR C_PARAM='TITLE2' OR C_PARAM='HEAT_NUMBER';")
+                        rows = cursor.fetchall()
+                        if len(rows) <= 4:
                             continue
-                        if cross_check and str(rows[2][0]) == "0" and cross_title.upper() in str(rows[3][0] + " " + rows[4][0]).upper():
-                            if wh_check and wh_title.upper() in str(rows[3][0]).upper():
+                        elif rows[3][0] == "COMPETITORS LIST":
+                            continue
+                        
+                        cursor.execute("SELECT C_NUM, C_FIRST_NAME, C_LAST_NAME, C_CLUB, C_TEAM FROM TCOMPETITORS;")
+                        driver_rows = cursor.fetchall()
+                        if len(rows) >= 4:
+                            if exclude_title.upper() in str(rows[3][0] + " " + rows[4][0]).upper() and exclude_title != "":
+                                continue
+                            if cross_check and str(rows[2][0]) == "0" and cross_title.upper() in str(rows[3][0] + " " + rows[4][0]).upper():
+                                if wh_check and wh_title.upper() in str(rows[3][0]).upper():
+                                    datevalue = timevalue_convert(int(rows[0][0]))
+                                    db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
+                                    if driver_rows:
+                                        for b in driver_rows:
+                                            driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
+                                    else:
+                                        pass
+                                elif wh_check == False:
+
+                                    datevalue = timevalue_convert(int(rows[0][0]))
+                                    db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
+                                    if driver_rows:
+                                        for b in driver_rows:
+                                            driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
+                                    else:
+                                        pass
+
+                            elif wh_check == False and cross_check == False:
                                 datevalue = timevalue_convert(int(rows[0][0]))
                                 db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
                                 if driver_rows:
@@ -102,32 +125,15 @@ def map_database_files(global_config, Event=None, event_only=False):
                                         driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
                                 else:
                                     pass
-                            elif wh_check == False:
 
+                            elif wh_title.upper() in str(rows[3][0]).upper() and cross_check == False:
                                 datevalue = timevalue_convert(int(rows[0][0]))
                                 db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
-                                if driver_rows:
+                                if driver_rows and event_only == False:
                                     for b in driver_rows:
                                         driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
-                                else:
-                                    pass
-
-                        elif wh_check == False and cross_check == False:
-                            datevalue = timevalue_convert(int(rows[0][0]))
-                            db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
-                            if driver_rows:
-                                for b in driver_rows:
-                                    driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
-                            else:
-                                pass
-
-                        elif wh_title.upper() in str(rows[3][0]).upper() and cross_check == False:
-                            datevalue = timevalue_convert(int(rows[0][0]))
-                            db_data.append({"db_file":filename[:-5],"MODE":rows[2][0],"TITLE1":rows[3][0],"TITLE2":rows[4][0],"HEATS":rows[1][0], "DATE":datevalue})
-                            if driver_rows and event_only == False:
-                                for b in driver_rows:
-                                    driver_db_data.setdefault(filename[:-5], []).append({"CID": b[0], "FIRST_NAME": b[1], "LAST_NAME": b[2], "CLUB": b[3], "SNOWMOBILE": b[4]})
-
+                except Exception as err:
+                    print(err)
     return db_data, driver_db_data
 
 def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude_lst=False):
@@ -136,7 +142,6 @@ def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude
         with sqlite3.connect(db_location + "/" + entry["db_file"]+".sqlite") as conn:
             
             cursor = conn.cursor()
-
             if init_mode:
                 #Create index table
                 cursor.execute('''
@@ -180,9 +185,10 @@ def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude
                             
                             driver_data_tuple = (cid, first_name, last_name, club, snowmobile)
                             driver_insert_data.append(driver_data_tuple)
-                    except:
-                        pass
-
+                    except Exception as err:
+                        print("Failed to add driver:")
+                        print(err)
+                
                 #Turning driver data into tuple
                 sql = "INSERT OR IGNORE INTO drivers (CID, FIRST_NAME, LAST_NAME, CLUB, SNOWMOBILE) VALUES (?, ?, ?, ?, ?);"
                 cursor.executemany(sql, driver_insert_data)
@@ -219,6 +225,10 @@ def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude
 def calculate_kvali_nr(event_dict):
     from app.models import EventKvaliRate
     from app import db as my_db
+    from app.lib.utils import GetEnv
+
+    g_config = GetEnv()
+
 
     # Delete all existing records and commit immediately
     EventKvaliRate.query.delete()
@@ -227,9 +237,14 @@ def calculate_kvali_nr(event_dict):
     count = 0
     for event, value in event_dict.items():
         count += 1
-        kvalinr = 16 if value >= 16 else 8 if value >= 8 else 4 if value >= 4 else 2 if value >= 2 else 1 if value >= 1 else 0
+        
+        if not g_config["msport_tm"]:
+            kvalinr = 16
+        else:
+            kvalinr = 16 if value >= 16 else 8 if value >= 8 else 4 if value >= 4 else 2 if value >= 2 else 1 if value >= 1 else 0
         
         try:
+            
             record = EventKvaliRate(id=count, event=event, kvalinr=kvalinr)
             my_db.session.add(record)
             my_db.session.commit()
@@ -252,11 +267,13 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
 
     event_dir = g_config["event_dir"]
     db_location = g_config["db_location"]
-    
-    current_title = None
 
+    current_title = None
     try:
         for a in db:
+
+            combined_title = my_db.session.query(ActiveEvents.event_name).filter(ActiveEvents.event_file == a["db_file"]).first()
+            
             if "SPESIFIC_HEAT" in a.keys():
                 spesific_heat = a["SPESIFIC_HEAT"]
             else:
@@ -293,7 +310,10 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
 
                 if g_config["cross"] and mode == str(0):
                     start_time_query = f"SELECT C_NUM, C_HOUR2 FROM TTIMERECORDS_HEAT{heat}_START"
-                    query = f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME FROM TTIMEINFOS_HEAT{heat}"
+                    if not g_config["msport_tm"]:
+                        query = f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME, C_DATA2 FROM TTIMEINFOS_HEAT{heat}"
+                    else:
+                        query = f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME FROM TTIMEINFOS_HEAT{heat}"
 
 
                 elif mode == str(3):
@@ -301,7 +321,7 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                     if spesific_heat == False:
                         heat_count = (heat_count - int(heat)) +1 
                     else:
-                        heat_count = (heat_count - int(heat)) +1 
+                        heat_count = (heat_count - int(heat)) +1    
 
                     query = f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME, C_DATA2 FROM TTIMEINFOS_PARF_HEAT{heat_count}_RUN1"
 
@@ -312,12 +332,11 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                     
                 try:
                     with sqlite3.connect(event_db_path) as conn:
-                        cursor = conn.cursor()
+                        cursor = conn.cursor()                            
                         cursor.execute(query)
                         time_data = cursor.fetchall()
                         time_data_lst = []
-
-                        if g_config["cross"] and mode == str(0):
+                        if g_config["cross"] and mode == str(0) and g_config["msport_tm"]:
                             cursor.execute(start_time_query)
                             start_time_data = cursor.fetchall()
                             time_data_lst = [
@@ -348,12 +367,11 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                                 for data in time_data:
                                     time_data_lst.append({"CID": data[0], "INTER_1": data[1], "INTER_2": data[2], "INTER_3": data[2],"SPEED": data[4], "REACTION": data[7], "PENELTY": data[5], "FINISHTIME": data[6]})
 
-
                 except Exception as e:
                     print("No session data inserted for, " + event_db_path)
                     print(e)
                     continue
-
+                
                 with sqlite3.connect(main_db_path) as conn:
                     cursor = conn.cursor()
                     sql = "SELECT * FROM startlist_r{0};".format(heat)
@@ -367,7 +385,7 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                     cursor.execute("SELECT TITLE1, TITLE2 FROM db_index;")
                     event_name = cursor.fetchall()
 
-                    if g_config["cross"] and mode == str(0):
+                    if g_config["cross"] and mode == str(0) and g_config["msport_tm"]:
                         
                         for v in startlist_lst:
                             inter_1 = None
@@ -399,20 +417,19 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                                     t["INTER_1"] = h["START"]
                                 
                     else:
-
-
-                        for v in startlist_lst:
-                            if v not in tmp_driver:
-                                time_data_lst.append({
-                                    "CID": v, 
-                                    "INTER_1": 0, 
-                                    "INTER_2": 0, 
-                                    "INTER_3": 0,
-                                    "REACTION":0,
-                                    "SPEED": 0, 
-                                    "PENELTY": 0, 
-                                    "FINISHTIME": 0
-                                })
+                        if tmp_driver != []:
+                            for v in startlist_lst:
+                                if v not in tmp_driver:
+                                    time_data_lst.append({
+                                        "CID": v, 
+                                        "INTER_1": 0, 
+                                        "INTER_2": 0, 
+                                        "INTER_3": 0,
+                                        "REACTION":0,
+                                        "SPEED": 0, 
+                                        "PENELTY": 0, 
+                                        "FINISHTIME": 0
+                                    })
 
                     session_data = {}
 
@@ -426,9 +443,19 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                         for x in time_data_lst:
                             for b in driver_list:
                                 if int(x["CID"]) == int(b[0]):
-                                    session_data[b[0]] = [b[1], b[2], event_name[0][0], event_name[0][1], heat, x["FINISHTIME"], b[4], x["PENELTY"], x["REACTION"]]
+                                    session_data[b[0]] = [b[1], b[2], event_name[0][0], event_name[0][1], heat, x["FINISHTIME"], b[4], x["PENELTY"], x["REACTION"], x["INTER_1"]]
                         for key, value in session_data.items():
-                            record = Session_Race_Records(first_name=value[0], last_name=value[1], title_1=value[2], title_2=value[3], heat=value[4], finishtime=value[5], snowmobile=value[6], penalty=int(value[7]), reaction=int(value[8]))
+                            if g_config["msport_tm"]:
+                                record = Session_Race_Records(first_name=value[0], last_name=value[1], title_1=value[2], title_2=value[3], heat=value[4], finishtime=value[5], snowmobile=value[6], penalty=int(value[7]), reaction=int(value[8]))
+                            else:
+                                if value[9] == '':
+                                    value[9] = 0
+                                if value[5] == '':
+                                    value[5] = 0
+                                if value[8] == '':
+                                    value[8] = 0
+                                record = Session_Race_Records(first_name=value[0], last_name=value[1], title_1=value[2], title_2=value[3], heat=value[4], finishtime=value[5], snowmobile=value[6], penalty=int(value[7]), reaction=int(value[8]), laps=int(value[9]))
+                            
                             my_db.session.add(record)
 
                         my_db.session.commit()
@@ -441,9 +468,9 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                         #cursor.executemany(sql, timedata_tuples)
                         
                     else:
-
                         if exclude_lst:
                             query = f"SELECT CID from driver_stats_r{str(heat)} WHERE LOCKED = 1"
+                            
                             cursor.execute(query)
                             locked_cids = [item[0] for item in cursor.fetchall()]
                             timedata_tuples = [
@@ -461,22 +488,22 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                             cursor.execute(f'DELETE FROM driver_stats_r{heat}')
                     
 
-
                     sql = f"""
                     INSERT OR REPLACE INTO driver_stats_r{heat} 
                     (INTER_1, INTER_2, INTER_3, SPEED, PENELTY, FINISHTIME, CID, REACTION) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """
-                    if len(timedata_tuples) == 0:
-                        continue
+                    
                     for x in timedata_tuples:
                         for b in driver_list:
                             if int(x[6]) == int(b[0]):
-                                session_data[b[0]] = [b[1], b[2], event_name[0][0], event_name[0][1], heat, x[5], b[4], x[4], x[7]]
+                                if g_config["msport_tm"]:
+                                    session_data[b[0]] = [b[1], b[2], event_name[0][0], event_name[0][1], heat, x[5], b[4], x[4], x[7]]
+                                else:
+                                    session_data[b[0]] = [b[1], b[2], event_name[0][0], event_name[0][1], heat, x[5], b[4], x[4], x[7], x[0]]
 
-                    current_title = session_data[list(session_data.keys())[0]][2] + " " + session_data[list(session_data.keys())[0]][3]
+                    current_title = combined_title[0]
                     
-
                     if mode == str(0) and g_config["cross"] and g_config["wl_cross_title"] in current_title:
                          cross_config = CrossConfig.query.first()
                          driver_scores = cross_config.driver_scores
@@ -484,7 +511,6 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                          dns_score = cross_config.dns_point
                          dsq_score = cross_config.dsq_point
                          invert_score = cross_config.invert_score
-
                          sorted_drivers = sorted(session_data.items(), key=lambda x: x[1][5])
                          if not invert_score:
                             finished_drivers = 0
@@ -507,6 +533,7 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
 
                             position = 1
                             first = True
+
                             for driver_id, driver_info in sorted_drivers:
                                 if driver_info[7] == 0 and driver_info[5] != 0:
                                     position_str = str(position)
@@ -529,29 +556,39 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                                     driver_info.append(0)
 
                                 session_data[driver_id] = driver_info
+                         my_db.session.query(Session_Race_Records)\
+                            .filter((Session_Race_Records.title_1 + " " + Session_Race_Records.title_2) == combined_title[0])\
+                            .filter(Session_Race_Records.heat == heat)\
+                            .delete()
+                         
+                         print("Trigger delete!")
+                         my_db.session.commit()
 
                     for value in session_data:
-                        if len(session_data[value]) == 9:
-                            session_data[value].append("0")
+                        if g_config["msport_tm"]: 
+                            if len(session_data[value]) == 9:
+                                session_data[value].append("0")
+                            my_db.session.query(Session_Race_Records)\
+                                .filter(Session_Race_Records.first_name == session_data[value][0])\
+                                .filter(Session_Race_Records.last_name == session_data[value][1])\
+                                .filter(Session_Race_Records.title_1 == session_data[value][2])\
+                                .filter(Session_Race_Records.title_2 == session_data[value][3])\
+                                .filter(Session_Race_Records.heat == session_data[value][4])\
+                                .delete()
 
-                        my_db.session.query(Session_Race_Records)\
-                            .filter(Session_Race_Records.first_name == session_data[value][0])\
-                            .filter(Session_Race_Records.last_name == session_data[value][1])\
-                            .filter(Session_Race_Records.title_1 == session_data[value][2])\
-                            .filter(Session_Race_Records.title_2 == session_data[value][3])\
-                            .filter(Session_Race_Records.heat == session_data[value][4])\
-                            .delete()
+                            my_db.session.commit()
 
-                        my_db.session.commit()
-                        
-                        if "Kvalifisering" in session_data[value][3]:
+                        if "Kvalifisering" in session_data[value][3] and g_config["msport_tm"]:
                             if session_data[value][3] not in event_dict_kvali.keys():
                                 event_dict_kvali[session_data[value][3]] = len(session_data)
                             session_data[value][8] = 0
-
-                        record = Session_Race_Records(cid=value, first_name=session_data[value][0], last_name=session_data[value][1], title_1=session_data[value][2], title_2=session_data[value][3], heat=session_data[value][4], finishtime=session_data[value][5], snowmobile=session_data[value][6], penalty=int(session_data[value][7]), points=int(session_data[value][9]), reaction=session_data[value][8])
+                        if "Kvalifisering" in session_data[value][3] and not g_config["msport_tm"]:
+                            if session_data[value][3] not in event_dict_kvali.keys():
+                                event_dict_kvali[session_data[value][3]] = len(session_data)
+                        
+                        record = Session_Race_Records(cid=value, first_name=session_data[value][0], last_name=session_data[value][1], title_1=session_data[value][2], title_2=session_data[value][3], heat=session_data[value][4], finishtime=session_data[value][5], snowmobile=session_data[value][6], penalty=int(session_data[value][7]),laps=int(session_data[value][9]),points=int(session_data[value][10]), reaction=session_data[value][8])
                         my_db.session.add(record)
-
+                    
                     my_db.session.commit()
                     cursor.executemany(sql, timedata_tuples)
                     
@@ -564,15 +601,16 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
         traceback.print_exc()
 
                         
-def insert_start_list(db, g_config, init_mode=True, set_active_driver=False):
+def insert_start_list(db, g_config, init_mode=True, set_active_driver=False, update_drivers_table=False):
     from app.models import ActiveEvents
     from app import db as my_db
     from app.lib.utils import Set_active_driver
+    
     event_dir = g_config["event_dir"]
     db_location = g_config["db_location"]
     if set_active_driver == True:
         SPESIFIC_HEAT = db[0]["SPESIFIC_HEAT"]
-
+    
     for a in db:
         if "MODE" not in a.keys():
             mode = my_db.session.query(ActiveEvents.mode).filter(ActiveEvents.event_file == a["db_file"]).first()[0]
@@ -588,6 +626,8 @@ def insert_start_list(db, g_config, init_mode=True, set_active_driver=False):
 
         local_event_db = db_location+a["db_file"]+".sqlite"
         ext_event_db = event_dir+a["db_file"]+"Ex.scdb"
+
+                
 
         for b in range(0, int(heats)):
             startlist_data = ""
@@ -619,7 +659,7 @@ def insert_start_list(db, g_config, init_mode=True, set_active_driver=False):
                 except Error as e:
                     print(e)
                 startlist_data = cursor.fetchall()
-                if len(startlist_data) == 0:
+                if len(startlist_data) == 0 and g_config["msport_tm"]:
                     print("No drivers")
                     continue
                 
@@ -630,9 +670,10 @@ def insert_start_list(db, g_config, init_mode=True, set_active_driver=False):
                 cursor_new = conn_new_db.cursor()
                 if init_mode == False:
                     #NO IDEA WHY I ADDED THIS, WILL PROBABLY FIND OUT IN THE FUTURE
+                    # 17/01/2025 THINK I KNOW WHY I ADDED IT. 
                     #cursor_new.execute(f'DELETE FROM driver_stats_r{heat}')
                     cursor_new.execute(f'DELETE FROM startlist_r{heat}')
-                    
+
                 try:
                     sql = "INSERT INTO startlist_r{0} (CID) VALUES (?)".format(heat)
                     cursor_new.executemany(sql, startlist_data)

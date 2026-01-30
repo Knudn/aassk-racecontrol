@@ -46,11 +46,15 @@ def register_event_routes(api_bp):
 
     @api_bp.route('/api/active_event_update', methods=['GET'])
     def active_event_update():
-        from app.views.api_view import send_data_to_room 
+        from app.views.api_view import send_data_to_room
+
 
         list_address = current_app.config['listen_address']
+        
         if str(list_address) == "0.0.0.0":
             list_address = "localhost"
+
+
         update_active_event_stats()
 
         event_data = get_active_startlist()
@@ -62,10 +66,10 @@ def register_event_routes(api_bp):
             mqtt_client.connect("localhost", 1883, 60)
 
 
-            upcoming_data = get_upcoming_drivers(return_driver_context=False)
+            #upcoming_data = get_upcoming_drivers(return_driver_context=False)
             
-            print(upcoming_data)
-            mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
+            #print(upcoming_data)
+            #mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
 
             update_led_panel_state() 
 
@@ -102,7 +106,6 @@ def register_event_routes(api_bp):
         heat = request.args.get('heat')
         event_comb = request.args.get('event_comb')
 
-        print(event_comb)
 
         if event_comb is not None:
             events = []
@@ -246,7 +249,6 @@ def register_event_routes(api_bp):
 
         # Execute the query to get the results
         results = query.all()
-        print(results, "EVENT")
         max_len = len(results)
         if max_len == 0:
             return {"error": "No entries found"}, 404
@@ -260,10 +262,9 @@ def register_event_routes(api_bp):
 
         query = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
             ActiveEvents.event_name == title_combo
-        )  
+        )
 
         results = query.all()
-        print(results)
         heat_insert = ""
         event_mode = results[0][2]
         if heat_insert == '':

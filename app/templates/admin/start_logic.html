@@ -8,6 +8,14 @@
     <div class="card-body">
         <form method="POST" action="start_logic" enctype="multipart/form-data" id="configForm">
             
+            {% if not endpoint_state %}
+
+                <div class="alert alert-danger" role="alert">
+                    http://{{ config.start_light_ip }} is not reachable!
+                </div> 
+            
+            {% endif %}
+            
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -60,7 +68,7 @@
             
             <div class="row mt-3">
                 <div class="col-md-12">
-                    <h5>Warmup Image Editor ({{ matrix_width }}x{{ matrix_height }} pixels, scaled 5x for editing)</h5>
+                    <h5>Warmup Image Editor ({{ matrix_width }}x{{ matrix_height }} pixels, scaled 10x for editing)</h5>
                     <div class="mb-2">
                         <label class="form-label">Upload New Image</label>
                         <input type="file" class="form-control" id="imageUpload" accept="image/*">
@@ -76,15 +84,32 @@
                         <button type="button" class="btn btn-warning btn-sm ms-2" id="clearCanvas">Clear All</button>
                     </div>
                     
+                    <div class="mb-2">
+                        <label class="form-label">Text Input</label>
+                        <input type="text" id="textInput" value="A" maxlength="20" class="form-control" style="width: 150px; display: inline-block;">
+                        <label class="form-label ms-3">Text Color</label>
+                        <input type="color" id="textColor" value="#ffffff" class="form-control form-control-color" style="width: 100px; display: inline-block;">
+                        <label class="form-label ms-3">Pixel Size</label>
+                        <input type="number" id="textPixelSize" value="1" min="1" max="3" class="form-control" style="width: 80px; display: inline-block;">
+                        <button type="button" class="btn btn-info btn-sm ms-2" id="textModeBtn">Text Mode: OFF</button>
+                    </div>
+                    
                     <div class="border p-2" style="background: #333; display: inline-block;">
                         <canvas id="imageCanvas" style="border: 1px solid #ccc; cursor: crosshair; image-rendering: pixelated;"></canvas>
                     </div>
-                    <div class="mt-2 text-muted small">Click to draw pixels. Shift+Click to start line, click again to end line</div>
+                    <div class="mt-2 text-muted small">
+                        <strong>Draw Mode:</strong> Click to draw pixels. Shift+Click to start line, click again to end line<br>
+                        <strong>Text Mode:</strong> Click to place pixelated text. Pixel Size 1 = 3x5 chars, Size 2 = 6x10 chars, Size 3 = 9x15 chars
+                    </div>
                     
                     <input type="hidden" name="sl_warmup_image_data" id="imageData">
                 </div>
                 
                 <div class="col-md-6 mt-3">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="sl_use_warmup_image" {% if config.sl_use_warmup_image %}checked{% endif %}>
+                        <label class="form-check-label">Use Warmup image</label>
+                    </div>
                     <div class="form-check mb-2">
                         <input type="checkbox" class="form-check-input" name="fc_req_ready" {% if config.fc_req_ready %}checked{% endif %}>
                         <label class="form-check-label">Field Controller Ready</label>
@@ -123,11 +148,15 @@ const ctx = canvas.getContext('2d');
 canvas.width = MATRIX_WIDTH * PIXEL_SCALE;
 canvas.height = MATRIX_HEIGHT * PIXEL_SCALE;
 
+// DISABLE IMAGE SMOOTHING on the main canvas context
+ctx.imageSmoothingEnabled = false;
+
 let img = new Image();
 let isDrawingLine = false;
+let isTextMode = false;
 let startX, startY;
 
-// Initialize with white background or existing image
+// Initialize with black background
 ctx.fillStyle = '#000000';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -137,6 +166,17 @@ img.onload = function() {
     ctx.drawImage(img, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT, 0, 0, canvas.width, canvas.height);
 };
 {% endif %}
+
+// Text mode toggle
+document.getElementById('textModeBtn').addEventListener('click', function() {
+    isTextMode = !isTextMode;
+    this.textContent = isTextMode ? 'Text Mode: ON' : 'Text Mode: OFF';
+    this.className = isTextMode ? 'btn btn-success btn-sm ms-2' : 'btn btn-info btn-sm ms-2';
+    canvas.style.cursor = isTextMode ? 'text' : 'crosshair';
+    if (isTextMode) {
+        isDrawingLine = false;
+    }
+});
 
 // Upload new image
 document.getElementById('imageUpload').addEventListener('change', function(e) {
@@ -154,13 +194,21 @@ document.getElementById('imageUpload').addEventListener('change', function(e) {
     }
 });
 
-// Drawing functionality
+// Drawing and text placement functionality
 canvas.addEventListener('click', function(e) {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / PIXEL_SCALE);
     const y = Math.floor((e.clientY - rect.top) / PIXEL_SCALE);
     
-    if (e.shiftKey) {
+    if (isTextMode) {
+        // Text placement mode
+        const text = document.getElementById('textInput').value;
+        const color = document.getElementById('textColor').value;
+        const pixelSize = parseInt(document.getElementById('textPixelSize').value);
+        if (text) {
+            drawText(x, y, text, color, pixelSize);
+        }
+    } else if (e.shiftKey) {
         // Line mode
         if (!isDrawingLine) {
             startX = x;
@@ -177,6 +225,89 @@ canvas.addEventListener('click', function(e) {
         ctx.fillRect(x * PIXEL_SCALE, y * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
     }
 });
+
+function drawText(x, y, text, color, pixelSize) {
+    // 3x5 bitmap font definition (each character is represented as an array of rows)
+    // 1 = pixel on, 0 = pixel off
+    const bitmapFont = {
+        '0': [[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],
+        '1': [[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]],
+        '2': [[1,1,1],[0,0,1],[1,1,1],[1,0,0],[1,1,1]],
+        '3': [[1,1,1],[0,0,1],[1,1,1],[0,0,1],[1,1,1]],
+        '4': [[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1]],
+        '5': [[1,1,1],[1,0,0],[1,1,1],[0,0,1],[1,1,1]],
+        '6': [[1,1,1],[1,0,0],[1,1,1],[1,0,1],[1,1,1]],
+        '7': [[1,1,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1]],
+        '8': [[1,1,1],[1,0,1],[1,1,1],[1,0,1],[1,1,1]],
+        '9': [[1,1,1],[1,0,1],[1,1,1],[0,0,1],[1,1,1]],
+        'A': [[0,1,0],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+        'B': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]],
+        'C': [[0,1,1],[1,0,0],[1,0,0],[1,0,0],[0,1,1]],
+        'D': [[1,1,0],[1,0,1],[1,0,1],[1,0,1],[1,1,0]],
+        'E': [[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,1,1]],
+        'F': [[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,0,0]],
+        'G': [[0,1,1],[1,0,0],[1,0,1],[1,0,1],[0,1,1]],
+        'H': [[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]],
+        'I': [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],
+        'J': [[0,0,1],[0,0,1],[0,0,1],[1,0,1],[0,1,0]],
+        'K': [[1,0,1],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
+        'L': [[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,1,1]],
+        'M': [[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],
+        'N': [[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1]],
+        'O': [[0,1,0],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+        'P': [[1,1,0],[1,0,1],[1,1,0],[1,0,0],[1,0,0]],
+        'Q': [[0,1,0],[1,0,1],[1,0,1],[1,1,0],[0,1,1]],
+        'R': [[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,0,1]],
+        'S': [[0,1,1],[1,0,0],[0,1,0],[0,0,1],[1,1,0]],
+        'T': [[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],
+        'U': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+        'V': [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[0,1,0]],
+        'W': [[1,0,1],[1,0,1],[1,1,1],[1,1,1],[1,0,1]],
+        'X': [[1,0,1],[1,0,1],[0,1,0],[1,0,1],[1,0,1]],
+        'Y': [[1,0,1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]],
+        'Z': [[1,1,1],[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+        ' ': [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],
+        '.': [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,1,0]],
+        ':': [[0,0,0],[0,1,0],[0,0,0],[0,1,0],[0,0,0]],
+        '-': [[0,0,0],[0,0,0],[1,1,1],[0,0,0],[0,0,0]],
+        '+': [[0,0,0],[0,1,0],[1,1,1],[0,1,0],[0,0,0]],
+        '!': [[0,1,0],[0,1,0],[0,1,0],[0,0,0],[0,1,0]],
+        '?': [[1,1,1],[0,0,1],[0,1,0],[0,0,0],[0,1,0]],
+    };
+    
+    ctx.fillStyle = color;
+    let currentX = x;
+    
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i].toUpperCase();
+        const bitmap = bitmapFont[char];
+        
+        if (bitmap) {
+            // Draw each pixel of the character
+            for (let row = 0; row < bitmap.length; row++) {
+                for (let col = 0; col < bitmap[row].length; col++) {
+                    if (bitmap[row][col] === 1) {
+                        // Draw a pixel block based on pixelSize
+                        for (let py = 0; py < pixelSize; py++) {
+                            for (let px = 0; px < pixelSize; px++) {
+                                const finalX = currentX + (col * pixelSize) + px;
+                                const finalY = y + (row * pixelSize) + py;
+                                if (finalX >= 0 && finalX < MATRIX_WIDTH && finalY >= 0 && finalY < MATRIX_HEIGHT) {
+                                    ctx.fillRect(finalX * PIXEL_SCALE, finalY * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Move to next character position (3 pixels wide + 1 pixel spacing)
+            currentX += (3 * pixelSize) + pixelSize;
+        } else {
+            // Unknown character, skip it
+            currentX += (3 * pixelSize) + pixelSize;
+        }
+    }
+}
 
 function drawLine(x0, y0, x1, y1) {
     const color = document.getElementById('lineColor').value;
@@ -223,21 +354,22 @@ document.getElementById('clearCanvas').addEventListener('click', function() {
     isDrawingLine = false;
 });
 
-// Save canvas data on form submit
+// Form submission
 document.getElementById('configForm').addEventListener('submit', function() {
-    // Create a temporary canvas at actual pixel size
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = MATRIX_WIDTH;
     tempCanvas.height = MATRIX_HEIGHT;
     const tempCtx = tempCanvas.getContext('2d');
+    
+    // Disable smoothing here too
     tempCtx.imageSmoothingEnabled = false;
     
-    // Draw scaled-down version
     tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, MATRIX_WIDTH, MATRIX_HEIGHT);
     
     const imageDataUrl = tempCanvas.toDataURL('image/png');
     document.getElementById('imageData').value = imageDataUrl;
 });
+
 </script>
 
 {% endblock %}

@@ -13,6 +13,7 @@ import json
 
 
 
+
 def get_upcoming_drivers(return_driver_context=False):
     from app.lib.db_operation import get_active_startlist_w_timedate, get_active_startlist
 
@@ -169,7 +170,9 @@ def get_upcoming_drivers(return_driver_context=False):
                 data["D1"].append(D1_NAME)
                 data["D2"].append(D2_NAME)
                 data["EVENT_NAME"] = EVENT_NAME
-    print(data)
+     
+    print(next_event)
+    
     return data
 
 def get_best_kvali_time(drivers, event):
@@ -517,7 +520,7 @@ def get_active_events_sorted():
 def format_startlist(event,include_timedata=False):
     import json
     g_config = GetEnv()
-
+    
     if Check_Event(event) == True:
         with sqlite3.connect(event[0]["db_file"]) as conn:
             cursor = conn.cursor()

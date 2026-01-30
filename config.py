@@ -60,7 +60,8 @@ DEFAULT_MICROSERVICES = [
     {"name": "Cross Clock Server", "path": "cross_clock_server.py", "params": "None"},
     {"name": "Backup Clock", "path": "clock_server_vola.py", "params": "192.168.1.51"},
     {"name": "PDF Converter", "path": "pdf_converter.py", "params": "None"},
-    {"name": "Intermediate Listener", "path": "intermediate_list.py", "params": "None"}
+    {"name": "Intermediate Listener", "path": "intermediate_list.py", "params": "None"},
+    {"name": "MQTT Middleware", "path": "mqtt_middleware.py", "params": "None"}
 ]
 
 # InfoScreen asset templates - {ip} will be replaced with actual IP

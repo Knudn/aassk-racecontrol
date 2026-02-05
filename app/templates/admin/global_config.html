@@ -66,21 +66,26 @@
                     <td>Race mode</td>
                     <td>
                         <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="race_type" id="race_type_1" value="1">
+                          <input class="form-check-input" type="radio" name="race_type" id="race_type_1" value="1" {%if config.race_type == "1" %} checked {%endif%}>
                           <label class="form-check-label" for="inlineRadio1">1. BakkeCross</label>
                         </div>
                         <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="race_type" id="race_type_2" value="2" checked>
+                          <input class="form-check-input" type="radio" name="race_type" id="race_type_2" value="2" {% if config.race_type == "2" %} checked {%endif%}>
+
                           <label class="form-check-label" for="inlineRadio2">2. BakkeDrag/Drag</label>
                         </div>
                         <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="race_type" id="race_type_3" value="3">
+                          <input class="form-check-input" type="radio" name="race_type" id="race_type_3" value="3" {% if config.race_type == "3" %} checked {%endif%}>
                           <label class="form-check-label" for="inlineRadio3">3. Bakkeløp</label>
                         </div>
 
                         <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="race_type" id="race_type_4" value="4">
-                          <label class="form-check-label" for="inlineRadio3">4. Vanncross</label>
+                          <input class="form-check-input" type="radio" name="race_type" id="race_type_4" value="4" {% if config.race_type == "4" %} checked {%endif%}>
+                          <label class="form-check-label" for="inlineRadio4">4. Vanncross</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="race_type" id="race_type_5" value="5" {% if config.race_type == "5" %} checked {%endif%}>
+                          <label class="form-check-label" for="inlineRadio5">5. Cross</label>
                         </div>
                     </td>
                 </tr>

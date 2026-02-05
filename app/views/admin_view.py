@@ -58,7 +58,7 @@ def s_set_active_driver():
         active_driver_id = request.json["driverId"]
         with sqlite3.connect(DB_PATH) as con:
             cur = con.cursor()
-            cur.execute("UPDATE active_drivers SET D1 = ?;", (active_driver_id,))
+            cur.execute("UPDATE active_drivers SET  D1 = ?;", (active_driver_id,))
 
         requests.get("http://{0}:7777/api/active_event_update".format(list_address))
 
@@ -68,9 +68,18 @@ def s_set_active_driver():
     return render_template("admin/s_set_active_driver.html")
 
 
+def publish(client, msg, topic_dev):
+    result = client.publish(topic_dev, msg, retain=True)
+    status = result[0]
+    if status == 0:
+        print(f"Send `{msg}` to topic `{topic_dev}`")
+    else:
+        print(f"Failed to send message to topic {topic_dev}")
+
+
 def start_logic():
     from app.lib.utils import GetEnv
-    from app.models import StartLogic
+    from app.models import StartLogic, MicroServices
     from flask import request, redirect, url_for, render_template
     import json, base64
     from PIL import Image
@@ -79,11 +88,29 @@ def start_logic():
     from requests.exceptions import HTTPError
     from app.lib.utils import manage_process_screen
     import time
+    from flask import current_app
 
     g_conf = GetEnv()
     start_data = StartLogic.query.first()
 
+    
     if request.method == "POST":
+        mqtt_mw_state = MicroServices.query.filter(MicroServices.path == "mqtt_middleware.py").first()
+
+
+        if "start_light_ip" not in request.form:
+            import paho.mqtt.publish as publish
+
+            current_state = current_app.config["start_state"]
+            for a in current_state:
+                if a in request.form:
+                    current_state[a] = request.form[a]
+                else:
+                    current_state[a] = False
+            publish.single(
+                "start/state", payload=json.dumps(current_state), hostname="127.0.0.1"
+            )
+            return redirect(url_for("admin.admin", tab_name="start_logic"))
 
         def hex_to_rgb_string(hex_color):
             hex_color = hex_color.lstrip("#")
@@ -100,9 +127,18 @@ def start_logic():
         start_data.sl_ready_color = hex_to_rgb_string(request.form["sl_ready_color"])
         start_data.sl_brightness = request.form["sl_brightness"]
 
+        if "use_orbits" in request.form:
+            start_data.use_orbits = True
+        else:
+            start_data.use_orbits = False
+        
+        if "req_orbits_warmup" in request.form:
+            start_data.req_orbits_ready = request.form["req_orbits_warmup"]
+        else:
+            start_data.req_orbits_ready = False
+
         if "sl_start_using_relay" in request.form:
             start_data.sl_start_using_relay = True
-            print("sssssssssssssss")
         else:
             start_data.sl_start_using_relay = False
 
@@ -147,9 +183,11 @@ def start_logic():
         except Exception as err:
             print(err)
 
-        manage_process_screen("mqtt_middleware.py", "stop")
-        time.sleep(1)
-        manage_process_screen("mqtt_middleware.py", "start")
+        if mqtt_mw_state.state:
+            manage_process_screen("mqtt_middleware.py", "stop")
+            time.sleep(1)
+            manage_process_screen("mqtt_middleware.py", "start")
+
         return redirect(url_for("admin.admin", tab_name="start_logic"))
 
     def rgb_to_hex(rgb_string):
@@ -163,14 +201,17 @@ def start_logic():
     matrix_size = start_data.sl_matric_size or "24x32"
     matrix_width, matrix_height = map(int, matrix_size.split("x"))
     try:
-        requests.get("http://" + start_data.start_light_ip, timeout=2)
+        requests.get("http://" + start_data.start_light_ip, timeout=1)
         endpoint_state = True
     except:
         endpoint_state = False
 
+    start_state_field = current_app.config["start_state"]
+
     return render_template(
         "admin/start_logic.html",
         config=start_data,
+        start_state_field=start_state_field,
         endpoint_state=endpoint_state,
         matrix_width=matrix_width,
         matrix_height=matrix_height,
@@ -326,7 +367,6 @@ def home_tab():
                     == event_name
                 ).delete()
                 db.session.commit()
-                print(selectedEventFile)
                 full_db_reload(add_intel_sort=False, Event=selectedEventFile)
 
             print("Getting:", selectedEventFile)
@@ -525,12 +565,10 @@ def global_config_tab():
     from sqlalchemy import asc
 
     global_config = GlobalConfig.query.all()
-
     form = ConfigForm()
 
     if request.method == "POST":
         if "submit" in request.form:
-            print(request.form)
             for config in global_config:
                 if not form.wl_cross_title.data:
                     form.wl_cross_title.data = ""
@@ -566,6 +604,7 @@ def global_config_tab():
                 config.intermediate_path = form.intermediate_path.data
                 config.autocommit = form.autocommit.data
                 config.keep_qualification = form.keep_qualification.data
+                config.race_type = str(form.race_type.data)
 
                 if bool(form.cross.data):
                     db.session.query(MicroServices).filter(

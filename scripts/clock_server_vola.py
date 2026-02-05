@@ -8,7 +8,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 current_working_directory = os.getcwd()
-print(current_working_directory)
 
 # Constants
 DB_PATH = "/home/administrator/aassk/new_system/site.db"

@@ -396,3 +396,29 @@ def register_driver_routes(api_bp):
             'message': f'Staging state updated: button={button}, status={status}'
                 }
 
+    @api_bp.route('/api/start_state', methods=['POST'])
+    def start_state():
+        from flask import current_app 
+        import json
+        from app.models import archive_server
+
+
+        archive_server_data = archive_server.query.first()
+
+        current_app.config['start_state'] = json.loads(request.json)
+        
+        if archive_server_data.enabled:
+            password = archive_server_data.auth_token
+            hostname = archive_server_data.hostname
+            
+            data = {
+                "start_state": json.loads(request.json),
+                "token": password,
+            }
+            
+            response = requests.post(f"http://{hostname}/api/set_startstate", json=data)
+
+        return {
+            'success': True,
+            'message': f'Staging state updated'
+                }

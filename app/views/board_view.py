@@ -120,7 +120,6 @@ def speaker():
     ActiveEvents.event_file == active_event[0]["db_file"]
     )
     results = query.first()
-    print(results)
     mode = results[2]
 
     SpeakerPageConfig = SpeakerPageSettings.query.first()
@@ -240,7 +239,6 @@ def scoreboard_cross():
                 Session_Race_Records.title_2
             ).all()
             event_count = len(results_orgin)
-            print(event_count)
 
             if event_count < session['index']:
                     session['index'] = 1

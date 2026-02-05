@@ -179,6 +179,7 @@ if __name__ == '__main__':
     app.config['remote_result_page_enabled'] = False
     app.config['event_content'] = ""
     app.config['stage_ready'] = 0
+    app.config['start_state'] = {"man_ready": False, "ready": False, "started": False, "halt_race": False, "warmup": False, "running": True}
     
     configure_logging(app)
     app.logger.info('App started')

@@ -160,8 +160,9 @@ def update_active_event_stats(Emit=True):
     if g_config["msport_tm"]:
         update_active_event(g_config)
     else:
-        clear_driver_table(active_event, g_config)
-
+        if active_event[0]["db_file"] != 'Event000':
+            clear_driver_table(active_event, g_config)
+    
     change_active_driver = False
 
 
@@ -236,7 +237,7 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
         return data
 
     event = get_active_event()
-    
+    print(event) 
     current_db_file = event[0]["db_file"]
     current_heat = event[0]["SPESIFIC_HEAT"]
 

@@ -199,7 +199,6 @@ def register_timedata_routes(api_bp):
                 Session_Race_Records.reaction,
                 Session_Race_Records.points)
 
-            print(query)
         else:
             query = db.session.query(
                 Session_Race_Records.first_name,

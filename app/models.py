@@ -84,6 +84,7 @@ class ConfigForm(FlaskForm):
     submit = SubmitField('Save')
 
     intermediate_path = StringField('Whitelist Title')
+    race_type = StringField('Race Type')
     hard_event_dir = StringField('Whitelist Title')
     autocommit = BooleanField('Watercross/Snowcross')
     use_intermediate = BooleanField('Watercross/Snowcross')
@@ -109,6 +110,7 @@ class GlobalConfig(db.Model):
     exclude_title = db.Column(db.String(100), nullable=False, default="")
     auto_commit_manual_clock = db.Column(db.Boolean, default=False)
     dual_start_manual_clock = db.Column(db.Boolean, default=False)
+    race_type = db.Column(db.String, default=2)
 
     intermediate_path = db.Column(db.String(100), nullable=True, default="/mnt/intermediate/")
     hard_event_dir = db.Column(db.String(100), nullable=True, default="/mnt/test/")
@@ -139,6 +141,8 @@ class StartLogic(db.Model):
     sl_matric_size = db.Column(db.String(16), nullable=True, default="24x32")
 
     fc_req_ready = db.Column(db.Boolean, default=False)
+    req_orbits_warmup = db.Column(db.Boolean, default=True)
+    use_orbits = db.Column(db.Boolean, default=False)
     cr_req_ready = db.Column(db.Boolean, default=False)
     
     fc_can_start = db.Column(db.Boolean, default=False)

@@ -10,8 +10,8 @@ import xml.etree.ElementTree as ET
 
 
 def clear_driver_table(active_event, g_config):
-    db_path = g_config["event_dir"]+active_event[0]["db_file"]+".scdb"
 
+    db_path = g_config["event_dir"]+active_event[0]["db_file"]+".scdb"
     db_location = g_config["db_location"]
     local_event_db = db_location+active_event[0]["db_file"]+".sqlite"
     driver_entries = []
@@ -173,7 +173,6 @@ def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude
                 print("Added:", entry["db_file"], entry["MODE"])
 
                 driver_insert_data = []
-
                 if len(driver_db_data) > 0: 
                     try:
                         for driver_data in driver_db_data[entry["db_file"]]:
@@ -365,7 +364,8 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                                     time_data_lst.append({"CID": data[0], "INTER_1": inter_time, "INTER_2": data[2], "INTER_3": data[2],"SPEED": data[4], "REACTION": data[7], "PENELTY": data[5], "FINISHTIME": data[6]})
                             else:
                                 for data in time_data:
-                                    time_data_lst.append({"CID": data[0], "INTER_1": data[1], "INTER_2": data[2], "INTER_3": data[2],"SPEED": data[4], "REACTION": data[7], "PENELTY": data[5], "FINISHTIME": data[6]})
+                                    print(data[2], data[3])
+                                    time_data_lst.append({"CID": data[0], "INTER_1": data[1], "INTER_2": data[2], "INTER_3": data[3],"SPEED": data[4], "REACTION": data[7], "PENELTY": data[5], "FINISHTIME": data[6]})
 
                 except Exception as e:
                     print("No session data inserted for, " + event_db_path)

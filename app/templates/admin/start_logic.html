@@ -5,17 +5,37 @@
     <div class="card-header">
         <h3>Start Logic Configuration</h3>
     </div>
-    <div class="card-body">
-        <form method="POST" action="start_logic" enctype="multipart/form-data" id="configForm">
+    
+      <div class="card-body">
+      <form method="POST" action="start_logic" enctype="multipart/form-data" id="start_state">
+     	    <h5 class="card-title">Force send start state!</h5>
+	{% for a in start_state_field %}
+	      <div class="form-check form-check-inline">
+		      <label class="form-check-label" for="inlineCheckbox1">
+		      {% if a == "man_ready"  %} Control Room Ready
+		      {% elif a == "ready" %} Controller ready
+		      {% elif a == "started" %} Start!
+		      {% elif a == "warmup" %} Warmup
+		      {% elif a == "running" %} Running
+		      {% elif a == "halt_race" %} Halt!
+
+		      {% endif %}
+		      <input class="form-check-input" name="{{ a }}" type="checkbox" {% if start_state_field[a] %} checked {% endif %} >
+		      </label>
+	      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-sm">Send</button>
+	</form>
+
+      <form method="POST" action="start_logic" enctype="multipart/form-data" id="configForm">
             
             {% if not endpoint_state %}
 
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger" style="margin: 5px;" role="alert">
                     http://{{ config.start_light_ip }} is not reachable!
                 </div> 
             
             {% endif %}
-            
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -107,6 +127,14 @@
                 
                 <div class="col-md-6 mt-3">
                     <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="req_orbits_warmup" {% if config.req_orbits_warmup %}checked{% endif %}>
+                        <label class="form-check-label">Require warmup in Orbits before start!</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" name="use_orbits" {% if config.use_orbits %}checked{% endif %}>
+                        <label class="form-check-label">Trigger startlight from Orbits/Mylaps</label>
+                    </div>
+                    <div class="form-check mb-2">
                         <input type="checkbox" class="form-check-input" name="sl_use_warmup_image" {% if config.sl_use_warmup_image %}checked{% endif %}>
                         <label class="form-check-label">Use Warmup image</label>
                     </div>
@@ -139,6 +167,10 @@
 </div>
 
 <script>
+
+
+
+
 const PIXEL_SCALE = 10;
 const MATRIX_WIDTH = {{ matrix_width }};
 const MATRIX_HEIGHT = {{ matrix_height }};
@@ -147,6 +179,10 @@ const canvas = document.getElementById('imageCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = MATRIX_WIDTH * PIXEL_SCALE;
 canvas.height = MATRIX_HEIGHT * PIXEL_SCALE;
+
+
+
+
 
 // DISABLE IMAGE SMOOTHING on the main canvas context
 ctx.imageSmoothingEnabled = false;

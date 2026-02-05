@@ -5,7 +5,7 @@ import random
 import paho.mqtt.client as mqtt_client
 import json
 import os
-
+import requests
 import sqlite3
 
 current_working_directory = os.getcwd()
@@ -13,14 +13,22 @@ current_working_directory = os.getcwd()
 DB_PATH = f"{current_working_directory}/site.db"
 with sqlite3.connect(DB_PATH) as con:
     cur = con.cursor()
-    starter_config = cur.execute("SELECT * FROM start_logic;").fetchone()
+    starter_config = cur.execute("SELECT fc_req_ready, cr_req_ready, fc_can_start, cr_can_start, sl_use_warmup_image, req_orbits_warmup, use_orbits FROM start_logic;").fetchone()
 
-req_field_ready = bool(starter_config[12])
-req_mon_ready = bool(starter_config[13])
-field_can_start = bool(starter_config[14])
-mon_can_start = bool(starter_config[15])
-sl_use_warmup_image = bool(starter_config[16])
+req_field_ready = bool(starter_config[0])
+req_mon_ready = bool(starter_config[1])
+field_can_start = bool(starter_config[2])
+mon_can_start = bool(starter_config[3])
+sl_use_warmup_image = bool(starter_config[4])
+use_orbits = bool(starter_config[6])
+req_orbits_warmup = bool(starter_config[5])
+orbits_warmup = False
+
+
+print(starter_config)
 print(sl_use_warmup_image)
+
+
 
 broker = "127.0.0.1"
 port = 1883
@@ -28,6 +36,12 @@ topic = "start/#"
 client_id = "MQTT_CONTROLLER"
 
 current_state = {}
+
+
+# If the broker looses it's state, send this to the start/state topic on the broker
+# mosquitto_pub -t "start/state" -h 127.0.0.1 -m '{"man_ready": false, "ready": false, "started": false, "halt_race": false, "warmup": false, "running": false}' -r
+# {"man_ready": true, "ready": true, "started": false, "halt_race": false, "warmup": false}
+
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
@@ -59,18 +73,68 @@ def subscribe(client: mqtt_client):
         global req_mon_ready
         global field_can_start
         global mon_can_start
+        global orbits_warmup
 
         topic = msg.topic
         msg = str(msg.payload.decode("utf-8", "ignore"))
-        msg_dict = json.loads(msg)
-
+        try:
+            msg_dict = json.loads(msg)
+        except Exception as err:
+            print(err)
+            return
+        
         if topic == "start/state":
             current_state = msg_dict
+            print(current_state)
+            try:
+                requests.post("http://192.168.1.50:7777/api/start_state", json=msg, timeout=1)
+            except Exception as err:
+                print(err)
 
+        if topic == "start/mylaps_inter":
+            print(msg_dict) 
+
+            if msg_dict["current_flag"] == "warmup":
+                orbits_warmup = True
+                current_state["warmup"] = True
+                current_state["started"] = False
+            else:
+                orbits_warmup = False
+
+            if msg_dict["current_flag"] == "red":
+                current_state["halt_race"] = True
+            else:
+
+                current_state["halt_race"] = False
+
+            if msg_dict["current_flag"] == "green":
+                if req_orbits_warmup:
+                    if orbits_warmup:
+                        current_state["started"] = True
+                        current_state["running"] = True
+                        current_state["halt_race"] = False
+                        current_state["man_ready"] = False
+                        current_state["ready"] = False
+                else:
+                    current_state["started"] = True
+                    current_state["running"] = True
+                    current_state["halt_race"] = False
+                    current_state["man_ready"] = False
+                    current_state["ready"] = False
+
+            else:
+                current_state["running"] = False
+            
+                
+            
+            publish(client, json.dumps(current_state), "start/state")
+        
         elif topic == "start/starter_cr":
             if msg_dict["action"] == "halt":
                 if msg_dict["value"] == True:
                     current_state["halt_race"] = True
+                    current_state["started"] = False
+                    current_state["warmup"] = False
                 else:
                     current_state["halt_race"] = False
             elif msg_dict["action"] == "ready" and req_mon_ready:

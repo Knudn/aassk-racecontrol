@@ -29,11 +29,15 @@ def register_archive_routes(api_bp):
 
     @api_bp.route("/api/upate_remote_data", methods=["GET"])
     def upate_remote_data():
+        from flask import current_app
+        
         g_config = GetEnv()
+
 
         update_type = request.args.get("type", type=str)
 
         archive_server_data = archive_server.query.first()
+        start_state = current_app.config["start_state"]
 
         if not g_config["msport_tm"]:
             race_type = "MyLaps Cross"
@@ -126,13 +130,6 @@ def register_archive_routes(api_bp):
                                         ] = a.points
 
                                         # print(a.first_name, a.last_name, heat, a.points, a.laps)
-                                print(title_1, title_2, heat)
-                                print(send_data[tk][k - 1]["drivers"][0]["first_name"])
-                                print(
-                                    send_data[tk][k - 1]["drivers"][0]["time_info"][
-                                        "FINISHTIME"
-                                    ]
-                                )
 
         else:
             return {"error": "Invalid update type"}, 400
@@ -144,6 +141,7 @@ def register_archive_routes(api_bp):
             "race_type": race_type,
             "kvali_ranking": json.dumps(result) if result else None,
             "event_data": json.dumps(event_data) if event_data else None,
+            "start_state": json.dumps(current_app.config["start_state"])
         }
 
         try:

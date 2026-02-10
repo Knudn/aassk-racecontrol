@@ -104,7 +104,7 @@ def start_logic():
             current_state = current_app.config["start_state"]
             for a in current_state:
                 if a in request.form:
-                    current_state[a] = request.form[a]
+                    current_state[a] = True
                 else:
                     current_state[a] = False
             publish.single(

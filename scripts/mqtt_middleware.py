@@ -23,7 +23,7 @@ sl_use_warmup_image = bool(starter_config[4])
 use_orbits = bool(starter_config[6])
 req_orbits_warmup = bool(starter_config[5])
 orbits_warmup = False
-
+print(req_orbits_warmup, "asdasd")
 
 print(starter_config)
 print(sl_use_warmup_image)
@@ -94,37 +94,48 @@ def subscribe(client: mqtt_client):
         if topic == "start/mylaps_inter":
             print(msg_dict) 
 
-            if msg_dict["current_flag"] == "warmup":
-                orbits_warmup = True
-                current_state["warmup"] = True
-                current_state["started"] = False
-            else:
-                orbits_warmup = False
-
             if msg_dict["current_flag"] == "red":
                 current_state["halt_race"] = True
             else:
 
                 current_state["halt_race"] = False
 
-            if msg_dict["current_flag"] == "green":
-                if req_orbits_warmup:
-                    if orbits_warmup:
+            if msg_dict["current_flag"] == "warmup":
+                orbits_warmup = True
+                print("Setting", orbits_warmup)
+                if use_orbits:
+                    current_state["warmup"] = True
+                
+                current_state["started"] = False
+                current_state["running"] = False
+
+
+            elif msg_dict["current_flag"] == "green":
+                print(orbits_warmup)
+                if use_orbits:
+                    if req_orbits_warmup:
+                        if orbits_warmup:
+                            current_state["started"] = True
+                            current_state["running"] = True
+                            current_state["halt_race"] = False
+                            current_state["man_ready"] = False
+                            current_state["ready"] = False
+                    else:
                         current_state["started"] = True
                         current_state["running"] = True
                         current_state["halt_race"] = False
                         current_state["man_ready"] = False
                         current_state["ready"] = False
                 else:
-                    current_state["started"] = True
                     current_state["running"] = True
-                    current_state["halt_race"] = False
-                    current_state["man_ready"] = False
-                    current_state["ready"] = False
 
+                orbits_warmup = False 
             else:
+                if orbits_warmup == True:
+                    orbits_warmup = False
                 current_state["running"] = False
             
+
                 
             
             publish(client, json.dumps(current_state), "start/state")
@@ -187,6 +198,10 @@ def subscribe(client: mqtt_client):
                         current_state["warmup"] = True
                     else:
                         current_state["warmup"] = False
+                elif not req_field_ready and not req_mon_ready:
+                    current_state["started"] = True
+                    if sl_use_warmup_image:
+                        current_state["warmup"] = True
                 
                 else:
                     current_state["started"] = False

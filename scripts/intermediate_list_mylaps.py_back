@@ -636,7 +636,7 @@ def file_monitor():
                     tracking_dict[file.path] = 0
                 if tracking_dict[file.path] < os.path.getmtime(file.path):
                     tracking_dict[file.path] = os.path.getmtime(file.path)
-                    if "current.xml" in file.path:
+                    if "current.xml" in file.path and sc_proc:
                         old_main_dict = main_dict
                         file_dict = xml_to_dict(file.path)
                         if "result" not in file_dict["results"]:
@@ -676,7 +676,6 @@ def file_monitor():
 
                                 elif a["type"] == "timetogo" and len(a) == 1:
                                     timetogo = "00:00"
-                            print(flag_state)
                             if old_flag_state != flag_state:
                                 current_flag = json.dumps({"current_flag": flag_state})
                                 publish.single(
@@ -686,12 +685,74 @@ def file_monitor():
                                 )
                                 old_flag_state = flag_state
 
+                            if race_type == 5:
+                                if timetogo == "00:00" and racetime != "00:00":
+                                    run_starttime, run_finishtime, timetogo_sec = (
+                                        get_time_data(timetogo, racetime, curr_time)
+                                    )
+
+                                if "results" not in old_entry:
+                                    old_entry["results"] = {}
+
+                                if timetogo != "00:00":
+                                    run_starttime, run_finishtime, timetogo_sec = (
+                                        get_time_data(timetogo, racetime, curr_time)
+                                    )
+                                    if (
+                                        old_finishtime != run_finishtime
+                                        or old_startime != run_starttime
+                                    ) and timetogo_sec != old_timetogo_sec:
+                                        old_startime = run_starttime
+                                        old_finishtime = run_finishtime
+                                        old_timetogo_sec = timetogo_sec
+                                        trigger_update = True
+
+                                if file_dict["results"] != old_entry["results"]:
+                                    trigger_update = True
+
+                            elif race_type != 5:
+                                trigger_update = True
+
+                            heat, run_name, heats = normalize_run_name(
+                                groupname, runname, type_name
+                            )
+                            if active_event != [heat, run_name]:
+                                print("UPDATE ACTIVE EVENT!")
+                                set_active_event(heat, run_name)
+                                active_event = [heat, run_name]
+                                sleep_time = 1
+                            else:
+                                sleep_time = 0.5
+
+                            if race_type == 5:
+                                main_dict[run_name]["heat_ent"][heat]["timedata"] = (
+                                    f"{run_starttime}:{run_finishtime}:{timetogo_sec}"
+                                )
+
+                            if trigger_update == False:
+                                print("Trigger Continue")
+                                continue
+
+                            proc_current(file_dict)
+                            update_scdb(main_dict[run_name], run_name)
+                            update_scdb_ex(main_dict[run_name], run_name, heat)
+
+                            old_entry = file_dict
 
                             print("UPDATE!")
                             requests.get(
                                 "http://192.168.1.50:7777/api/active_event_update"
                             )
 
+                    elif "schedule.xml" in file.path:
+                        file_dict = xml_to_dict(file.path)
+                        if last_sc != file_dict:
+                            print("Updated schedule")
+                            update_schedule(file_dict)
+
+                        sc_proc = True
+
+                        last_sc = file_dict
 
         time.sleep(sleep_time)
 

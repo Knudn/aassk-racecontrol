@@ -6,7 +6,6 @@ from collections import defaultdict
 import time
 from app import socketio
 
-# Socket room definitions
 SOCKET_ROOMS = {
     'default': 'default',
     'clock_management': 'clock_mgnt',
@@ -14,17 +13,16 @@ SOCKET_ROOMS = {
     'infoscreen': 'infoscreen',
     'admin': 'admin',
     'prestage_lights': 'prestage_lights',
-
+    'start_state': 'start_state',
+    'overlay': 'overlay',
 }
 
-# Socket event types
 SOCKET_EVENTS = {
     'standard_response': 'response',
-    'admin_update': 'admin_update',
+        'admin_update': 'admin_update',
     'session_list': 'session_list'
 }
 
-# In-memory storage for active sessions
 active_sessions = defaultdict(list)
 
 def send_data_to_room(msg, room=None):
@@ -38,7 +36,6 @@ def send_data_to_room(msg, room=None):
     return {"message": f"Data sent to room: {room}"}
 
 
-# Function to emit data to a specific room
 def emit_to_room(socketio, data, room=None):
     """
     Emits data to a specific socket room
@@ -51,13 +48,11 @@ def emit_to_room(socketio, data, room=None):
     if room is None:
         room = SOCKET_ROOMS['default']
     
-    # Make sure data is serialized to JSON if it's not already a string
     if not isinstance(data, str):
         data = json.dumps(data)
     
     socketio.emit(SOCKET_EVENTS['standard_response'], data, room=room)
 
-# Function to emit data to a specific client by SID
 def emit_to_client(socketio, data, sid):
     """
     Emits data to a specific client by SID
@@ -67,13 +62,11 @@ def emit_to_client(socketio, data, sid):
         data: Data to emit
         sid: Client's session ID
     """
-    # Make sure data is serialized to JSON if it's not already a string
     if not isinstance(data, str):
         data = json.dumps(data)
     
     socketio.emit(SOCKET_EVENTS['standard_response'], data, room=sid)
 
-# Function to get all active sessions
 def get_active_sessions(room=None):
     """
     Get all active sessions, optionally filtered by room
@@ -87,7 +80,6 @@ def get_active_sessions(room=None):
     if room:
         return active_sessions.get(room, [])
     
-    # Get all sessions from all rooms
     all_sessions = []
     for room_name, sessions in active_sessions.items():
         for session in sessions:
@@ -97,7 +89,6 @@ def get_active_sessions(room=None):
     
     return all_sessions
 
-# Socket event handlers
 def register_socket_events(socketio):
     """
     Register all socket event handlers
@@ -114,12 +105,10 @@ def register_socket_events(socketio):
     @socketio.on('disconnect')
     def handle_disconnect():
         """Handle client disconnection"""
-        # Remove from active sessions
         for room in active_sessions:
             active_sessions[room] = [session for session in active_sessions[room] 
                                     if session.get('sid') != request.sid]
         
-        # Notify admin about the change
         socketio.emit(SOCKET_EVENTS['admin_update'], {'action': 'disconnect', 'sid': request.sid}, 
                      room=SOCKET_ROOMS['admin'])
         print(f"Client disconnected with SID: {request.sid}")
@@ -130,11 +119,8 @@ def register_socket_events(socketio):
         username = data.get('username', 'anonymous')
         room = data.get('room', SOCKET_ROOMS['default'])
         hostname = data.get('hostname', 'unknown')
-
-        # Join the requested room
         join_room(room)
         
-        # Store session info
         session_info = {
             'sid': request.sid,
             'username': username,
@@ -145,7 +131,6 @@ def register_socket_events(socketio):
             'last_active': time.time()
         }
         
-        # Check if this session already exists
         exists = False
         for i, session in enumerate(active_sessions[room]):
             if session.get('sid') == request.sid:
@@ -158,14 +143,22 @@ def register_socket_events(socketio):
         
         print(f"Client {username} (SID: {request.sid}) joined room: {room}")
         
-        # Send confirmation to the client
         emit('joined', {'status': 'success', 'room': room, 'session_id': request.sid})
-        
-        # If this is an infoscreen client, notify admin
+         
         if room == SOCKET_ROOMS['infoscreen']:
             socketio.emit(SOCKET_EVENTS['admin_update'], 
                          {'action': 'join', 'session': session_info}, 
                          room=SOCKET_ROOMS['admin'])
+        if room == "start_state":
+            from flask import current_app
+            state = current_app.config.get('start_state', {})
+            emit(SOCKET_EVENTS['standard_response'], json.dumps(state))
+        elif room == "active_dash":
+            from app.lib.utils import get_dash_data
+            payload = get_dash_data()
+            emit(SOCKET_EVENTS["standard_response"], json.dumps(payload))
+        elif room == 'results':
+            pass
     
     @socketio.on('message')
     def handle_message(data):
@@ -176,7 +169,6 @@ def register_socket_events(socketio):
         
         print(f"Message received in room {room} from {username}: {message}")
         
-        # Update last active timestamp
         for room_sessions in active_sessions.values():
             for session in room_sessions:
                 if session.get('sid') == request.sid:
@@ -191,7 +183,6 @@ def register_socket_events(socketio):
         room_filter = data.get('room') if data else None
         sessions = get_active_sessions(room_filter)
         
-        # Send session list to requester
         emit(SOCKET_EVENTS['session_list'], {'sessions': sessions})
     
     @socketio.on('send_to_client')
@@ -203,10 +194,8 @@ def register_socket_events(socketio):
         if not target_sid or not content:
             return
         
-        # Send content to target client
         socketio.emit(SOCKET_EVENTS['standard_response'], content, room=target_sid)
         print(f"Sent content to client SID: {target_sid}")
 
-# Make sure all necessary functions are exported
 __all__ = ['SOCKET_ROOMS', 'SOCKET_EVENTS', 'active_sessions', 'emit_to_room', 
            'emit_to_client', 'get_active_sessions', 'register_socket_events']

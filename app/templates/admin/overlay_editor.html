@@ -1,0 +1,548 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.min.js"></script>
+
+<style>
+.oe-wrap { display:flex; gap:12px; margin-top:12px; min-height:600px; }
+.oe-sidebar { width:260px; flex-shrink:0; }
+.oe-main { flex:1; min-width:0; }
+.oe-panel { background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px; padding:10px; margin-bottom:10px; }
+.oe-panel h6 { margin:0 0 8px; font-size:12px; text-transform:uppercase; color:#888; }
+.oe-list { list-style:none; padding:0; margin:0; }
+.oe-list li { padding:6px 8px; cursor:pointer; border-radius:4px; margin-bottom:2px; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+.oe-list li:hover { background:#e9ecef; }
+.oe-list li.active { background:#0d6efd; color:#fff; }
+.oe-del { cursor:pointer; color:#dc3545; font-weight:bold; font-size:14px; }
+li.active .oe-del { color:#ffb3b3; }
+.oe-btn { width:100%; margin-top:6px; font-size:12px; }
+
+.oe-view-pills { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px; }
+.oe-pill { font-size:12px; padding:3px 10px; border-radius:16px; cursor:pointer; border:1px solid #ccc; background:#fff; display:inline-flex; align-items:center; gap:4px; }
+.oe-pill.sel { border-color:#0d6efd; background:#e7f1ff; }
+.oe-pill.live { border-color:#198754; background:#d1e7dd; }
+.oe-pill .oe-del { font-size:12px; margin-left:2px; }
+
+.oe-canvas-wrap { border-radius:6px; overflow:hidden; position:relative; }
+.oe-canvas { width:100%; aspect-ratio:16/9; position:relative; overflow:hidden; } /* aspect-ratio overridden inline */
+.oe-grid-overlay {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:10; display:none;
+}
+.oe-grid-overlay.show {
+    display:block;
+    background-image:
+        linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px);
+    background-size: calc(100% / 12) calc(100% / 18); /* coarse 12x18 guide */
+}
+.oe-grid-toggle {
+    position:absolute; top:6px; right:6px; z-index:11;
+    font-size:10px; padding:2px 8px; opacity:0.7;
+}
+.oe-grid-toggle:hover { opacity:1; }
+.oe-canvas .grid-stack { height:100% !important; }
+.oe-canvas .grid-stack-item-content {
+    overflow:hidden; cursor:move; position:relative; padding:0;
+    border:none; background:transparent; border-radius:2px;
+}
+.oe-canvas .grid-stack-item-content:hover { outline:2px solid #0d6efd; outline-offset:-1px; }
+.oe-widget-iframe {
+    position:absolute; top:0; left:0; border:none;
+    transform-origin:0 0; pointer-events:none; background:transparent;
+}
+.oe-widget-label {
+    position:absolute; bottom:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1px 5px; font-size:9px; color:#fff;
+    background:rgba(0,0,0,0.45); z-index:2; pointer-events:auto;
+    opacity:0; transition:opacity 0.15s;
+}
+.oe-canvas .grid-stack-item-content:hover .oe-widget-label { opacity:1; }
+.oe-widget-label .oe-label-btns { display:flex; gap:4px; align-items:center; }
+.oe-widget-label .oe-fs-btn {
+    cursor:pointer; font-size:10px; padding:0 3px; border-radius:2px;
+    background:rgba(255,255,255,0.2); color:#fff; border:none; line-height:1.3;
+}
+.oe-widget-label .oe-fs-btn:hover { background:rgba(255,255,255,0.4); }
+.oe-widget-label .oe-fs-btn.active { background:#0d6efd; }
+.gs-item-del { cursor:pointer; color:#ff6b6b; font-weight:bold; font-size:12px; line-height:1; }
+
+.oe-row { display:flex; gap:4px; margin-bottom:4px; }
+.oe-row input, .oe-row select { font-size:12px; }
+.oe-sep { border:none; border-top:1px solid #dee2e6; margin:6px 0; }
+
+.oe-url { font-size:11px; color:#888; margin-bottom:6px; }
+.oe-url a { color:#5b9bff; }
+.oe-empty { color:#999; text-align:center; padding:50px 20px; }
+</style>
+
+<div id="app"></div>
+
+<script>
+(function() {
+    var state = {
+        groups: [],
+        selGroup: null,
+        views: [],
+        selView: null,
+        widgets: [],
+        vmixFiles: []
+    };
+    var _grid = null;
+    var root = document.getElementById('app');
+
+    function api(method, url, body) {
+        var opts = { method: method, headers: {'Content-Type':'application/json'} };
+        if (body) opts.body = JSON.stringify(body);
+        return fetch(url, opts).then(function(r) { return r.json(); });
+    }
+    function bp() { return '/api/overlay/groups/' + state.selGroup; }
+
+    function getSelView() {
+        return state.views.find(function(v){return v.id===state.selView;}) || null;
+    }
+    function getSelGroup() {
+        return state.groups.find(function(g){return g.id===state.selGroup;}) || null;
+    }
+    function grpRes() {
+        var g = getSelGroup();
+        return { w: (g && g.res_w) || 1920, h: (g && g.res_h) || 1080 };
+    }
+
+    // --- Render ---
+    function render() {
+        var h = '<div class="oe-wrap"><div class="oe-sidebar">';
+
+        // Groups
+        h += '<div class="oe-panel"><h6>Overlay Groups</h6><ul class="oe-list">';
+        state.groups.forEach(function(g) {
+            var cls = g.id === state.selGroup ? ' class="active"' : '';
+            h += '<li' + cls + ' onclick="OE.selGroup(' + g.id + ')">' +
+                 '<span>' + esc(g.name) + '</span>' +
+                 '<span class="oe-del" onclick="event.stopPropagation();OE.delGroup(' + g.id + ')">&times;</span></li>';
+        });
+        h += '</ul><button class="btn btn-primary btn-sm oe-btn" onclick="OE.addGroup()">+ New Group</button></div>';
+
+        // Group resolution
+        if (state.selGroup) {
+            var res = grpRes();
+            h += '<div class="oe-panel"><h6>Resolution</h6>';
+            h += '<div class="oe-row">';
+            h += '<input id="resW" type="number" class="form-control form-control-sm" value="' + res.w + '" style="width:70px;">';
+            h += '<span style="font-size:12px;line-height:2;">x</span>';
+            h += '<input id="resH" type="number" class="form-control form-control-sm" value="' + res.h + '" style="width:70px;">';
+            h += '<button class="btn btn-outline-secondary btn-sm" style="font-size:10px;" onclick="OE.saveRes()">Save</button>';
+            h += '</div></div>';
+        }
+
+        // Views
+        if (state.selGroup) {
+            var grp = state.groups.find(function(g){return g.id===state.selGroup;});
+            h += '<div class="oe-panel"><h6>Views</h6><ul class="oe-list">';
+            state.views.forEach(function(v) {
+                var cls = v.id === state.selView ? ' class="active"' : '';
+                var live = (grp && grp.active_view_id === v.id);
+                h += '<li' + cls + ' onclick="OE.selViewFn(' + v.id + ')">';
+                h += '<span>';
+                if (live) h += '<span style="color:' + (v.id === state.selView ? '#8f8' : '#198754') + ';font-weight:bold;">&#9679; </span>';
+                h += '<span style="color:' + (v.id === state.selView ? '#aac4ff' : '#888') + ';font-size:11px;">#' + v.id + '</span> ' + esc(v.name);
+                h += '</span>';
+                h += '<span class="oe-del" onclick="event.stopPropagation();OE.delView(' + v.id + ')">&times;</span>';
+                h += '</li>';
+            });
+            h += '</ul><div style="display:flex;gap:4px;">';
+            h += '<button class="btn btn-outline-primary btn-sm" style="flex:1;font-size:11px;" onclick="OE.addView()">+ View</button>';
+            var liveClass = (grp && grp.active_view_id === state.selView) ? 'btn-success' : 'btn-outline-success';
+            var liveLabel = (grp && grp.active_view_id === state.selView) ? '&#9679; LIVE' : '&#9675; Go Live';
+            var liveDis = state.selView ? '' : ' disabled';
+            h += '<button class="btn btn-sm ' + liveClass + '" style="font-size:11px;"' + liveDis + ' onclick="OE.goLive()">' + liveLabel + '</button>';
+            h += '</div></div>';
+
+            // Add widget
+            if (state.selView) {
+                h += '<div class="oe-panel"><h6>Add Widget</h6>';
+                // File picker
+                h += '<div class="oe-row"><select id="vmixPicker" class="form-select form-select-sm" style="flex:1;">';
+                state.vmixFiles.forEach(function(f) {
+                    h += '<option value="' + esc(f) + '">' + esc(f.replace('.html','')) + '</option>';
+                });
+                h += '</select></div>';
+                h += '<button class="btn btn-primary btn-sm oe-btn" onclick="OE.addWidget()">+ Add File</button>';
+                // URL input
+                h += '<hr class="oe-sep">';
+                h += '<div class="oe-row"><input id="urlInput" type="text" class="form-control form-control-sm" placeholder="https://..." style="flex:1;"></div>';
+                h += '<button class="btn btn-outline-primary btn-sm oe-btn" onclick="OE.addUrlWidget()">+ Add URL</button>';
+                h += '</div>';
+
+                // View background settings
+                var sv = getSelView();
+                var bgColor = (sv && sv.bg_color) || '';
+                var bgImage = (sv && sv.bg_image) || '';
+                var bgOpacity = (sv && sv.bg_opacity !== undefined) ? sv.bg_opacity : 1;
+                h += '<div class="oe-panel"><h6>View Background</h6>';
+                h += '<div class="oe-row"><label style="font-size:11px;width:55px;margin:0;">Color</label>';
+                h += '<input id="bgColor" type="color" value="' + (bgColor || '#000000') + '" style="width:36px;height:26px;padding:1px;border:1px solid #ccc;border-radius:3px;">';
+                h += '<button class="btn btn-outline-secondary btn-sm" style="font-size:10px;padding:1px 6px;" onclick="OE.clearBgColor()">Clear</button></div>';
+                h += '<div class="oe-row"><label style="font-size:11px;width:55px;margin:0;">Image</label>';
+                h += '<input id="bgImage" type="text" class="form-control form-control-sm" value="' + esc(bgImage) + '" placeholder="URL..." style="flex:1;font-size:11px;"></div>';
+                h += '<div class="oe-row"><label style="font-size:11px;width:55px;margin:0;">Opacity</label>';
+                h += '<input id="bgOpacity" type="range" min="0" max="1" step="0.05" value="' + bgOpacity + '" style="flex:1;">';
+                h += '<span id="bgOpacityVal" style="font-size:11px;width:30px;text-align:right;">' + bgOpacity + '</span></div>';
+                h += '<button class="btn btn-outline-success btn-sm oe-btn" onclick="OE.saveBg()">Save Background</button>';
+                h += '</div>';
+            }
+        }
+
+        h += '</div><div class="oe-main">';
+
+        if (!state.selGroup) {
+            h += '<div class="oe-empty"><h5>Select or create an overlay group</h5></div>';
+        } else {
+            // URL bar
+            h += '<div class="oe-url">vMix/OBS URL: <a href="/overlay/' + state.selGroup + '" target="_blank">' +
+                 location.origin + '/overlay/' + state.selGroup + '</a> ' +
+                 '<button class="btn btn-outline-secondary btn-sm" style="font-size:10px;padding:1px 6px;" onclick="window.open(\'/overlay/' + state.selGroup + '\')">Open</button></div>';
+
+            if (state.selView) {
+                // Canvas background preview
+                var sv = getSelView();
+                var canvasBg = '#1a1a1a';
+                if (sv && sv.bg_color) canvasBg = sv.bg_color;
+                var canvasStyle = 'background:' + canvasBg + ';';
+                if (sv && sv.bg_image) canvasStyle += 'background-image:url(' + sv.bg_image + ');background-size:cover;background-position:center;';
+                if (sv && sv.bg_opacity !== undefined && sv.bg_opacity < 1) canvasStyle += 'opacity:' + sv.bg_opacity + ';';
+                var res = grpRes();
+                var ar = res.w + '/' + res.h;
+                h += '<div class="oe-canvas-wrap" style="' + canvasStyle + '">';
+                h += '<button class="btn btn-outline-light btn-sm oe-grid-toggle" onclick="OE.toggleGrid()">Grid</button>';
+                h += '<div class="oe-canvas" style="aspect-ratio:' + ar + ';"><div id="gridEl" class="grid-stack"></div><div id="gridOverlay" class="oe-grid-overlay"></div></div></div>';
+
+                // Widget list
+                if (state.widgets.length) {
+                    h += '<div style="margin-top:8px;">';
+                    h += '<table class="table table-sm table-bordered" style="font-size:12px;margin:0;">';
+                    h += '<thead><tr><th>#</th><th>Widget</th><th>Params</th><th>Pos</th><th>Size</th><th></th></tr></thead><tbody>';
+                    state.widgets.forEach(function(w, i) {
+                        var label = w.url ? (function(){ try{return new URL(w.url).hostname;}catch(e){return w.url.substring(0,30);} })() : (w.file||'').replace('.html','');
+                        var fs = w.fullscreen ? ' <span class="badge bg-primary" style="font-size:9px;">FS</span>' : '';
+                        var params = w.params || '';
+                        h += '<tr>';
+                        h += '<td>' + (i+1) + '</td>';
+                        h += '<td>' + esc(label) + fs + '</td>';
+                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;min-width:120px;" value="' + esc(params) + '" placeholder="key=val, ..." onchange="OE.saveParams(' + w.id + ',this.value)"></td>';
+                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:70px;" value="' + (w.gs_x||0) + ',' + (w.gs_y||0) + '" onchange="OE.updatePosSize(' + w.id + ',\'pos\',this.value)"></td>';
+                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:70px;" value="' + (w.gs_w||6) + 'x' + (w.gs_h||6) + '" onchange="OE.updatePosSize(' + w.id + ',\'size\',this.value)"></td>';
+                        h += '<td style="text-align:center;"><span class="oe-del" onclick="OE.delWidget(' + w.id + ')" style="cursor:pointer;">&times;</span></td>';
+                        h += '</tr>';
+                    });
+                    h += '</tbody></table></div>';
+                }
+            } else {
+                h += '<div class="oe-empty" style="padding:30px;"><p>Select a view to edit its layout</p></div>';
+            }
+        }
+
+        h += '</div></div>';
+        root.innerHTML = h;
+
+        // Bind opacity slider live display
+        var opSlider = document.getElementById('bgOpacity');
+        var opVal = document.getElementById('bgOpacityVal');
+        if (opSlider && opVal) {
+            opSlider.addEventListener('input', function() { opVal.textContent = this.value; });
+        }
+
+        if (state.selView) {
+            initGrid();
+        }
+    }
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s));
+        return d.innerHTML;
+    }
+
+    // --- Grid ---
+    var _resizeObserver = null;
+
+    function updateAllScales() {
+        var res = grpRes();
+        var items = document.querySelectorAll('.grid-stack-item');
+        items.forEach(function(item) {
+            var content = item.querySelector('.grid-stack-item-content');
+            var iframe = item.querySelector('.oe-widget-iframe');
+            if (!iframe || !content) return;
+            iframe.style.width = res.w + 'px';
+            iframe.style.height = res.h + 'px';
+            var sW = content.offsetWidth / res.w;
+            var sH = content.offsetHeight / res.h;
+            var s = Math.min(sW, sH);
+            iframe.style.transform = 'scale(' + s + ')';
+        });
+    }
+
+    function buildParams(str) {
+        if (!str || !str.trim()) return '';
+        var parts = str.split(',');
+        var pairs = [];
+        parts.forEach(function(p) {
+            var kv = p.trim().split('=');
+            if (kv.length === 2 && kv[0].trim()) {
+                pairs.push(encodeURIComponent(kv[0].trim()) + '=' + encodeURIComponent(kv[1].trim()));
+            }
+        });
+        return pairs.length ? '?' + pairs.join('&') : '';
+    }
+
+    function widgetSrc(w) {
+        var base = w.url ? w.url : '/vmix/raw/' + w.file;
+        return base + buildParams(w.params || '');
+    }
+
+    function widgetLabel(w) {
+        if (w.url) {
+            try { return new URL(w.url).hostname; } catch(e) { return w.url.substring(0, 30); }
+        }
+        return (w.file || '').replace('.html','');
+    }
+
+    function widgetContent(w) {
+        var fsClass = w.fullscreen ? ' active' : '';
+        return '<iframe class="oe-widget-iframe" src="' + esc(widgetSrc(w)) + '" scrolling="no"></iframe>' +
+               '<div class="oe-widget-label">' +
+               '<span>' + esc(widgetLabel(w)) + '</span>' +
+               '<span class="oe-label-btns">' +
+               '<button class="oe-fs-btn' + fsClass + '" onclick="event.stopPropagation();OE.toggleFs(' + w.id + ')" title="Fullscreen">&#x26F6;</button>' +
+               '<span class="gs-item-del" onclick="event.stopPropagation();OE.delWidget(' + w.id + ')">&times;</span>' +
+               '</span></div>';
+    }
+
+    // Generate CSS for N columns (Gridstack only auto-generates for <=12)
+    function ensureGridCSS(cols) {
+        var id = 'gs-css-' + cols;
+        if (document.getElementById(id)) return;
+        var css = '';
+        for (var i = 1; i <= cols; i++) {
+            var w = (i / cols * 100).toFixed(6);
+            css += '.grid-stack > .grid-stack-item[gs-w="' + i + '"] { width:' + w + '% }\n';
+            if (i < cols) {
+                var x = (i / cols * 100).toFixed(6);
+                css += '.grid-stack > .grid-stack-item[gs-x="' + i + '"] { left:' + x + '% }\n';
+            }
+        }
+        var style = document.createElement('style');
+        style.id = id;
+        style.textContent = css;
+        document.head.appendChild(style);
+    }
+
+    function initGrid() {
+        var el = document.getElementById('gridEl');
+        if (!el) return;
+        if (_grid) { _grid.destroy(false); _grid = null; }
+        if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; }
+
+        // Allow overlapping widgets by disabling collision detection
+        var GSEngine = GridStack.Engine || GridStack.engineClass;
+        if (GSEngine) {
+            GSEngine.prototype.collide = function() { return null; };
+            GSEngine.prototype.collideAll = function() { return []; };
+        }
+
+        ensureGridCSS(48);
+        _grid = GridStack.init({
+            column: 48,
+            cellHeight: (100/36).toFixed(4) + '%',
+            margin: 2,
+            float: true,
+            animate: false,
+            disableOneColumnMode: true
+        }, el);
+
+        state.widgets.forEach(function(w) {
+            var opts = {
+                id: String(w.id),
+                x: w.gs_x || 0,
+                y: w.gs_y || 0,
+                w: w.fullscreen ? 48 : (w.gs_w || 24),
+                h: w.fullscreen ? 36 : (w.gs_h || 12),
+                content: widgetContent(w)
+            };
+            if (w.fullscreen) {
+                opts.noResize = true;
+                opts.noMove = true;
+            }
+            _grid.addWidget(opts);
+        });
+
+        requestAnimationFrame(function() { updateAllScales(); });
+
+        _grid.on('change', function(event, items) {
+            if (!items) return;
+            items.forEach(function(item) {
+                var wid = parseInt(item.id);
+                api('PUT', bp() + '/views/' + state.selView + '/widgets/' + wid, {
+                    gs_x: item.x, gs_y: item.y, gs_w: item.w, gs_h: item.h
+                });
+                var w = state.widgets.find(function(x){return x.id===wid;});
+                if (w) {
+                    w.gs_x=item.x; w.gs_y=item.y; w.gs_w=item.w; w.gs_h=item.h;
+                    // Sync table inputs
+                    var idx = state.widgets.indexOf(w);
+                    var rows = document.querySelectorAll('.oe-main table tbody tr');
+                    if (rows[idx]) {
+                        var inputs = rows[idx].querySelectorAll('input');
+                        if (inputs[1]) inputs[1].value = item.x + ',' + item.y;
+                        if (inputs[2]) inputs[2].value = item.w + 'x' + item.h;
+                    }
+                }
+            });
+            requestAnimationFrame(function() { updateAllScales(); });
+        });
+
+        _grid.on('resizestop', function() {
+            requestAnimationFrame(function() { updateAllScales(); });
+        });
+
+        var canvas = document.querySelector('.oe-canvas');
+        if (canvas) {
+            _resizeObserver = new ResizeObserver(function() { updateAllScales(); });
+            _resizeObserver.observe(canvas);
+        }
+    }
+
+    // --- Actions ---
+    function loadGroups(cb) {
+        api('GET', '/api/overlay/groups').then(function(d) { state.groups = d; if(cb)cb(); else render(); });
+    }
+    function loadViews(cb) {
+        api('GET', bp() + '/views').then(function(d) { state.views = d; if(cb)cb(); else render(); });
+    }
+    function loadWidgets(cb) {
+        api('GET', bp() + '/views/' + state.selView + '/widgets').then(function(d) { state.widgets = d; if(cb)cb(); else render(); });
+    }
+    function loadVmixFiles() {
+        api('GET', '/api/overlay/vmix-files').then(function(d) { state.vmixFiles = d; });
+    }
+
+    window.OE = {
+        selGroup: function(id) {
+            state.selGroup = id; state.selView = null; state.widgets = [];
+            if(_grid){_grid.destroy(false);_grid=null;}
+            loadViews();
+        },
+        addGroup: function() {
+            var n = prompt('Group name:'); if(!n) return;
+            api('POST','/api/overlay/groups',{name:n}).then(function(){loadGroups();});
+        },
+        delGroup: function(id) {
+            if(!confirm('Delete this group?')) return;
+            api('DELETE','/api/overlay/groups/'+id).then(function(){
+                if(state.selGroup===id){state.selGroup=null;state.selView=null;state.widgets=[];}
+                loadGroups();
+            });
+        },
+        selViewFn: function(id) {
+            state.selView = id;
+            loadWidgets();
+        },
+        addView: function() {
+            var n = prompt('View name:'); if(!n) return;
+            api('POST', bp()+'/views',{name:n}).then(function(){loadViews();});
+        },
+        delView: function(id) {
+            if(!confirm('Delete this view?')) return;
+            api('DELETE', bp()+'/views/'+id).then(function(){
+                if(state.selView===id){state.selView=null;state.widgets=[];}
+                loadGroups(function(){ loadViews(); });
+            });
+        },
+        goLive: function() {
+            if(!state.selView) return;
+            api('POST', bp()+'/switch',{view_id:state.selView}).then(function(){loadGroups();});
+        },
+        addWidget: function() {
+            var sel = document.getElementById('vmixPicker');
+            if(!sel) return;
+            api('POST', bp()+'/views/'+state.selView+'/widgets',{file:sel.value}).then(function(){loadWidgets();});
+        },
+        addUrlWidget: function() {
+            var inp = document.getElementById('urlInput');
+            if(!inp || !inp.value.trim()) return;
+            api('POST', bp()+'/views/'+state.selView+'/widgets',{url:inp.value.trim()}).then(function(){loadWidgets();});
+        },
+        delWidget: function(id) {
+            if(!confirm('Remove this widget?')) return;
+            api('DELETE', bp()+'/views/'+state.selView+'/widgets/'+id).then(function(){loadWidgets();});
+        },
+        saveParams: function(id, val) {
+            api('PUT', bp()+'/views/'+state.selView+'/widgets/'+id, {params:val}).then(function(){loadWidgets();});
+        },
+        toggleFs: function(id) {
+            var w = state.widgets.find(function(x){return x.id===id;});
+            if(!w) return;
+            var newFs = !w.fullscreen;
+            api('PUT', bp()+'/views/'+state.selView+'/widgets/'+id, {fullscreen:newFs}).then(function(){loadWidgets();});
+        },
+        saveBg: function() {
+            var color = document.getElementById('bgColor').value;
+            var image = document.getElementById('bgImage').value.trim();
+            var opacity = parseFloat(document.getElementById('bgOpacity').value);
+            api('PUT', bp()+'/views/'+state.selView, {bg_color:color, bg_image:image, bg_opacity:opacity}).then(function(v){
+                // Update local view
+                var sv = state.views.find(function(x){return x.id===state.selView;});
+                if(sv){ sv.bg_color=color; sv.bg_image=image; sv.bg_opacity=opacity; }
+                render();
+            });
+        },
+        saveRes: function() {
+            var w = parseInt(document.getElementById('resW').value) || 1920;
+            var h = parseInt(document.getElementById('resH').value) || 1080;
+            api('PUT', '/api/overlay/groups/' + state.selGroup, {res_w: w, res_h: h}).then(function(){
+                loadGroups(function() {
+                    if (state.selView) loadWidgets(); else render();
+                });
+            });
+        },
+        toggleGrid: function() {
+            var el = document.getElementById('gridOverlay');
+            if (el) el.classList.toggle('show');
+        },
+        updatePosSize: function(id, type, val) {
+            var w = state.widgets.find(function(x){return x.id===id;});
+            if (!w) return;
+            var data = {};
+            if (type === 'pos') {
+                var parts = val.split(',');
+                if (parts.length !== 2) return;
+                var x = parseInt(parts[0]); var y = parseInt(parts[1]);
+                if (isNaN(x) || isNaN(y)) return;
+                data.gs_x = x; data.gs_y = y;
+            } else {
+                var parts = val.split('x');
+                if (parts.length !== 2) return;
+                var nw = parseInt(parts[0]); var nh = parseInt(parts[1]);
+                if (isNaN(nw) || isNaN(nh) || nw < 1 || nh < 1) return;
+                data.gs_w = nw; data.gs_h = nh;
+            }
+            api('PUT', bp()+'/views/'+state.selView+'/widgets/'+id, data).then(function(){loadWidgets();});
+        },
+        clearBgColor: function() {
+            document.getElementById('bgColor').value = '#000000';
+            api('PUT', bp()+'/views/'+state.selView, {bg_color:'', bg_image:'', bg_opacity:1}).then(function(){
+                var sv = state.views.find(function(x){return x.id===state.selView;});
+                if(sv){ sv.bg_color=''; sv.bg_image=''; sv.bg_opacity=1; }
+                render();
+            });
+        }
+    };
+
+    // Init
+    loadVmixFiles();
+    loadGroups();
+})();
+</script>
+{% endblock %}

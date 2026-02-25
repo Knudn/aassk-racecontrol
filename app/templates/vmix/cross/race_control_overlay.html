@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Control Overlay</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #widget {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            width: 260px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #widget.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #panel {
+            background: rgba(8, 8, 12, 0.92);
+            padding: 12px 14px 13px;
+        }
+
+        /* ── Title ── */
+        #title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            letter-spacing: -0.2px;
+        }
+
+        /* ── Heat ── */
+        #heat {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.38);
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        /* ── Divider ── */
+        #sep {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 10px 0;
+        }
+
+        /* ── Data row: timer + laps side by side ── */
+        #data-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 0;
+        }
+
+        /* Timer column */
+        #timer-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #timer-label {
+            font-size: 7.5px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.28);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Active indicator — lives next to a label, hidden by default */
+        .active-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            flex-shrink: 0;
+        }
+        .active-dot.on {
+            opacity: 1;
+        }
+
+        #timer {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0px;
+            line-height: 1;
+            transition: color 0.4s ease;
+        }
+
+        #timer.dimmed {
+            color: rgba(255, 255, 255, 0.20);
+        }
+
+        /* Vertical divider */
+        #col-sep {
+            width: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 0 12px;
+            align-self: stretch;
+        }
+
+        /* Laps column */
+        #laps-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        #laps-label {
+            font-size: 7.5px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.28);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+
+        #laps {
+            font-size: 16px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.38);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            transition: color 0.4s ease;
+        }
+
+        #laps.active {
+            color: #fff;
+        }
+
+        @keyframes laps-pulse {
+            0%   { opacity: 0.2; }
+            50%  { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        #laps.pulse {
+            animation: laps-pulse 0.35s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+<div id="widget">
+    <div id="panel">
+
+        <div id="title">—</div>
+        <div id="heat">Heat — / —</div>
+
+        <div id="sep"></div>
+
+        <div id="data-row">
+
+            <div id="timer-col">
+                <div id="timer-label">
+                    <span class="active-dot" id="timer-dot"></span>
+                    Time
+                </div>
+                <div id="timer">--:--</div>
+            </div>
+
+            <div id="col-sep"></div>
+
+            <div id="laps-col">
+                <div id="laps-label">
+                    Laps
+                    <span class="active-dot" id="laps-dot"></span>
+                </div>
+                <div id="laps">—</div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ── URL params ──────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const widget = document.getElementById('widget');
+
+    (function applyParams() {
+        const w      = params.get('w');
+        const h      = params.get('h');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+
+        if (w)      widget.style.width  = w + 'px';
+        if (h)      widget.style.height = h + 'px';
+
+        if (mirror) {
+            widget.style.left  = 'auto';
+            widget.style.right = '60px';
+        }
+
+        if (scale) {
+            const origin = mirror ? 'bottom right' : 'bottom left';
+            document.body.style.transformOrigin = origin;
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Data & WebSocket ─────────────────────────────────────────
+    const WS_URL = 'ws://192.168.1.50:4444';
+    const RECONNECT_DELAY = 3000;
+
+    const titleEl  = document.getElementById('title');
+    const heatEl   = document.getElementById('heat');
+    const timerEl  = document.getElementById('timer');
+    const timerDot = document.getElementById('timer-dot');
+    const lapsEl   = document.getElementById('laps');
+    const lapsDot  = document.getElementById('laps-dot');
+
+    let prevLaps = null;
+    let ws = null;
+
+    function isZero(t) {
+        return !t || t === '00:00' || t === '0:00';
+    }
+
+    function update(data) {
+        titleEl.textContent = data.title || '—';
+
+        if (data.heat != null && data.heats != null) {
+            heatEl.textContent = 'Heat ' + data.heat + ' / ' + data.heats;
+        }
+
+        timerEl.textContent = data.timer || '--:--';
+
+        const laps = data.laps_to_go != null ? data.laps_to_go : '—';
+        lapsEl.textContent = laps;
+
+        const timerDone = isZero(data.timer);
+
+        if (data.finish_criteria === 'time_plus_rounds') {
+            if (!timerDone) {
+                // Timer is active
+                timerEl.classList.remove('dimmed');
+                lapsEl.classList.remove('active');
+                timerDot.classList.add('on');
+                lapsDot.classList.remove('on');
+            } else {
+                // Laps are active
+                timerEl.classList.add('dimmed');
+                lapsEl.classList.add('active');
+                timerDot.classList.remove('on');
+                lapsDot.classList.add('on');
+
+                // Pulse when a lap ticks down
+                if (prevLaps !== null && laps !== prevLaps) {
+                    lapsEl.classList.remove('pulse');
+                    void lapsEl.offsetWidth;
+                    lapsEl.classList.add('pulse');
+                    setTimeout(() => lapsEl.classList.remove('pulse'), 400);
+                }
+            }
+        } else {
+            timerEl.classList.remove('dimmed');
+            lapsEl.classList.remove('active');
+            timerDot.classList.remove('on');
+            lapsDot.classList.remove('on');
+        }
+
+        prevLaps = laps;
+        widget.classList.add('visible');
+    }
+
+    function connect() {
+        ws = new WebSocket(WS_URL);
+        ws.onopen  = () => console.log('[overlay] connected');
+        ws.onclose = () => { console.log('[overlay] reconnecting…'); setTimeout(connect, RECONNECT_DELAY); };
+        ws.onerror = () => ws.close();
+        ws.onmessage = (e) => {
+            try { update(JSON.parse(e.data)); }
+            catch (err) { console.error('[overlay] parse error', err); }
+        };
+    }
+
+    connect();
+</script>
+
+</body>
+</html>

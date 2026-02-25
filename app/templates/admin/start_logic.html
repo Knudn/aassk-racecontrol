@@ -18,6 +18,8 @@
 		      {% elif a == "warmup" %} Warmup
 		      {% elif a == "running" %} Running
 		      {% elif a == "halt_race" %} Halt!
+		      {% elif a == "orbits_warmup" %} Orbits Warmup
+		      {% elif a == "orbits_finish" %} Orbits Finished
 
 		      {% endif %}
 		      <input class="form-check-input" name="{{ a }}" type="checkbox" {% if start_state_field[a] %} checked {% endif %} >

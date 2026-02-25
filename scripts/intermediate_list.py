@@ -6,6 +6,20 @@ import requests
 import xml.etree.ElementTree as ET
 import traceback
 from typing import Dict, Set
+import logging
+from logging.handlers import RotatingFileHandler
+
+_log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(_log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    handlers=[
+        RotatingFileHandler(os.path.join(_log_dir, 'intermediate_list.log'), maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Configuration
 FIFO_PATH = '/tmp/file_monitor_fifo'
@@ -91,7 +105,7 @@ class FileMonitor:
                             event_key = f"{title1}|{title2}"
                             if bool(wl_bool):
                                 if wl_title not in event_key:
-                                    print("skipped", event_key)
+                                    logger.debug("Skipped event: %s", event_key)
                                     continue
 
                             self.event_db_mapping[event_key] = filename
@@ -101,7 +115,7 @@ class FileMonitor:
                 except:
                     pass
         
-        print(f"Indexed {len(self.event_db_mapping)} event database(s)")
+        logger.info("Indexed %d event database(s)", len(self.event_db_mapping))
     
     def parse_schedule(self, schedule_path: str) -> bool:
         """Parse schedule.xml"""
@@ -195,9 +209,9 @@ class FileMonitor:
             for event_key in (old_event_keys & new_event_keys):
                 old_heats = self.schedule[event_key]["heats"]
                 new_heats = new_schedule[event_key]["heats"]
-                
+
                 if old_heats != new_heats:
-                    print(f"Schedule change: {event_key} heats {old_heats} -> {new_heats}")
+                    logger.info("Schedule change: %s heats %d -> %d", event_key, old_heats, new_heats)
                     if event_key in self.event_db_mapping:
                         self._update_heat_count(event_key, new_heats)
             
@@ -213,7 +227,7 @@ class FileMonitor:
                     
                     if old_base_group == new_base_group:
                         # Same base group, different run type - this is a rename
-                        print(f"Event renamed: {old_event_key} -> {new_event_key}")
+                        logger.info("Event renamed: %s -> %s", old_event_key, new_event_key)
                         
                         if old_event_key in self.event_db_mapping:
                             # Update the database file with new information
@@ -249,19 +263,19 @@ class FileMonitor:
 
             
             self.schedule = new_schedule
-            print(f"Schedule: {len(self.schedule)} events loaded")
-            
+            logger.info("Schedule: %d events loaded", len(self.schedule))
+
             # Display heat order for verification
             for event_key, event_info in sorted(self.schedule.items()):
-                print(f"\n{event_key}:")
+                logger.debug("Event: %s", event_key)
                 for idx, run_name in enumerate(event_info["runs"], 1):
                     time_str = event_info["run_times"].get(run_name, "??:??")
-                    print(f"  Heat {idx}: {time_str} - {run_name}")
+                    logger.debug("  Heat %d: %s - %s", idx, time_str, run_name)
             
             return True
         
         except Exception as e:
-            print(f"Error parsing schedule: {e}")
+            logger.error("Error parsing schedule: %s", e)
             return False
     
     def _update_event_info(self, db_filename: str, event_name: str, group_name: str, heats: int):
@@ -275,9 +289,9 @@ class FileMonitor:
                 cursor.execute("UPDATE TPARAMETERS SET C_VALUE = ? WHERE C_PARAM = 'TITLE2';", (group_name,))
                 cursor.execute("UPDATE TPARAMETERS SET C_VALUE = ? WHERE C_PARAM = 'HEAT_NUMBER';", (str(heats),))
                 conn.commit()
-                print(f"  Updated {db_filename}: TITLE1={event_name}, TITLE2={group_name}, HEATS={heats}")
+                logger.info("Updated %s: TITLE1=%s, TITLE2=%s, HEATS=%s", db_filename, event_name, group_name, heats)
         except Exception as e:
-            print(f"  Error updating event info: {e}")
+            logger.error("Error updating event info: %s", e)
     
     def _delete_event_files(self, event_key: str, db_filename: str):
         """Delete Event and EventEx database files for removed event"""
@@ -286,14 +300,14 @@ class FileMonitor:
             db_path = os.path.join(self.intermediate_dir, db_filename)
             if os.path.exists(db_path):
                 os.remove(db_path)
-                print(f"Deleted: {db_filename}")
-            
+                logger.info("Deleted: %s", db_filename)
+
             # Delete Ex file
             ex_filename = db_filename.replace(".scdb", "Ex.scdb")
             ex_path = os.path.join(self.intermediate_dir, ex_filename)
             if os.path.exists(ex_path):
                 os.remove(ex_path)
-                print(f"Deleted: {ex_filename}")
+                logger.info("Deleted: %s", ex_filename)
             
             # Clean up internal state
             del self.event_db_mapping[event_key]
@@ -301,11 +315,11 @@ class FileMonitor:
                 del self.event_drivers[event_key]
             if event_key in self.last_event_drivers:
                 del self.last_event_drivers[event_key]
-            
-            print(f"Event removed: {event_key}")
-        
+
+            logger.info("Event removed: %s", event_key)
+
         except Exception as e:
-            print(f"Error deleting event files: {e}")
+            logger.error("Error deleting event files: %s", e)
     
     def _update_heat_count(self, event_key: str, new_heats: int):
         """Update HEAT_NUMBER in existing database"""
@@ -320,9 +334,9 @@ class FileMonitor:
                     (str(new_heats),)
                 )
                 conn.commit()
-                print(f"  Updated {db_filename}: HEAT_NUMBER = {new_heats}")
+                logger.info("Updated %s: HEAT_NUMBER = %s", db_filename, new_heats)
         except Exception as e:
-            print(f"  Error updating heat count: {e}")
+            logger.error("Error updating heat count: %s", e)
     
     def process_current(self, current_path: str) -> bool:
         """Process current.xml"""
@@ -430,12 +444,12 @@ class FileMonitor:
             if all_drivers_in_event != existing_cids:
                 new_cids = all_drivers_in_event - existing_cids
                 removed_cids = existing_cids - all_drivers_in_event
-                
-                print(f"\nCurrent: {group_name} | {run_name} (heat {heat_number}) ({len(driver_cids)} drivers in this heat)")
+
+                logger.info("Current: %s | %s (heat %d) (%d drivers in heat)", group_name, run_name, heat_number, len(driver_cids))
                 if len(new_cids) > 0:
-                    print(f"  +{len(new_cids)} new driver(s) to event")
+                    logger.info("  +%d new driver(s) to event", len(new_cids))
                 if len(removed_cids) > 0:
-                    print(f"  -{len(removed_cids)} removed driver(s) from event")
+                    logger.info("  -%d removed driver(s) from event", len(removed_cids))
                 
                 driver_list_changed = True
             else:
@@ -458,8 +472,7 @@ class FileMonitor:
             return True
         
         except Exception as e:
-            print(f"Error processing current.xml: {e}")
-            traceback.print_exc()
+            logger.exception("Error processing current.xml: %s", e)
             return False
     
     def _update_online_scdb(self, event_key: str, heat_number: int):
@@ -496,11 +509,10 @@ class FileMonitor:
                 self.active_state["event"] = event_num.zfill(3)
                 self.active_state["heat"] = heat_number
                 
-                print(f"  Online.scdb updated: EVENT={event_num}, HEAT={heat_number}")
-        
+                logger.info("Online.scdb updated: EVENT=%s, HEAT=%d", event_num, heat_number)
+
         except Exception as e:
-            print(f"Error updating Online.scdb: {e}")
-            traceback.print_exc()
+            logger.exception("Error updating Online.scdb: %s", e)
     
     def _get_heat_number(self, event_key: str, run_name: str) -> int:
         """Determine heat number based on run order in schedule (sorted by datetime)"""
@@ -599,11 +611,10 @@ class FileMonitor:
                 
                 conn.commit()
                 requests.get(f"http://{self.host}:7777/api/active_event_update", timeout=1)
-                print(f"  Timing: heat {heat_number}, {drivers_updated} driver(s) updated")
-        
+                logger.info("Timing: heat %d, %d driver(s) updated", heat_number, drivers_updated)
+
         except Exception as e:
-            print(f"Error updating timing database: {e}")
-            traceback.print_exc()
+            logger.exception("Error updating timing database: %s", e)
     
     def _update_database(self, event_key: str, event_name: str, group_name: str, drivers: Dict, 
                         existing_cids: Set, all_driver_cids: Set, removed_cids: Set, 
@@ -659,7 +670,7 @@ class FileMonitor:
                     # Remove drivers no longer in event
                     for cid in removed_cids:
                         cursor.execute("DELETE FROM TCOMPETITORS WHERE C_NUM = ?;", (cid,))
-                        print(f"  Removed driver {cid}")
+                        logger.info("Removed driver %s", cid)
                     
                     # Add new drivers (only those in current heat will have full info)
                     new_cids = all_driver_cids - existing_cids
@@ -671,7 +682,7 @@ class FileMonitor:
                         actually_new_cids = new_cids - db_cids
                         
                         if len(actually_new_cids) < len(new_cids):
-                            print(f"  Warning: Cache mismatch detected, prevented {len(new_cids - actually_new_cids)} duplicate(s)")
+                            logger.warning("Cache mismatch detected, prevented %d duplicate(s)", len(new_cids - actually_new_cids))
                         
                         if len(actually_new_cids) > 0:
                             cursor.execute("SELECT MAX(C_IDX) FROM TCOMPETITORS;")
@@ -706,13 +717,12 @@ class FileMonitor:
                         updated_count += 1
                 
                 if updated_count > 0 and not driver_list_changed:
-                    print(f"  Updated info for {updated_count} driver(s)")
+                    logger.debug("Updated info for %d driver(s)", updated_count)
                 
                 conn.commit()
         
         except Exception as e:
-            print(f"Error updating database: {e}")
-            traceback.print_exc()
+            logger.exception("Error updating database: %s", e)
     
     def handle_scdb_file(self, file_path: str):
         """Handle .scdb file updates"""
@@ -729,7 +739,7 @@ class FileMonitor:
                 self._handle_event_ex_scdb(dest_path)
         
         except Exception as e:
-            print(f"Error handling {file_path}: {e}")
+            logger.error("Error handling %s: %s", file_path, e)
     
     def _handle_online_scdb(self, db_path: str):
         """Handle Online.scdb"""
@@ -816,7 +826,7 @@ class FileMonitor:
     
     def run(self, interval: int = 3):
         """Main monitoring loop"""
-        print(f"Monitoring {self.source_dir}")
+        logger.info("Monitoring %s", self.source_dir)
         
         try:
             while True:
@@ -838,7 +848,7 @@ class FileMonitor:
                         
                         if filename == 'schedule.xml':
                             if self.parse_schedule(file_path):
-                                print("Schedule updated")
+                                logger.info("Schedule updated")
                             self.last_modified_times[file_path] = current_mtime
                         
                         elif filename == 'current.xml':
@@ -853,10 +863,9 @@ class FileMonitor:
                 time.sleep(interval)
         
         except KeyboardInterrupt:
-            print("\nStopped by user")
+            logger.info("Stopped by user")
         except Exception as e:
-            print(f"Fatal error: {e}")
-            traceback.print_exc()
+            logger.exception("Fatal error: %s", e)
 
 
 def main():

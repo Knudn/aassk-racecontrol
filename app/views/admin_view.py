@@ -24,8 +24,10 @@ def admin(tab_name):
         return start_logic()
     elif tab_name == "s_set_active_driver":
         return s_set_active_driver()
-    elif tab_name == "cross_config":
-        return cross_config_tab()
+    elif tab_name == "standing_config":
+        return standing_config_tab()
+    elif tab_name == "race_setup":
+        return race_setup_tab()
     elif tab_name == "infoscreen":
         return infoscreen()
     elif tab_name == "active_events":
@@ -44,6 +46,8 @@ def admin(tab_name):
         return led_panel()
     elif tab_name == "kvali_criteria":
         return kvali_criteria()
+    elif tab_name == "stream_overlay":
+        return stream_overlay()
     else:
         return "Invalid tab", 404
 
@@ -126,16 +130,16 @@ def start_logic():
         start_data.sl_stop_color = hex_to_rgb_string(request.form["sl_stop_color"])
         start_data.sl_ready_color = hex_to_rgb_string(request.form["sl_ready_color"])
         start_data.sl_brightness = request.form["sl_brightness"]
-
+        
         if "use_orbits" in request.form:
             start_data.use_orbits = True
         else:
             start_data.use_orbits = False
         
         if "req_orbits_warmup" in request.form:
-            start_data.req_orbits_ready = request.form["req_orbits_warmup"]
+            start_data.req_orbits_warmup = True
         else:
-            start_data.req_orbits_ready = False
+            start_data.req_orbits_warmup = False
 
         if "sl_start_using_relay" in request.form:
             start_data.sl_start_using_relay = True
@@ -232,7 +236,6 @@ def start_logic():
         else None,
     )
 
-
 def home_tab():
     from app.models import (
         ActiveDrivers,
@@ -291,13 +294,12 @@ def home_tab():
     )
 
     drivers = (
-        Session_Race_Records.query.with_entities(
-            Session_Race_Records.first_name, Session_Race_Records.last_name
-        )
-        .group_by(Session_Race_Records.first_name, Session_Race_Records.last_name)
+        Session_Race_Records.query
+        .with_entities(Session_Race_Records.cid)
+        .distinct()
         .count()
     )
-
+    
     services = MicroServices.query.all()
 
     number_runs = ActiveEvents.query.filter(ActiveEvents.enabled == 1).count()
@@ -312,6 +314,7 @@ def home_tab():
         .order_by(ActiveEvents.sort_order)
         .all()
     )
+    print(len(unique_events))
 
     if request.method == "POST":
         if "endpoint_server_update" in request.form:
@@ -349,73 +352,65 @@ def home_tab():
             if request.form.get("event_file") == "active_event":
                 active_event = get_active_event()
                 selectedEventFile = active_event[0]["db_file"]
-                selectedRun = active_event[0]["SPESIFIC_HEAT"]
             else:
                 selectedEventFile = request.form.get("single_event")
-
                 sync_state = request.form.get("sync")
 
-            if sync_state == "true":
-                from app.lib.utils import GetEnv
+                if sync_state == "true":
+                    from app.lib.utils import GetEnv
+                    event_name = request.form.get("event_name")
 
-                g_config = GetEnv()
-
-                event_name = request.form.get("event_name")
-
-                db.session.query(Session_Race_Records).filter(
-                    (Session_Race_Records.title_1 + " " + Session_Race_Records.title_2)
-                    == event_name
-                ).delete()
-                db.session.commit()
-                full_db_reload(add_intel_sort=False, Event=selectedEventFile)
+                    db.session.query(Session_Race_Records).filter(
+                        Session_Race_Records.title_2 == event_name
+                    ).delete()
+                    db.session.commit()
+                    full_db_reload(add_intel_sort=False, Event=selectedEventFile)
 
             print("Getting:", selectedEventFile)
 
-            with sqlite3.connect(db_location + selectedEventFile + ".sqlite") as con:
-                cur = con.cursor()
-                cur.execute(f"SELECT COUNT() FROM drivers;")
-                amount_drivers = cur.fetchone()
-                cur.execute(
-                    f"SELECT COUNT() FROM sqlite_master WHERE type='table' AND name LIKE 'driver\_%' ESCAPE '\\';"
-                )
-                heat_num = cur.fetchone()[0]
-                valid_recorded_times = 0
-                invalid_recorded_times = 0
-                drivers_left = 0
+            heat_num = (
+                db.session.query(func.max(Session_Race_Records.heat))
+                .filter(Session_Race_Records.title_2 == selectedEventFile)
+                .scalar()
+            ) or 0
 
-                for a in range(1, heat_num + 1):
-                    cur.execute(
-                        "SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME != 0 AND PENELTY = 0;".format(
-                            a
-                        )
-                    )
-                    valid_recorded_times += cur.fetchone()[0]
+            amount_drivers = (
+                db.session.query(Session_Race_Records.cid)
+                .filter(Session_Race_Records.title_2 == selectedEventFile)
+                .distinct()
+                .count()
+            )
 
-                    cur.execute(
-                        "SELECT COUNT() FROM driver_stats_r{0} WHERE PENELTY != 0;".format(
-                            a
-                        )
-                    )
-                    invalid_recorded_times += cur.fetchone()[0]
+            valid_recorded_times = 0
+            invalid_recorded_times = 0
+            drivers_left = 0
 
-                    cur.execute(
-                        "SELECT COUNT() FROM driver_stats_r{0} WHERE FINISHTIME = 0 AND PENELTY = 0;".format(
-                            a
-                        )
-                    )
-                    drivers_left += cur.fetchone()[0]
+            records = Session_Race_Records.query.filter_by(
+                title_2=selectedEventFile
+            ).all()
 
-                event_config = {
-                    "all_records": (
-                        valid_recorded_times + invalid_recorded_times + drivers_left
-                    ),
-                    "p_times": invalid_recorded_times,
-                    "v_times": valid_recorded_times,
-                    "l_times": drivers_left,
-                    "drivers": amount_drivers,
-                    "heats": heat_num,
-                }
-                return event_config
+            for r in records:
+                data = r.data or {}
+                position = str(data.get("position", ""))
+                finished = data.get("finished", False)
+
+                if not position.isdigit():
+                    # DSQ, DNF, DNS etc.
+                    invalid_recorded_times += 1
+                elif finished:
+                    valid_recorded_times += 1
+                else:
+                    drivers_left += 1
+
+            event_config = {
+                "all_records": valid_recorded_times + invalid_recorded_times + drivers_left,
+                "p_times": invalid_recorded_times,
+                "v_times": valid_recorded_times,
+                "l_times": drivers_left,
+                "drivers": amount_drivers,
+                "heats": heat_num,
+            }
+            return event_config
 
         elif "service_state" in request.form:
             from app.lib.utils import (
@@ -438,6 +433,7 @@ def home_tab():
                 .filter((MicroServices.name == service_name))
                 .first()
             )
+
             if service_object is not None:
                 if bool(service_object.state) == False and service_state == "start":
                     service_object.state = True
@@ -503,51 +499,203 @@ def kvali_criteria():
         )
 
 
-def cross_config_tab():
-    from app.models import CrossConfig, db
+def standing_config_tab():
+    from app.models import StandingConfig, db
 
-    cross_config = CrossConfig.query.first()
+    standing_config = StandingConfig.query.first()
 
     if request.method == "POST":
-        # Extract form data
-        dnf_point = request.form.get("dnf_point", type=int)
-        dns_point = request.form.get("dns_point", type=int)
-        dsq_point = request.form.get("dsq_point", type=int)
-        invert_score = request.form.get("invert_score") == "true"
-        num_drivers = request.form.get("num_drivers", type=int)
+        scoring_method = request.form.get("scoring_method", "best_lap")
 
-        # Prepare driver_scores dictionary
-        driver_scores = {}
-        for i in range(1, num_drivers + 1):
-            score = request.form.get(f"driver_scores[{i}]", type=int)
-            if score is not None:
-                driver_scores[i] = score
+        if not standing_config:
+            standing_config = StandingConfig()
+            db.session.add(standing_config)
 
-        # If there's no existing config, create a new one
-        if not cross_config:
-            cross_config = CrossConfig()
+        standing_config.scoring_method = scoring_method
+        standing_config.mix_classes = request.form.get("mix_classes") == "on"
+        standing_config.use_tiebreaker = request.form.get("use_tiebreaker") == "on"
+        standing_config.tiebreaker_method = request.form.get("tiebreaker_method", "")
+        standing_config.use_points = request.form.get("use_points") == "on"
 
-        # Update cross_config with form values
-        cross_config.dnf_point = dnf_point
-        cross_config.dns_point = dns_point
-        cross_config.dsq_point = dsq_point
-        cross_config.invert_score = invert_score
-        cross_config.driver_scores = driver_scores
+        if standing_config.use_points:
+            standing_config.dnf_point = request.form.get("dnf_point", 0, type=int)
+            standing_config.dns_point = request.form.get("dns_point", 0, type=int)
+            standing_config.dsq_point = request.form.get("dsq_point", 0, type=int)
+            standing_config.invert_score = request.form.get("invert_score") == "true"
 
-        # Add to session and commit if new, otherwise just commit the changes
-        if not CrossConfig.query.first():
-            db.session.add(cross_config)
+            num_drivers = request.form.get("num_drivers", 0, type=int)
+            driver_scores = {}
+            for i in range(1, num_drivers + 1):
+                score = request.form.get(f"driver_scores[{i}]", type=int)
+                if score is not None:
+                    driver_scores[i] = score
+            standing_config.driver_scores = driver_scores
+
         db.session.commit()
+        return redirect(url_for("admin.admin", tab_name="standing_config"))
 
-        # Redirect to avoid form resubmission issues
-        return redirect(url_for("admin.admin", tab_name="cross_config"))
-
-    # Render template at the end of the function, passing the cross_config
-    driver_scores_json = json.dumps(cross_config.driver_scores)
+    scoring_method = (standing_config.scoring_method or "best_lap") if standing_config else "best_lap"
+    driver_scores_json = json.dumps(standing_config.driver_scores) if standing_config and standing_config.driver_scores else "{}"
     return render_template(
-        "admin/cross_config_tab.html",
-        cross_config=cross_config,
+        "admin/standing_config_tab.html",
+        config=standing_config,
+        scoring_method=scoring_method,
         driver_scores_json=driver_scores_json,
+    )
+
+
+def _get_or_create_standing_config(stage):
+    from app.models import StandingConfig
+    from app import db
+    sc = StandingConfig.query.filter_by(stage=stage).first()
+    if not sc:
+        sc = StandingConfig(stage=stage)
+        db.session.add(sc)
+        db.session.commit()
+    return sc
+
+
+def _standing_config_to_dict(sc):
+    if not sc:
+        return {}
+    return {
+        "scoring_method": sc.scoring_method or "best_lap",
+        "mix_classes": sc.mix_classes,
+        "use_tiebreaker": sc.use_tiebreaker,
+        "tiebreaker_method": sc.tiebreaker_method or "",
+        "use_points": sc.use_points,
+        "dnf_point": sc.dnf_point,
+        "dns_point": sc.dns_point,
+        "dsq_point": sc.dsq_point,
+        "invert_score": sc.invert_score,
+        "driver_scores": sc.driver_scores or {},
+    }
+
+
+def _save_standing_config(sc, data):
+    from app import db
+    sc.scoring_method = data.get("scoring_method", "best_lap")
+    sc.mix_classes = data.get("mix_classes", False)
+    sc.use_tiebreaker = data.get("use_tiebreaker", False)
+    sc.tiebreaker_method = data.get("tiebreaker_method", "")
+    sc.use_points = data.get("use_points", False)
+    if sc.use_points:
+        sc.dnf_point = data.get("dnf_point", 0)
+        sc.dns_point = data.get("dns_point", 0)
+        sc.dsq_point = data.get("dsq_point", 0)
+        sc.invert_score = data.get("invert_score", False)
+        sc.driver_scores = data.get("driver_scores", {})
+    db.session.commit()
+
+
+def race_setup_tab():
+    from app.models import GlobalConfig, ActiveEvents, EventKvaliRate, StandingConfig
+    from app import db
+
+    config = GlobalConfig.query.first()
+
+    if request.method == "POST":
+        if request.content_type and "application/json" in request.content_type:
+            data = request.get_json()
+
+            # Save standing config for a stage (1=qualifying, 2=finale)
+            if data and "standing_config" in data:
+                stage = data.get("stage", 1)
+                sc = _get_or_create_standing_config(stage)
+                _save_standing_config(sc, data["standing_config"])
+                return {"success": True}
+
+            # Save default finish criteria and apply to non-overridden events
+            if data and "race_setup" in data:
+                if not config:
+                    config = GlobalConfig()
+                    db.session.add(config)
+                config.race_setup = data.get("race_setup", {})
+                db.session.commit()
+
+                setup = config.race_setup
+                non_overridden = ActiveEvents.query.filter(
+                    (ActiveEvents.override_finish == False) | (ActiveEvents.override_finish == None)
+                ).all()
+                for ev in non_overridden:
+                    ev.finish_criteria = setup.get("finish_criteria", "")
+                    ev.finish_laps = setup.get("laps", 0)
+                    ev.finish_time = setup.get("time_minutes", 0)
+                db.session.commit()
+                return {"success": True}
+
+            # Save per-event finish overrides
+            if data and "event_finish" in data:
+                for item in data["event_finish"]:
+                    ev = ActiveEvents.query.get(item["id"])
+                    if ev:
+                        ev.override_finish = bool(item.get("override", False))
+                        ev.finish_criteria = item.get("finish_criteria", "")
+                        ev.finish_laps = item.get("laps", 0) or 0
+                        ev.finish_time = item.get("time_minutes", 0) or 0
+                db.session.commit()
+                return {"success": True}
+
+            # Save kvali criteria
+            if data and "kvali_criteria" in data:
+                kvali_data = data["kvali_criteria"]
+                EventKvaliRate.query.delete()
+                for k, a in enumerate(kvali_data.keys()):
+                    new_entry = EventKvaliRate(id=k + 1, event=a, kvalinr=int(kvali_data[a]))
+                    db.session.add(new_entry)
+                db.session.commit()
+                return {"Success": "True"}
+
+        # Handle active events table update (form POST)
+        table_data = request.form.get("table_data")
+        request_src = request.form.get("src")
+        if table_data:
+            table_data = json.loads(table_data)
+            for k, row in enumerate(table_data):
+                k += 1
+                if request_src == "orbits":
+                    event_name = row["name"]
+                    event = ActiveEvents.query.filter(
+                        ActiveEvents.event_name == event_name,
+                        ActiveEvents.run == row["run"],
+                    ).first()
+                    row["id"] = event.id
+                    row["name"] = event_name
+
+                event = ActiveEvents.query.get(row["id"])
+                if event:
+                    event.event_name = row["name"]
+                    event.run = row["run"]
+                    if "enable" in row:
+                        event.enabled = row["enable"]
+                    if "event_stage" in row:
+                        event.event_stage = row["event_stage"]
+                    event.sort_order = k
+            db.session.commit()
+
+        return redirect(url_for("admin.admin", tab_name="race_setup"))
+
+    race_setup = config.race_setup if config and config.race_setup else {}
+    race_type = config.race_type if config else "1"
+    msport_tm = config.msport_tm if config else True
+    active_events = ActiveEvents.query.order_by(ActiveEvents.sort_order).all()
+    kvali_criteria = [event.to_dict() for event in EventKvaliRate.query.all()]
+
+    sc_qualifying = _get_or_create_standing_config(1)
+    sc_finale = _get_or_create_standing_config(2)
+
+    return render_template(
+        "admin/race_setup_tab.html",
+        race_setup=race_setup,
+        race_setup_json=json.dumps(race_setup),
+        race_type=race_type,
+        msport_tm=msport_tm,
+        active_events=active_events,
+        kvali_criteria=kvali_criteria,
+        sc_qualifying=sc_qualifying,
+        sc_finale=sc_finale,
+        sc_qualifying_json=json.dumps(_standing_config_to_dict(sc_qualifying)),
+        sc_finale_json=json.dumps(_standing_config_to_dict(sc_finale)),
     )
 
 
@@ -561,7 +709,7 @@ def global_config_tab():
         ActiveEvents,
     )
     from app import db
-    from app.lib.utils import manage_process_screen
+    from app.lib.utils import manage_process_screen, insert_event_data
     from sqlalchemy import asc
 
     global_config = GlobalConfig.query.all()
@@ -606,6 +754,12 @@ def global_config_tab():
                 config.keep_qualification = form.keep_qualification.data
                 config.race_type = str(form.race_type.data)
 
+                config.normalization_rules = {
+                    "qualifying": request.form.get("norm_qualifying", ""),
+                    "finale": request.form.get("norm_finale", ""),
+                    "other": request.form.get("norm_other", ""),
+                }
+
                 if bool(form.cross.data):
                     db.session.query(MicroServices).filter(
                         MicroServices.name == "Cross Clock Server"
@@ -629,18 +783,24 @@ def global_config_tab():
                     ActiveEvents_list.append(h.id)
 
             db.session.query(Session_Race_Records).delete()
-            full_db_reload(add_intel_sort=True)
-            if global_config[0].keep_previous_sort == True:
-                order_mapping = {
-                    id_value: index for index, id_value in enumerate(ActiveEvents_list)
-                }
-                events = ActiveEvents.query.filter(
-                    ActiveEvents.id.in_(ActiveEvents_list)
-                ).all()
-                for event in events:
-                    event.sort_order = order_mapping[event.id]
 
-                db.session.commit()
+            if bool(global_config[0].msport_tm) == False:
+                insert_event_data(full_sync=True)
+
+            else:
+                full_db_reload(add_intel_sort=True)
+
+                if global_config[0].keep_previous_sort == True:
+                    order_mapping = {
+                        id_value: index for index, id_value in enumerate(ActiveEvents_list)
+                    }
+                    events = ActiveEvents.query.filter(
+                        ActiveEvents.id.in_(ActiveEvents_list)
+                    ).all()
+                    for event in events:
+                        event.sort_order = order_mapping[event.id]
+
+                    db.session.commit()
 
         return redirect(url_for("admin.admin", tab_name="global-config"))
 
@@ -650,26 +810,31 @@ def global_config_tab():
 
 
 def active_events():
-    from app.models import ActiveEvents, EventType, EventOrder, GlobalConfig
+    from app.models import ActiveEvents, GlobalConfig, EventKvaliRate
     from app import db
-    from flask import current_app
     import json
 
     if request.method == "POST":
-        # Handle the form data for table updates
+        # Handle JSON posts (kvali criteria)
+        if request.content_type and "application/json" in request.content_type:
+            data = request.get_json()
+            if data and "kvali_criteria" in data:
+                kvali_data = data["kvali_criteria"]
+                EventKvaliRate.query.delete()
+                for k, a in enumerate(kvali_data.keys()):
+                    new_entry = EventKvaliRate(id=k + 1, event=a, kvalinr=int(kvali_data[a]))
+                    db.session.add(new_entry)
+                db.session.commit()
+                return {"Success": "True"}
+
         table_data = request.form.get("table_data")
-        sort_data = request.form.get("eventOrderJson")
         request_src = request.form.get("src")
-        # If table_data is provided, process it
         if table_data:
             table_data = json.loads(table_data)
             for k, row in enumerate(table_data):
                 k += 1
                 if request_src == "orbits":
-                    title_1 = json.loads(current_app.config["event_content"])[0][
-                        "race_config"
-                    ]["TITLE_1"]
-                    event_name = title_1 + " " + row["name"]
+                    event_name = row["name"]
                     event = ActiveEvents.query.filter(
                         ActiveEvents.event_name == event_name,
                         ActiveEvents.run == row["run"],
@@ -687,175 +852,112 @@ def active_events():
             db.session.commit()
             flash("Active events updated successfully.", "success")
 
-        # If sort_data is provided, process it to update the sort order
-        elif sort_data:
-            try:
-                EventType.query.delete()
-                EventOrder.query.delete()
-                # Insert EventTypes
-                sort_data = json.loads(sort_data)
-                for event_type in sort_data["eventTypes"]:
-                    new_event_type = EventType(
-                        order=event_type["order"],
-                        name=event_type["name"],
-                        finish_heat=event_type["finishHeat"],
-                    )
-                    db.session.add(new_event_type)
-
-                # Insert EventOrders
-                for event_order in sort_data["eventOrder"]:
-                    new_event_order = EventOrder(
-                        order=event_order["order"], name=event_order["name"]
-                    )
-                    db.session.add(new_event_order)
-
-                # Commit the session to save changes
-                db.session.commit()
-
-            except Exception as e:
-                db.session.rollback()  # Rollback in case of error
-                flash(f"An error occurred while updating the sort order: {e}", "error")
-            intel_sort()
-
-        elif "smartSortingEnabled" in request.get_json():
-            data = request.get_json()["smartSortingEnabled"]
-            global_config = GlobalConfig.query.first()
-            global_config.Smart_Sorting = bool(data)
-            db.session.commit()
-
-            if bool(data) == False:
-                active_events = ActiveEvents.query.all()
-
-                # Update sort_order to match the id for each event
-                for event in active_events:
-                    event.sort_order = event.id
-
-                # Commit the changes to the database
-                db.session.commit()
-
         return redirect(url_for("admin.admin", tab_name="active_events"))
 
     # For GET requests or after POST processing, retrieve and display the active events
     active_events = ActiveEvents.query.order_by(ActiveEvents.sort_order).all()
-    event_types = EventType.query.order_by(EventType.order).all()
-    event_order = EventOrder.query.order_by(EventOrder.order).all()
-    global_config_new = GlobalConfig.query.first()
+    kvali_criteria = [event.to_dict() for event in EventKvaliRate.query.all()]
     return render_template(
         "admin/active_events.html",
         active_events=active_events,
-        event_types=event_types,
-        event_order=event_order,
-        global_config_new=global_config_new,
+        kvali_criteria=kvali_criteria,
     )
 
 
 def active_events_driver_data():
-    from app.models import ActiveEvents, GlobalConfig, LockedEntry
+    from app.models import Session_Race_Records
     from app import db
     from sqlalchemy import func
-    import sqlite3
-    import time
-    from app.lib.db_operation import get_active_event
-
-    db_location = db.session.query(GlobalConfig.db_location).all()[0][0]
+    from flask import jsonify
+    import json
 
     unique_events = (
         db.session.query(
-            ActiveEvents.event_name,
-            func.max(ActiveEvents.run).label("max_run"),
-            ActiveEvents.event_file,
+            Session_Race_Records.title_2,
+            func.max(Session_Race_Records.heat).label("max_heat"),
         )
-        .group_by(ActiveEvents.event_name)
-        .order_by(ActiveEvents.sort_order)
+        .group_by(Session_Race_Records.title_2)
         .all()
     )
 
     if request.method == "POST":
-        if request.form.get("event_file") is not None:
-            if request.form.get("event_file") == "active_event":
-                active_event = get_active_event()
-                selectedEventFile = active_event[0]["db_file"]
-                selectedRun = active_event[0]["SPESIFIC_HEAT"]
+        # JSON update from Tabulator
+        if request.content_type and "application/json" in request.content_type:
+            incoming = request.get_json()
+            title_2 = incoming["title_2"]
+            heat = int(incoming["heat"])
+
+            for row in incoming["data"]:
+                cid = row.pop("CID")
+                locked = row.pop("LOCKED", False)
+
+                record = Session_Race_Records.query.filter_by(
+                    title_2=title_2, heat=heat, cid=cid
+                ).first()
+
+                if record:
+                    record.data = row
+                    record.locked = bool(locked)
+
+            db.session.commit()
+            return jsonify({"status": "success"})
+
+        # Form submission - pick event/heat
+        else:
+            use_active = request.form.get("event_file") == "active_event"
+
+            if use_active:
+                records = Session_Race_Records.query.filter_by(active_event=True).all()
+                if not records:
+                    return render_template(
+                        "admin/active_events_driver_data.html",
+                        unique_events=unique_events,
+                        sqldata="None",
+                        event_entry_file="None",
+                        returned_event_info="No active event found",
+                    )
+                selected_event = records[0].title_2
+                selected_heat = records[0].heat
             else:
-                selectedEventFile = request.form.get("event_file")
-                selectedRun = request.form.get("run")
-            event_entry_file_picked = {"file": selectedEventFile, "run": selectedRun}
-            print("Getting:", selectedEventFile, selectedRun)
-            with sqlite3.connect(db_location + selectedEventFile + ".sqlite") as con:
-                cur = con.cursor()
-                cur.execute(f"SELECT * FROM driver_stats_r{selectedRun}")
+                selected_event = request.form.get("event_name")
+                selected_heat = int(request.form.get("run"))
+                records = Session_Race_Records.query.filter_by(
+                    title_2=selected_event, heat=selected_heat
+                ).all()
 
-                data = [
-                    dict((cur.description[i][0], value) for i, value in enumerate(row))
-                    for row in cur.fetchall()
-                ]
-                cur.execute(f"SELECT TITLE1, TITLE2, MODE FROM db_index")
-                event_title = cur.fetchall()
-                event_info = (
-                    event_title[0][0]
-                    + " "
-                    + event_title[0][1]
-                    + " - Heat: "
-                    + str(selectedRun)
-                    + " - Mode: "
-                    + str(event_title[0][2])
-                )
+            table_data = []
+            for r in records:
+                row = {"CID": r.cid, "LOCKED": r.locked}
+                if r.data:
+                    row.update(r.data)
+                table_data.append(row)
 
+            # Extract dynamic column names from JSON data (exclude CID/LOCKED)
+            dynamic_keys = []
+            if table_data:
+                for key in table_data[0]:
+                    if key not in ("CID", "LOCKED"):
+                        dynamic_keys.append(key)
+
+            event_info = f"{selected_event} - Heat: {selected_heat}"
+            
             return render_template(
                 "admin/active_events_driver_data.html",
                 unique_events=unique_events,
-                sqldata=data,
-                event_entry_file=event_entry_file_picked,
+                sqldata = json.dumps(table_data),
+                dynamic_keys=dynamic_keys,
+                event_entry_file={"title_2": selected_event, "heat": selected_heat},
                 returned_event_info=event_info,
             )
-
-        else:
-            data = request.get_json()
-            file = data["file"]
-            run = data["run"]
-
-            db_location = db.session.query(GlobalConfig.db_location).all()[0][0]
-            sql_con = sqlite3.connect(db_location + file + ".sqlite")
-            sql_cur = sql_con.cursor()
-            sql_cur.execute(f"DELETE FROM driver_stats_r{run}")
-
-            for a in data["data"]:
-                if "LOCKED" in a.keys() and a["LOCKED"] == True:
-                    locked = "1"
-                else:
-                    locked = "0"
-                sql_cur.execute(
-                    f"""
-                    INSERT INTO driver_stats_r{run} (INTER_1, INTER_2, INTER_3, SPEED, PENELTY, FINISHTIME, CID, LOCKED)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        a["INTER_1"],
-                        a["INTER_2"],
-                        a["INTER_3"],
-                        a["SPEED"],
-                        a["PENELTY"],
-                        a["FINISHTIME"],
-                        int(a["CID"]),
-                        locked,
-                    ),
-                )
-            sql_con.commit()
-            sql_con.close()
-
-        return render_template(
-            "admin/active_events_driver_data.html",
-            unique_events=unique_events,
-            sqldata=data,
-            event_entry_file="None",
-        )
 
     return render_template(
         "admin/active_events_driver_data.html",
         unique_events=unique_events,
         sqldata="None",
+        dynamic_keys=[],
         event_entry_file="None",
+        returned_event_info="None",
     )
-
 
 def msport_proxy():
     return render_template("pdfconverter.html")
@@ -1096,192 +1198,211 @@ def led_panel():
     from app import db
 
     def clear_display(endpoint):
-        requests.get(f"http://{endpoint}:5000/stop")
-        requests.get(f"http://{endpoint}/api/overlays/model/LED%20Panels/clear")
-        requests.get(f"http://{endpoint}/api/playlists/stop")
-
-    def enable_display(endpoint):
-        data = requests.request(
-            "GET", "http://{0}/api/overlays/model/LED%20Panels/state".format(endpoint)
-        )
-        data = json.loads(data.content)
-        active_state = data["isActive"]
-        if active_state == 0:
-            url = "http://{0}/api/overlays/model/LED%20Panels/state".format(endpoint)
-
-            headers = {
-                "Accept": "*/*",
-                "X-Requested-With": "XMLHttpRequest",
-                "Accept-Language": "en-US",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.127 Safari/537.36",
-                "Content-Type": "application/json",
-                "Origin": "http://192.168.20.219",
-                "Referer": "http://192.168.20.219/plugin.php?_menu=status&plugin=fpp-matrixtools&page=matrixtools.php",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Connection": "keep-alive",
-            }
-
-            data = {"State": 1}
-
-            response = requests.put(url, json=data, headers=headers)
-
-    if request.method == "POST":
-        if request.json["command"] == "save_endpoint":
-            endpoint = request.json["endpoint"]
-            entry_id = request.json["panel_id"]
-
-            db.session.query(ledpanel).filter_by(id=entry_id).update(
-                {
-                    "endpoint": endpoint,
-                }
-            )
-            db.session.commit()
-            return json.dumps(
-                {"success": True, "message": "Endpoint added successfully"}
-            ), 200
-
-        elif request.json["command"] == "save_mode_config":
-            ledpanel_db = db.session.query(ledpanel).all()
-
-            if request.json["mode"] == "parallel":
-                mode = 2
-                for b in range(1, 3):
-                    db.session.query(ledpanel).filter_by(id=b).update(
-                        {
-                            "track": request.json["display{0}_driver".format(str(b))],
-                            "mode": mode,
-                        }
-                    )
-                db.session.commit()
-            else:
-                mode = 1
-                for b in range(1, 3):
-                    db.session.query(ledpanel).filter_by(id=b).update(
-                        {
-                            "track": request.json["display"],
-                            "mode": mode,
-                        }
-                    )
-                db.session.commit()
-
-            for a in ledpanel_db:
-                if a.mode == 1:
-                    mode = "single"
-                else:
-                    mode = "parallel"
-
-                track = a.track
-
-                config_data = {"mode": mode, "track": track}
-
-                try:
-                    response = requests.post(
-                        "http://{0}:5000/update_config".format(a.endpoint),
-                        json=config_data,
-                        timeout=1.5,
-                        headers={"Content-Type": "application/json"},
-                    )
-                except requests.RequestException as e:
-                    print("Failed to send config to {0}".format(a.endpoint))
-
-            return json.dumps(
-                {"success": True, "message": "Mode updated successfully"}
-            ), 200
-
-        elif request.json["command"] == "set_playlist":
-            endpoint = request.json["endpoint"]
-            args = request.json["args"]
-
-            payload = {"command": "Start Playlist At Item", "args": args}
-
-            clear_display(endpoint)
-
-            try:
-                response = requests.post(f"http://{endpoint}/api/command", json=payload)
-                response.raise_for_status()
-                return json.dumps(
-                    {"success": True, "message": "Playlist started successfully"}
-                ), 200
-            except requests.RequestException as e:
-                return json.dumps({"success": False, "message": str(e)}), 500
-
-        elif request.json["command"] == "edit_db_data":
+        try:
+            requests.get(f"http://{endpoint}:5000/stop", timeout=2)
+        except Exception:
+            pass
+        try:
+            requests.get(f"http://{endpoint}/api/overlays/model/LED%20Panels/clear", timeout=2)
+        except Exception:
+            pass
+        try:
+            requests.get(f"http://{endpoint}/api/playlists/stop", timeout=2)
+        except Exception:
             pass
 
-        elif request.json["command"] == "display_text":
-            endpoint = request.json["endpoint"]
-
-            headers = {"Content-Type": "application/json"}
-
-            clear_display(endpoint)
-            enable_display(endpoint)
-
-            payload = request.json
-            font_size = request.json["FontSize"]
-            Color = request.json["Color"]
-            Message = request.json["Message"]
-
-            payload = json.dumps(
-                {
-                    "Message": Message,
-                    "Position": "center",
-                    "Font": "Helvetica",
-                    "FontSize": font_size,
-                    "AntiAlias": False,
-                    "PixelsPerSecond": 20,
-                    "Color": Color,
-                    "AutoEnable": True,
-                }
+    def enable_display(endpoint):
+        try:
+            data = requests.get(
+                f"http://{endpoint}/api/overlays/model/LED%20Panels/state", timeout=2
             )
-
-            try:
-                response = requests.request(
-                    "PUT",
-                    "http://{0}/api/overlays/model/LED Panels/text".format(endpoint),
-                    headers=headers,
-                    data=payload,
+            data = data.json()
+            if data.get("isActive") == 0:
+                requests.put(
+                    f"http://{endpoint}/api/overlays/model/LED%20Panels/state",
+                    json={"State": 1},
+                    headers={"Content-Type": "application/json"},
+                    timeout=2,
                 )
+        except Exception:
+            pass
 
+    if request.method == "POST":
+        cmd = request.json.get("command")
+
+        if cmd == "save_endpoint":
+            endpoint = request.json["endpoint"]
+            entry_id = request.json["panel_id"]
+            db.session.query(ledpanel).filter_by(id=entry_id).update({"endpoint": endpoint})
+            db.session.commit()
+            return json.dumps({"success": True, "message": "Endpoint saved"}), 200
+
+        elif cmd == "set_mode":
+            panel_id = request.json["panel_id"]
+            mode = request.json.get("mode", "off")
+            mqtt_topic = request.json.get("mqtt_topic", "")
+            font_size = request.json.get("font_size", 60)
+
+            panel = ledpanel.query.get(panel_id)
+            if not panel:
+                return json.dumps({"success": False, "message": "Panel not found"}), 404
+
+            panel.active_mode = mode
+            if mqtt_topic:
+                panel.mqtt_subscribe_topic = mqtt_topic
+            db.session.commit()
+
+            # Forward to FPP device
+            try:
+                requests.post(
+                    f"http://{panel.endpoint}:5000/set_mode",
+                    json={"mode": mode, "mqtt_topic": mqtt_topic, "font_size": int(font_size)},
+                    timeout=3,
+                )
+            except requests.RequestException as e:
+                print(f"Failed to send mode to {panel.endpoint}: {e}")
+
+            return json.dumps({"success": True, "message": f"Mode set to {mode}"}), 200
+
+        elif cmd == "set_brightness":
+            panel_id = request.json["panel_id"]
+            brightness = int(request.json.get("brightness", 100))
+
+            panel = ledpanel.query.get(panel_id)
+            if not panel:
+                return json.dumps({"success": False, "message": "Panel not found"}), 404
+
+            panel.brightness = brightness
+            db.session.commit()
+
+            # Forward to FPP device
+            try:
+                requests.post(
+                    f"http://{panel.endpoint}:5000/set_brightness",
+                    json={"brightness": brightness},
+                    timeout=3,
+                )
+            except requests.RequestException as e:
+                print(f"Failed to send brightness to {panel.endpoint}: {e}")
+
+            return json.dumps({"success": True, "message": "Brightness updated"}), 200
+
+        elif cmd == "set_flag_colors":
+            panel_id = request.json["panel_id"]
+            flag_colors = request.json.get("flag_colors", {})
+            flag_priorities = request.json.get("flag_priorities", [])
+            flag_enabled = request.json.get("flag_enabled", False)
+            flag_fields_enabled = request.json.get("flag_fields_enabled", {})
+
+            panel = ledpanel.query.get(panel_id)
+            if not panel:
+                return json.dumps({"success": False, "message": "Panel not found"}), 404
+
+            panel.flag_colors = flag_colors
+            panel.flag_priorities = flag_priorities
+            panel.flag_enabled = flag_enabled
+            panel.flag_fields_enabled = flag_fields_enabled
+            db.session.commit()
+
+            # Forward to FPP device
+            try:
+                requests.post(
+                    f"http://{panel.endpoint}:5000/update_config",
+                    json={
+                        "flag_colors": flag_colors,
+                        "flag_priorities": flag_priorities,
+                        "flag_enabled": flag_enabled,
+                        "flag_fields_enabled": flag_fields_enabled,
+                    },
+                    timeout=3,
+                )
+            except requests.RequestException as e:
+                print(f"Failed to send flag config to {panel.endpoint}: {e}")
+
+            return json.dumps({"success": True, "message": "Flag colors updated"}), 200
+
+        elif cmd == "set_playlist":
+            endpoint = request.json["endpoint"]
+            args = request.json["args"]
+            clear_display(endpoint)
+            try:
+                response = requests.post(
+                    f"http://{endpoint}/api/command",
+                    json={"command": "Start Playlist At Item", "args": args},
+                    timeout=3,
+                )
                 response.raise_for_status()
-                return json.dumps(
-                    {"success": True, "message": "Playlist started successfully"}
-                ), 200
-
+                return json.dumps({"success": True, "message": "Playlist started"}), 200
             except requests.RequestException as e:
                 return json.dumps({"success": False, "message": str(e)}), 500
 
-        elif request.json["command"] == "stop":
+        elif cmd == "display_text":
             endpoint = request.json["endpoint"]
-
             clear_display(endpoint)
             enable_display(endpoint)
+
+            payload = json.dumps({
+                "Message": request.json["Message"],
+                "Position": "center",
+                "Font": "Helvetica",
+                "FontSize": request.json.get("FontSize", 60),
+                "AntiAlias": False,
+                "PixelsPerSecond": 20,
+                "Color": request.json.get("Color", "#FFFFFF"),
+                "AutoEnable": True,
+            })
+            try:
+                response = requests.put(
+                    f"http://{endpoint}/api/overlays/model/LED Panels/text",
+                    headers={"Content-Type": "application/json"},
+                    data=payload,
+                    timeout=3,
+                )
+                response.raise_for_status()
+                return json.dumps({"success": True, "message": "Text displayed"}), 200
+            except requests.RequestException as e:
+                return json.dumps({"success": False, "message": str(e)}), 500
+
+        elif cmd == "stop":
+            endpoint = request.json["endpoint"]
+            panel_id = request.json.get("panel_id")
+            clear_display(endpoint)
+
+            # Update DB mode to off
+            if panel_id:
+                panel = ledpanel.query.get(panel_id)
+                if panel:
+                    panel.active_mode = "off"
+                    db.session.commit()
+
+            return json.dumps({"success": True, "message": "Display stopped"}), 200
+
         else:
-            return json.dumps({"success": False, "message": str("asd")})
+            return json.dumps({"success": False, "message": "Unknown command"}), 400
 
     else:
         ledpanel_db = db.session.query(ledpanel).all()
         panels = {}
-        mode_config = {}
         for b in ledpanel_db:
-            panels[b.id] = [
-                b.endpoint,
-                b.active_playlist,
-                b.brightness,
-                b.mode,
-                b.track,
-            ]
-            if b.id == 1:
-                if b.mode == 1:
-                    mode_config["mode"] = "single"
-                    mode_config["display"] = b.track
+            panels[b.id] = {
+                'endpoint': b.endpoint,
+                'brightness': b.brightness or 100,
+                'active_mode': b.active_mode or 'off',
+                'mqtt_subscribe_topic': b.mqtt_subscribe_topic or '',
+                'flag_enabled': b.flag_enabled or False,
+                'flag_colors': b.flag_colors or {},
+                'flag_priorities': b.flag_priorities or [],
+                'flag_fields_enabled': b.flag_fields_enabled or {
+                    "halt_race": True, "warmup": True, "running": True,
+                    "ready": True, "started": True, "orbits_finish": True,
+                    "orbits_warmup": True, "man_ready": True
+                },
+                'active_playlist': b.active_playlist,
+            }
 
-                else:
-                    mode_config["mode"] = "parallel"
+        panels_json = json.dumps(panels)
+        return render_template("admin/ledpanel.html", panels=panels, panels_json=panels_json)
 
-                mode_config["display1_driver"] = b.track
-            else:
-                mode_config["display2_driver"] = b.track
 
-        return render_template(
-            "admin/ledpanel.html", panels=panels, mode_config=mode_config
-        )
+def stream_overlay():
+    return render_template("admin/overlay_editor.html")

@@ -1,0 +1,64 @@
+{
+  "id": 1,
+  "name": "test",
+  "active_view_id": 3,
+  "next_view_id": 4,
+  "res_w": 1920,
+  "res_h": 1080,
+  "grid_version": 2,
+  "views": [
+    {
+      "id": 1,
+      "name": "asd",
+      "next_widget_id": 8,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1,
+      "widgets": [
+        {
+          "id": 4,
+          "file": "cross/basic_overlay.html",
+          "url": "",
+          "params": "w=330, mirror=1, scale=5",
+          "fullscreen": false,
+          "gs_x": 35,
+          "gs_y": 3,
+          "gs_w": 12,
+          "gs_h": 29
+        },
+        {
+          "id": 6,
+          "file": "cross/race_control_overlay.html",
+          "url": "",
+          "params": "w=230, scale=5",
+          "fullscreen": false,
+          "gs_x": 0,
+          "gs_y": 1,
+          "gs_w": 13,
+          "gs_h": 8
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "results_active_run",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "cross/race_results_overlay.html",
+          "url": "",
+          "params": "opacity=0, w=1600, scale=1.2",
+          "fullscreen": true,
+          "gs_x": 0,
+          "gs_y": 0,
+          "gs_w": 48,
+          "gs_h": 36
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Overlay - {{ group.name }}</title>
+    {% set rw = group.res_w|default(1920) %}
+    {% set rh = group.res_h|default(1080) %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: {{ rw }}px;
+            height: {{ rh }}px;
+            overflow: hidden;
+            background: transparent;
+        }
+        #overlay-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: {{ rw }}px;
+            height: {{ rh }}px;
+            {% if view and view.bg_color %}
+            background-color: {{ view.bg_color }};
+            {% endif %}
+            {% if view and view.bg_image %}
+            background-image: url('{{ view.bg_image }}');
+            background-size: cover;
+            background-position: center;
+            {% endif %}
+            opacity: {{ view.bg_opacity if view and view.bg_opacity is defined else 1 }};
+        }
+        #overlay-container {
+            position: relative;
+            width: {{ rw }}px;
+            height: {{ rh }}px;
+        }
+        .overlay-widget {
+            position: absolute;
+            overflow: hidden;
+            border: none;
+        }
+        .overlay-widget iframe {
+            width: {{ rw }}px;
+            height: {{ rh }}px;
+            border: none;
+            background: transparent;
+            transform-origin: 0 0;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="overlay-bg"></div>
+    <div id="overlay-container">
+        {% for w in widgets %}
+        {% if w.fullscreen %}
+        <div class="overlay-widget"
+             style="left:0; top:0; width:{{ rw }}px; height:{{ rh }}px;">
+            <iframe src="{{ w.src }}" scrolling="no" style="transform:scale(1)"></iframe>
+        </div>
+        {% else %}
+        {% set sw = w.px.w / rw %}
+        {% set sh = w.px.h / rh %}
+        {% set s = sw if sw < sh else sh %}
+        <div class="overlay-widget"
+             style="left:{{ w.px.x }}px; top:{{ w.px.y }}px; width:{{ w.px.w }}px; height:{{ w.px.h }}px;">
+            <iframe src="{{ w.src }}" scrolling="no" style="transform:scale({{ s }})"></iframe>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <script>
+        var groupId = {{ group.id }};
+        var socket = io();
+        socket.on('connect', function() {
+            socket.emit('join', { room: 'overlay_' + groupId, username: 'overlay_' + groupId });
+        });
+        socket.on('response', function(data) {
+            try {
+                var msg = typeof data === 'string' ? JSON.parse(data) : data;
+                if (msg.action === 'switch_view') {
+                    window.location.reload();
+                }
+            } catch(e) {}
+        });
+    </script>
+</body>
+</html>

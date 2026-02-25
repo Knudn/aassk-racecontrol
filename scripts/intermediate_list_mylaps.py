@@ -1,37 +1,90 @@
 import os
 import time
-import shutil
 import sqlite3
 import requests
 import xml.etree.ElementTree as ET
-import traceback
-from typing import Dict, Set
-import time
 import json
 import sys
 import paho.mqtt.publish as publish
+from sqlalchemy import create_engine, Column, Integer, Text, JSON, Boolean, event
+from sqlalchemy.orm import declarative_base, Session
+import zlib
+import logging
+from logging.handlers import RotatingFileHandler
+
+_log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(_log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    handlers=[
+        RotatingFileHandler(os.path.join(_log_dir, 'intermediate_list_mylaps.log'), maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
 
 # Configuration
-FIFO_PATH = "/tmp/file_monitor_fifo"
-ACTIVE_EVENT_QUERY = (
-    "SELECT C_VALUE FROM TPARAMETERS WHERE C_PARAM = 'HEAT' OR C_PARAM = 'EVENT';"
-)
-MODE_QUERY = "SELECT C_VALUE FROM TPARAMETERS WHERE C_PARAM='MODULE';"
-
 DB_PATH = "site.db"
+STATE_DB_PATH = "sqlite:////mnt/intermediate/race_state.db"
 
 MQTT_BROKER = "127.0.0.1"
 MQTT_TOPIC = "start/mylaps_inter"
 
+# SQLAlchemy setup
+Base = declarative_base()
+
+class ScheduleEntry(Base):
+    """One row per run/heat from schedule.xml"""
+    __tablename__ = "schedule_entries"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_name = Column(Text, nullable=False)
+    heat = Column(Text, nullable=False)
+    data = Column(JSON, nullable=False)
+    event_checksum = Column(Text, nullable=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.event_checksum:
+            heat = str(self.heat) if self.heat is not None else ""
+            self.event_checksum = create_event_id_checksum(f"{self.run_name} {heat}")
+
+@event.listens_for(ScheduleEntry, 'before_insert')
+def set_event_checksum(mapper, connection, target):
+    if target.event_checksum is None:
+        heat = str(target.heat) if target.heat is not None else ""
+        target.event_checksum = create_event_id_checksum(f"{target.run_name} {heat}")
+
+
+class RaceEntry(Base):
+    """One flat row per driver per heat from current.xml"""
+    __tablename__ = "race_entries"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_name = Column(Text, nullable=False)
+    heat = Column(Text, nullable=False)
+    active_event = Column(Boolean, nullable=False, default=False)
+    event_id = Column(Text, nullable=False)
+    cid = Column(Integer, nullable=False)
+    data = Column(JSON, nullable=False)
+
+
+engine = create_engine(
+    STATE_DB_PATH,
+    json_serializer=lambda obj: json.dumps(obj, ensure_ascii=False),
+    connect_args={"timeout": 15},
+)
+Base.metadata.create_all(engine)
+
+# Load global config
 with sqlite3.connect(DB_PATH) as con:
     cur = con.cursor()
     g_config = cur.execute(
         "SELECT wl_cross_title, wl_bool, wl_title, race_type, msport_tm from global_config;"
     ).fetchone()
 
-
 if int(g_config[4]) == 1:
-    print("Not using Orbints/Mylaps. Exits!")
+    logger.info("Not using Orbits/Mylaps. Exiting.")
     sys.exit()
 
 wl_bool = g_config[1]
@@ -40,27 +93,176 @@ if bool(wl_bool) == True:
     wl_title = g_config[2]
     wl_cross_title = g_config[0]
 
-main_dict = {}
-active_event = []
-
-# The racetype is set in gconfig
-# 1 = Bakkecross
-# 5 = Cross
-# 4 = Vanncross
+# 1 = Bakkecross, 5 = Cross, 4 = Vanncross
 race_type = int(g_config[3])
 
 if race_type == 2 or race_type == 3:
-    print("Wrong race type configured in http://192.168.1.50:7777/admin/global-config")
+    logger.warning("Wrong race type configured. Check global-config. Exiting.")
     sys.exit()
 
 event_name = ""
+active_event = []
 
+
+def create_event_id_checksum(event_entry):
+    #The checksum will be based on str(run_name + heat)
+    checksum = zlib.crc32(event_entry.encode())
+    logger.debug("Checksum: %08x for %s", checksum, event_entry)
+    return f"{checksum:08x}"
+
+
+def upsert_schedule(run_name, heat, data):
+
+    with Session(engine) as session:
+        existing = session.query(ScheduleEntry).filter_by(
+            run_name=run_name, heat=str(heat)
+        ).first()
+        if existing:
+            existing.data = data
+        else:
+            session.add(ScheduleEntry(
+                run_name=run_name, heat=str(heat), data=data
+            ))
+        session.commit()
+
+
+def get_schedule_entry(run_name, heat):
+    with Session(engine) as session:
+        row = session.query(ScheduleEntry).filter_by(
+            run_name=run_name, heat=str(heat)
+        ).first()
+        return row.data if row else None
+
+
+def get_all_schedule_keys():
+    """Returns set of (run_name, heat) tuples currently in schedule"""
+    with Session(engine) as session:
+        rows = session.query(ScheduleEntry.run_name, ScheduleEntry.heat).all()
+        return set((r[0], r[1]) for r in rows)
+
+
+def get_schedule_run_names():
+    with Session(engine) as session:
+        rows = session.query(ScheduleEntry.run_name).distinct().all()
+        return [r[0] for r in rows]
+
+
+def clear_schedule():
+    with Session(engine) as session:
+        session.query(ScheduleEntry).delete()
+        session.commit()
+
+
+
+def upsert_driver(run_name, heat, cid, data):
+    with Session(engine) as session:
+        existing = session.query(RaceEntry).filter_by(
+            run_name=run_name, heat=str(heat), cid=int(cid)
+        ).first()
+
+        raw = json.dumps(data)
+        data = json.loads(raw.replace('\\\\u', '\\u'))
+
+        checksum = create_event_id_checksum(run_name + " " + heat)
+
+        if existing:
+            existing.data = data
+        else:
+            session.add(RaceEntry(
+                run_name=run_name, event_id=checksum, active_event=True, heat=str(heat), cid=int(cid), data=data
+            ))
+        session.commit()
+
+
+def upsert_drivers_bulk(run_name, heat, drivers):
+    """Insert all drivers for a heat in a single session to reduce DB churn."""
+    checksum = create_event_id_checksum(run_name + " " + str(heat))
+    with Session(engine) as session:
+        for data in drivers:
+            raw = json.dumps(data)
+            data = json.loads(raw.replace('\\\\u', '\\u'))
+            try:
+                cid = int(data["cid"])
+            except (ValueError, TypeError):
+                logger.warning("Skipping driver with invalid cid: %s", data.get('cid'))
+                continue
+            existing = session.query(RaceEntry).filter_by(
+                run_name=run_name, heat=str(heat), cid=cid
+            ).first()
+            if existing:
+                existing.data = data
+            else:
+                session.add(RaceEntry(
+                    run_name=run_name, event_id=checksum, active_event=True, heat=str(heat), cid=cid, data=data
+                ))
+        session.commit()
+
+
+def get_drivers(run_name, heat):
+    with Session(engine) as session:
+        rows = session.query(RaceEntry).filter_by(
+            run_name=run_name, heat=str(heat)
+        ).all()
+        return [row.data for row in rows]
+
+
+def clear_heat(run_name, heat):
+    with Session(engine) as session:
+        session.query(RaceEntry).filter_by(
+            run_name=run_name, heat=str(heat)
+        ).delete()
+        session.commit()
+
+def clear_active_state():
+    with Session(engine) as session:
+        logger.info("Clearing active event state")
+        entries = session.query(RaceEntry).filter_by(active_event=True).all()
+        for a in entries:
+            a.active_event = False
+        session.commit()
+
+def clear_event(run_name):
+    with Session(engine) as session:
+        session.query(RaceEntry).filter_by(run_name=run_name).delete()
+        session.query(ScheduleEntry).filter_by(run_name=run_name).delete()
+        session.commit()
+
+
+def clear_all():
+    with Session(engine) as session:
+        session.query(RaceEntry).delete()
+        session.query(ScheduleEntry).delete()
+        session.commit()
+
+
+def sync_to_schedule():
+    """Remove any race entries that no longer exist in the schedule"""
+    schedule_keys = get_all_schedule_keys()
+    schedule_runs = set(k[0] for k in schedule_keys)
+
+    with Session(engine) as session:
+        # Get all unique run_name/heat combos in race entries
+        race_keys = session.query(RaceEntry.run_name, RaceEntry.heat).distinct().all()
+
+        for run_name, heat in race_keys:
+            if run_name not in schedule_runs:
+                logger.info("Schedule removed event: %s, cleaning up", run_name)
+                session.query(RaceEntry).filter_by(run_name=run_name).delete()
+            elif (run_name, heat) not in schedule_keys:
+                logger.info("Schedule removed heat %s from %s, cleaning up", heat, run_name)
+                session.query(RaceEntry).filter_by(
+                    run_name=run_name, heat=heat
+                ).delete()
+
+        session.commit()
+
+
+# --- XML parsing ---
 
 def xml_to_dict(file):
     if type(file) == str:
         with open(file, "r") as f:
             file_read = f.read()
-
         element = ET.fromstring(file_read)
     else:
         element = file
@@ -73,7 +275,6 @@ def xml_to_dict(file):
         if len(child.items()) == 1 and race_type != 5:
             if child.items()[0][1] == "timeofday":
                 child.text = ""
-
             if child.items()[0][1] == "racetime":
                 child.text = ""
 
@@ -88,118 +289,114 @@ def xml_to_dict(file):
     return result
 
 
-def index_current():
-    global main_dict
-    current_files = [
-        a.path
-        for a in os.scandir("/mnt/intermediate/")
-        if "scdb" in a.path and not "Ex" in a.path and not "Online" in a.path
-    ]
+# --- Helpers ---
 
-    tmp_index = []
-    tmp_driver_lst = []
-    for a in current_files:
-        with sqlite3.connect(a) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT C_VALUE FROM TPARAMETERS WHERE C_PARAM='TITLE1' OR C_PARAM='TITLE2' or C_PARAM='HEAT_NUMBER';"
-            )
-            event_content = cursor.fetchall()
+def normalize_run_name(groupname, runname, runtype):
+    if runtype == "Qualifying":
+        try:
+            heat = runname[-1]
+            norm_grup_name = groupname + " - Kvalifisering"
+            heats = 0
+        except Exception as err:
+            heats = 1
+            norm_grup_name = runname
+            heat = 1
+    elif runtype == "Race":
+        if "Kvali" in runname:
+            heats = runname[-1]
+            heat = runname[-1]
+            norm_grup_name = groupname + " - Kvalifisering"
+        elif "C" in runname:
+            heats = runname[-1]
+            norm_grup_name = groupname + " - C Finale"
+            heat = runname[-1]
+        elif "B" in runname:
+            norm_grup_name = groupname + " - B Finale"
+            heats = runname[-1]
+            heat = runname[-1]
+        elif len(runname.split("-")) == 2:
+            norm_grup_name = groupname + " - " + runname.split("-")[0]
+            heats = runname[-1]
+            heat = runname[-1]
+        else:
+            heats = 1
+            heat = 1
+            norm_grup_name = groupname + " - " + runname
+    else:
+        heats = 1
+        heat = 1
+        norm_grup_name = groupname + " - " + runname
 
-            if str(event_content) == "[]":
-                continue
-
-            df = [item[0] for item in event_content]
-            if wl_bool == 1:
-                if not wl_title in (df[1] + df[2]):
-                    #print(df[1], df[2])
-                    continue
-                else:
-                    print(df[1], df[2], a)
-
-            cursor.execute(
-                "SELECT C_NUM, C_FIRST_NAME, C_LAST_NAME, C_CLUB, C_TEAM FROM TCOMPETITORS;"
-            )
-            drivers = [driv for driv in cursor.fetchall()]
-            file = os.path.split(a)[-1]
-            main_dict[df[2]] = {"event_file": file, "event_name": df[1], "heats": df[0]}
-
-            # main_dict[file]
-            # itmp_index.append([file,df[0], df[1]])
-
-        ex_file = a.replace(".scdb", "Ex.scdb")
-
-        with sqlite3.connect(ex_file) as conn:
-            cursor_new = conn.cursor()
-            heat_index = []
-            main_dict[df[2]]["heat_ent"] = {}
-            for heat in range(0, int(df[0])):
-                try:
-                    heat = heat + 1
-                    print(ex_file, heat)
-                    q = f"select C_NUM from TSTARTLIST_HEAT{heat};"
-                    cursor_new.execute(q)
-                    cids = [c[0] for c in cursor_new.fetchall()]
-                    main_dict[df[2]]["heat_ent"][str(heat)] = {"time": "", "laps": 0}
-                    main_dict[df[2]]["heat_ent"][str(heat)]["drivers"] = []
-                    for driv in drivers:
-                        if driv[0] in cids:
-                            dv_dict = {
-                                "cid": driv[0],
-                                "first_name": driv[1],
-                                "last_name": driv[2],
-                                "club": driv[3],
-                                "snowmobile": driv[4],
-                                "totale_time": 0,
-                                "laps": 0,
-                                "best_time": 0,
-                                "finish_laps": 0,
-                                "last_lap_time": 0,
-                            }
-                            main_dict[df[2]]["heat_ent"][str(heat)]["drivers"].append(
-                                dv_dict
-                            )
-                
-                except Exception as err:
-                    print(err)
-                    print("Error adding drivers in main dict during init")
-                    main_dict[df[2]]["heat_ent"][str(heat)] = {"time": ""}
-                    main_dict[df[2]]["heat_ent"][str(heat)]["drivers"] = []
-
-    return main_dict
+    return heat, norm_grup_name, heats
 
 
-def get_new_db_file():
-    db_file = ""
-
-    existing_files = os.listdir("/mnt/intermediate/")
-
-    for num in range(33, 999):
-        db_file = f"Event{str(num).zfill(3)}.scdb"
-        if db_file not in existing_files:
-            break
-    return db_file
+def get_event_name_from_xml():
+    file_dict = xml_to_dict("/mnt/test/current.xml")
+    for b in file_dict["label"]:
+        if b["type"] == "eventname":
+            return b["_text"]
+    return ""
 
 
-def set_active_event(heat, run_name):
+def _parse_time_to_seconds(value):
+    """Parse a time string like MM:SS or HH:MM:SS to seconds. Returns 0 for placeholders like -??-."""
+    try:
+        parts = value.split(":")
+        if len(parts) == 2:
+            return int(parts[0]) * 60 + int(parts[1])
+        elif len(parts) == 3:
+            return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+        else:
+            return int(value)
+    except (ValueError, AttributeError):
+        return 0
+
+
+def get_time_data(timetogo, racetime, curr_time):
+    from datetime import datetime
+
+    if len(curr_time.split(":")) == 3:
+        time_format = "%H:%M:%S"
+    else:
+        time_format = "%M:%S"
+    try:
+        dt = datetime.strptime(curr_time, time_format).replace(
+            year=datetime.now().year, month=datetime.now().month, day=datetime.now().day
+        )
+        curr_epoch = int(dt.timestamp())
+    except (ValueError, AttributeError):
+        curr_epoch = 0
+
+    race_time_sec = _parse_time_to_seconds(racetime)
+    timetogo_sec = _parse_time_to_seconds(timetogo)
+
+    finishtime = curr_epoch + timetogo_sec
+    starttime = curr_epoch - race_time_sec
+    return starttime, finishtime, timetogo_sec
+
+
+def set_active_event(event_id):
     global event_name
 
     json_data = {
-        "driver_one": 0,
-        "driver_two": 0,
-        "event": f"{event_name} {run_name}",
-        "event_heat": f"{heat}",
+        "event_id": event_id,
+        "push_to_room": True,
     }
 
-    requests.post(
-        "http://192.168.1.50:7777/api/set_active_state",
-        json=json_data,
-        verify=False,
-    )
+    try:
+        requests.post(
+            "http://192.168.1.50:7777/api/set_active_state",
+            json=json_data,
+            verify=False,
+            timeout=5,
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error("Error setting active event: %s", e)
 
 
-def extract_driver_data(data, finish_on_lap):
+def extract_driver_data(data):
     tmp_driver_data_lst = []
+    class_lst = []
 
     if isinstance(data, dict):
         data = [data]
@@ -213,12 +410,25 @@ def extract_driver_data(data, finish_on_lap):
         snowmobile = a["additional1"]
         best_time = a["besttime"]
         last_time = a["lasttime"]
+        driver_class = a["class"]
+        gap = a["gap"]
         if best_time == "":
             best_time = 0
-        if int(laps) >= int(finish_on_lap):
-            totale_time = a["totaltime"]
-        else:
+        if a["totaltime"] == "":
             totale_time = 0
+        else:
+            totale_time = a["totaltime"]
+        
+        if driver_class not in class_lst:
+            class_lst.append(driver_class)
+
+        if str(pen).upper() == "DQ":
+            penalty = "DSQ"
+        elif "D" in str(pen).upper():
+            penalty = ""
+        else:
+            penalty = ""
+
 
         tmp_driver_data = {
             "cid": cid,
@@ -228,18 +438,53 @@ def extract_driver_data(data, finish_on_lap):
             "snowmobile": snowmobile,
             "totaltime": totale_time,
             "laps": laps,
-            "pen": pen,
+            "position": pen,
             "best_time": best_time,
             "last_lap_time": last_time,
+            "class":driver_class,
+            "gap":gap,
+            "penalty":penalty,
         }
 
         tmp_driver_data_lst.append(tmp_driver_data)
+    if len(class_lst) > 1:
+        multi_class = True
+    else:
+        multi_class = False
 
-    return tmp_driver_data_lst
+    return tmp_driver_data_lst, multi_class
+
+
+def index_current():
+    """Restore state from existing race_state.db on startup"""
+    global event_name, active_event
+
+    with Session(engine) as session:
+        schedule_count = session.query(ScheduleEntry).count()
+        race_count = session.query(RaceEntry).count()
+
+        if schedule_count == 0:
+            logger.info("No existing state in DB, starting fresh")
+            return
+
+        logger.info("Restored state: %d schedule entries, %d race entries", schedule_count, race_count)
+
+        # Restore event_name from first schedule entry
+        first_schedule = session.query(ScheduleEntry).first()
+        if first_schedule and first_schedule.data.get("event_name"):
+            event_name = first_schedule.data["event_name"]
+            logger.info("Restored event name: %s", event_name)
+
+        # Restore active_event from the active race entry
+        active_entry = session.query(RaceEntry).filter_by(active_event=True).first()
+        if active_entry:
+            active_event = [active_entry.heat, active_entry.run_name]
+            logger.info("Restored active event: %s", active_event)
 
 
 def proc_current(current_dict):
-    global main_dict
+    """Process current.xml data and update race entries"""
+    global event_name
     heat_has_timentries = False
     current_flag = None
     laps_to_go = None
@@ -247,7 +492,6 @@ def proc_current(current_dict):
     for a in current_dict["label"]:
         if a["type"] == "runname":
             run_name = a["_text"]
-
         elif a["type"] == "groupname":
             group_name = a["_text"]
         elif a["type"] == "runtype":
@@ -258,440 +502,302 @@ def proc_current(current_dict):
                 type_name = "Race"
             elif type_name == "P":
                 type_name = "Practice"
-
         elif a["type"] == "leadermargin" and "_text" in a:
             heat_has_timentries = True
-
         elif a["type"] == "flag":
             current_flag = a["_text"]
         elif a["type"] == "lapstogo" and "_text" in a:
             laps_to_go = a["_text"]
-
+    logger.debug("proc_current: %s %s %s", group_name, run_name, type_name)
     heat, run_name, heats = normalize_run_name(group_name, run_name, type_name)
+    logger.debug("Normalized: heat=%s run=%s heats=%s", heat, run_name, heats)
+    schedule = get_schedule_entry(run_name, heat)
+    if not schedule:
+        return
 
     if (
         not heat_has_timentries
         and (current_flag == "none" or current_flag == "warmup")
-        and laps_to_go != None
-    ):  
-        main_dict[run_name]["heat_ent"][heat]["laps"] = laps_to_go
+        and laps_to_go is not None
+    ):
+        try:
+            schedule["laps"] = int(laps_to_go)
+        except (ValueError, TypeError):
+            schedule["laps"] = 0
+        upsert_schedule(run_name, heat, schedule)
 
-    print(main_dict[run_name]["heat_ent"][heat])
-    main_dict[run_name]["heat_ent"][heat]["drivers"] = []
-    finish_on_lap = main_dict[run_name]["heat_ent"][heat]["laps"]
+    finish_on_lap = schedule["laps"]
+
+    clear_heat(run_name, heat)
+
+    
 
     if "result" in current_dict["results"]:
-        driver_data = extract_driver_data(
-            current_dict["results"]["result"], finish_on_lap
-        )
-        main_dict[run_name]["heat_ent"][heat]["drivers"].append(driver_data)
+        driver_data, multi_class = extract_driver_data(current_dict["results"]["result"])
+        timedata = schedule.get("timedata", "")
+        time_to_go_parts = timedata.split(":")
+        try:
+            time_to_go = int(time_to_go_parts[-1]) if time_to_go_parts[-1] else 0
+        except (ValueError, IndexError):
+            time_to_go = 0
+        event_id = create_event_id_checksum(run_name + " " + heat)
+        for driver in driver_data:
+            driver["run_name"] = run_name
+            driver["event_name"] = event_name
+            driver["heat"] = str(heat)
+            driver["timedata"] = timedata
+            driver["time_to_go"] = time_to_go
+            driver["multi_class"] = multi_class
+            driver["event_id"] = event_id
+            try:
+                driver["laps_to_go"] = 0 if laps_to_go is None else int(laps_to_go)
+            except (ValueError, TypeError):
+                driver["laps_to_go"] = 0
+            if (driver["laps_to_go"] == 0 and driver["time_to_go"] == 0 and driver["totaltime"]) or current_flag == "finish":
+                driver["finished"] = True
+            else:
+                driver["finished"] = False
+        upsert_drivers_bulk(run_name, heat, driver_data)
+            
 
-
-def create_scdb(filename):
-    print("Created", filename)
-
-    query = "CREATE TABLE IF NOT EXISTS 'TPARAMETERS' ('C_PARAM' CHAR(32) NOT NULL, 'C_VALUE'	VARCHAR(510), PRIMARY KEY('C_PARAM'));"
-    query_2 = "CREATE TABLE IF NOT EXISTS 'TCOMPETITORS' ('C_NUM' INTEGER, 'C_LAST_NAME' VARCHAR(60), 'C_FIRST_NAME'	VARCHAR(60), 'C_CLUB' VARCHAR(60), 'C_TEAM' VARCHAR(60), PRIMARY KEY('C_NUM'));"
-
-    with sqlite3.connect("/mnt/intermediate/" + filename) as conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        cursor.execute(query_2)
-
-
-def update_scdb(event_data, run_name):
-    global event_name
-
-    event_file = event_data["event_file"]
-    driver_lst_cid = []
-    driver_lst = []
-    heats = event_data["heats"]
-
-    for a in event_data["heat_ent"]:
-        if len(event_data["heat_ent"][a]["drivers"]) > 0:
-            for b in event_data["heat_ent"][a]["drivers"][0]:
-                if isinstance(b, dict):
-                    if b["cid"] not in driver_lst_cid:
-                        driver_data_tuple = (
-                            b["cid"],
-                            b["first_name"],
-                            b["last_name"],
-                            b["club"],
-                            b["snowmobile"],
-                        )
-                        driver_lst.append(driver_data_tuple)
-                        driver_lst_cid.append(b["cid"])
-
-    with sqlite3.connect("/mnt/intermediate/" + event_file) as conn:
-        cursor = conn.cursor()
-        q_clear_tp = "DELETE FROM TPARAMETERS;"
-        q_clear_tc = "DELETE FROM TCOMPETITORS"
-        cursor.execute(q_clear_tp)
-        cursor.execute(q_clear_tc)
-
-        cursor.execute(
-            "INSERT OR REPLACE INTO TPARAMETERS (C_PARAM, C_VALUE) VALUES ('TITLE1', ?);",
-            (event_name,),
-        )
-        cursor.execute(
-            "INSERT OR REPLACE INTO TPARAMETERS (C_PARAM, C_VALUE) VALUES ('TITLE2', ?);",
-            (run_name,),
-        )
-        cursor.execute(
-            "INSERT OR REPLACE INTO TPARAMETERS (C_PARAM, C_VALUE) VALUES ('MODULE', '0');"
-        )
-        cursor.execute(
-            "INSERT OR REPLACE INTO TPARAMETERS (C_PARAM, C_VALUE) VALUES ('DATE', ?);",
-            (str(int(time.time())),),
-        )
-        cursor.execute(
-            "INSERT OR REPLACE INTO TPARAMETERS (C_PARAM, C_VALUE) VALUES ('HEAT_NUMBER', ?);",
-            (str(heats),),
-        )
-
-        q_add_entries_drivers = "INSERT INTO TCOMPETITORS (C_NUM, C_FIRST_NAME, C_LAST_NAME, C_CLUB, C_TEAM) VALUES (?, ?, ?, ?, ?);"
-        cursor.executemany(q_add_entries_drivers, driver_lst)
-
-
-def update_scdb_ex(event_data, run_name, heat):
-    filename = event_data["event_file"].replace(".scdb", "Ex.scdb")
-    start_list_cid = []
-    driver_times = []
-
-    if len(event_data["heat_ent"][heat]["drivers"]) == 0:
-        with sqlite3.connect("/mnt/intermediate/" + filename) as conn:
-            cursor = conn.cursor()
-            cursor.execute(f"DELETE FROM TSTARTLIST_HEAT{heat};")
-            cursor.execute(f"DELETE FROM TTIMEINFOS_HEAT{heat};")
-
-        print("No drivers in:", run_name + ":" + heat)
-        return
-
-    time_string = event_data["heat_ent"][heat]["timedata"]
-
-    for k, a in enumerate(event_data["heat_ent"][heat]["drivers"][0]):
-        entry = (k + 1, a["cid"], "0")
-
-        if a["pen"] == "DNF":
-            pen_code = 2
-        elif a["pen"] == "DQ":
-            pen_code = 3
-        elif a["pen"] == "DNS":
-            pen_code = 1
-        else:
-            pen_code = 0
-        if a["totaltime"] == "" or pen_code != 0:
-            totaltime = 0
-        else:
-            totaltime = a["totaltime"]
-        last_time = a["last_lap_time"]
-        best_time = a["best_time"]
-        driver_times_tmp = (
-            a["cid"],
-            totaltime,
-            a["laps"],
-            best_time,
-            last_time,
-            time_string,
-            best_time,
-            pen_code,
-        )
-        print(best_time, last_time)
-        driver_times.append(driver_times_tmp)
-        start_list_cid.append(entry)
-
-    insert_startlist_q = (
-        f"INSERT INTO TSTARTLIST_HEAT{heat} (C_LINE, C_NUM, C_START) VALUES (?,?,?)"
-    )
-    insert_times_q = f"INSERT INTO TTIMEINFOS_HEAT{heat} (C_NUM, C_TIME, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_DATA2, C_STATUS) VALUES (?,?,?,?,?,?,?,?)"
-
-    with sqlite3.connect("/mnt/intermediate/" + filename) as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"DELETE FROM TSTARTLIST_HEAT{heat};")
-        cursor.execute(f"DELETE FROM TTIMEINFOS_HEAT{heat};")
-        cursor.executemany(insert_startlist_q, start_list_cid)
-        cursor.executemany(insert_times_q, driver_times)
-
-
-def create_scdb_ex(filename, heat=None, heats=None):
-    filename = filename.replace(".scdb", "Ex.scdb")
-    if heats != None:
-        for heat in range(0, heats):
-            heat += 1
-
-            query = f"CREATE TABLE IF NOT EXISTS 'TTIMEINFOS_HEAT{heat}' ('C_NUM' INTEGER NOT NULL, 'C_STATUS' INTEGER, 'C_TIME' INTEGER, 'C_INTER1' INTEGER, 'C_INTER2' INTEGER, 'C_INTER3' INTEGER, 'C_SPEED1' INTEGER, 'C_DATA2' INTEGER, PRIMARY KEY('C_NUM'));"
-            query_startlist = f"CREATE TABLE IF NOT EXISTS 'TSTARTLIST_HEAT{heat}'('C_LINE' INTEGER NOT NULL, 'C_NUM' INTEGER, 'C_START' INTEGER, PRIMARY KEY('C_LINE'));"
-
-            with sqlite3.connect("/mnt/intermediate/" + filename) as conn:
-                cursor = conn.cursor()
-                cursor.execute(query)
-                cursor.execute(query_startlist)
-    else:
-        query = f"CREATE TABLE IF NOT EXISTS 'TTIMEINFOS_HEAT{heat}' ('C_NUM' INTEGER NOT NULL, 'C_STATUS' INTEGER, 'C_TIME' INTEGER, 'C_INTER1' INTEGER, 'C_INTER2' INTEGER, 'C_INTER3' INTEGER, 'C_SPEED1' INTEGER, 'C_DATA2' INTEGER, PRIMARY KEY('C_NUM'));"
-
-        query_startlist = f"CREATE TABLE IF NOT EXISTS 'TSTARTLIST_HEAT{heat}'('C_LINE' INTEGER NOT NULL, 'C_NUM' INTEGER, 'C_START' INTEGER, PRIMARY KEY('C_LINE'));"
-
-        with sqlite3.connect("/mnt/intermediate/" + filename) as conn:
-            cursor = conn.cursor()
-            cursor.execute(query)
-            cursor.execute(query_startlist)
-
-
-def get_event_name():
-    file_dict_event_name = xml_to_dict("/mnt/test/current.xml")
-    event_name = ""
-    for b in file_dict_event_name["label"]:
-        if b["type"] == "eventname":
-            event_name = b["_text"]
-    return event_name
-
-
-def remove_event_files(event):
-    event_file = "/mnt/intermediate/" + event
-    event_file_ex = "/mnt/intermediate/" + event.replace(".scdb", "Ex.scdb")
-    print("Removing:", event_file)
-    print("Removing:", event_file_ex)
-    os.remove(event_file)
-    os.remove(event_file_ex)
-
-
-def build_schedule(sc_data):
+def build_schedule_api(sc_data):
     data = {"table_data": json.dumps(sc_data), "src": "orbits"}
-    response = requests.post(
-        "http://192.168.1.50:7777/admin/active_events", data=data, verify=False
-    )
+    logger.debug("Posting schedule: %s", data)
+    try:
+        requests.post(
+            "http://192.168.1.50:7777/admin/active_events", data=data, verify=False,
+            timeout=5,
+        )
+    except requests.exceptions.RequestException as e:
+        logger.error("Error posting schedule: %s", e)
 
 
 def update_schedule(entry):
-    global main_dict
     global event_name
 
-    update_lst = []
-
     if event_name == "":
-        event_name = get_event_name()
+        event_name = get_event_name_from_xml()
 
-    check_dict = {}
+    current_schedule_keys = get_all_schedule_keys()
+    new_schedule_keys = set()
     schedule_lst = []
+
     for k, results in enumerate(entry["results"]["result"]):
         k += 1
         heat, norm_group_name, heats = normalize_run_name(
             results["groupname"], results["runname"], results["runtype"]
         )
         schedule_lst.append({"name": norm_group_name, "run": heat, "sort_order": k})
+        new_schedule_keys.add((norm_group_name, str(heat)))
 
-        if norm_group_name not in check_dict:
-            check_dict[norm_group_name] = []
+        existing = get_schedule_entry(norm_group_name, heat)
 
-        check_dict[norm_group_name].append(heat)
+        if existing:
+            logger.debug("Found: %s", norm_group_name)
+            existing["sort_order"] = k
+            upsert_schedule(norm_group_name, str(heat), existing)
+        else:
+            logger.info("Added schedule entry: %s", norm_group_name)
 
-        add_event = True
-        if norm_group_name in main_dict:
-            add_event = False
-
-        if add_event:
-            event_file = get_new_db_file()
-            print("Added", norm_group_name)
-            create_scdb(event_file)
-            main_dict[norm_group_name] = {
-                "event_file": event_file,
+            event_checksum = create_event_id_checksum(norm_group_name + " " + heat)
+            upsert_schedule(norm_group_name, str(heat), {
                 "event_name": event_name,
                 "heats": heats,
-                "heat_ent": {},
-            }
-            update_lst.append(norm_group_name)
-        else:
-            print("Found:", norm_group_name)
-
-        if str(heat) not in main_dict[norm_group_name]["heat_ent"]:
-            main_dict[norm_group_name]["heat_ent"][str(heat)] = {
                 "laps": 0,
                 "time": results["datetime"],
-                "drivers": [],
-            }
+                "timedata": "",
+                "sort_order": k,
+                "event_checksum": event_checksum,
+            })
 
-        if add_event:
-            create_scdb_ex(event_file, heats=int(8))
+    build_schedule_api(schedule_lst)
 
-        update_scdb(main_dict[norm_group_name], norm_group_name)
-    # insert_scdb_ex(main_dict[norm_group_name], norm_group_name, heat)
-    rm_list = []
-    build_schedule(schedule_lst)
-    for a in main_dict:
-        for b in main_dict[a]["heat_ent"]:
-            if a not in check_dict:
-                rm_list.append([a, 0])
-                break
-            if b not in check_dict[a]:
-                rm_list.append([a, b])
-        main_dict[a]["heats"] = len(main_dict[a]["heat_ent"])
+    # Remove anything no longer in schedule
+    removed = current_schedule_keys - new_schedule_keys
+    for run_name, heat in removed:
+        logger.info("Schedule removed: %s heat %s, cleaning up", run_name, heat)
+        clear_heat(run_name, heat)
+        with Session(engine) as session:
+            session.query(ScheduleEntry).filter_by(
+                run_name=run_name, heat=heat
+            ).delete()
+            session.commit()
 
-    for a in rm_list:
-        if a[1] == 0 and a[0]:
-            remove_event_files(main_dict[a[0]]["event_file"])
-            del main_dict[a[0]]
-
-        else:
-            main_dict[a[0]]["heats"] -= 1
-            del main_dict[a[0]]["heat_ent"][a[1]]
+    # Also sync race entries (catches any stragglers)
+    sync_to_schedule()
 
 
-def get_time_data(timetogo, racetime, curr_time):
-    from datetime import datetime
-
-    if len(curr_time.split(":")) == 3:
-        time_format = "%H:%M:%S"
-    else:
-        time_format = "%M:%S"
-    dt = datetime.strptime(curr_time, time_format).replace(
-        year=datetime.now().year, month=datetime.now().month, day=datetime.now().day
-    )
-
-    curr_epoch = int(dt.timestamp())
-    if len(racetime.split(":")) == 2:
-        m, s = map(int, racetime.split(":"))
-        race_time_sec = m * 60 + s
-    elif len(racetime.split(":")) == 3:
-        h, m, s = map(int, racetime.split(":"))
-        race_time_sec = m * 60 + s
-    else:
-        race_time_sec = int(racetime)
-
-    if ":" in timetogo:
-        m, s = map(int, timetogo.split(":"))
-        timetogo_sec = m * 60 + s
-    else:
-        timetogo_sec = int(timetogo)
-
-    finishtime = curr_epoch + timetogo_sec
-    starttime = curr_epoch - race_time_sec
-    return starttime, finishtime, timetogo_sec
-
-
-def normalize_run_name(groupname, runname, runtype):
-    if runtype == "Qualifying":
-        try:
-            heat = runname[-1]
-            norm_grup_name = groupname + " - Kvalifisering"
-            heats = 0
-        except Exception as err:
-            heats = 1
-            norm_grup_name = runname
-            heat = 1
-
-    elif runtype == "Race":
-        if "Kvali" in runname:
-            heats = runname[-1]
-            heat = runname[-1]
-            norm_grup_name = groupname + " - Kvalifisering"
-
-        elif "C" in runname:
-            heats = runname[-1]
-            norm_grup_name = groupname + " - C Finale"
-            heat = runname[-1]
-
-        elif "B" in runname:
-            norm_grup_name = groupname + " - B Finale"
-            heats = runname[-1]
-            heat = runname[-1]
-        elif len(runname.split("-")) == 2:
-            norm_grup_name = groupname + " - " + runname.split("-")[0]
-            heats = runname[-1]
-            heat = runname[-1]
-        else:
-            heats = 1
-            heat = 1
-
-            norm_grup_name = groupname + " - " + runname
-
-    else:
-        heats = 1
-        heat = 1
-
-        norm_grup_name = groupname + " - " + runname
-
-    return heat, norm_grup_name, heats
-
+# --- Main loop ---
 
 def file_monitor():
-    tracking_dict = {}
-    global main_dict
     global active_event
-    main_dict = index_current()
-    sc_proc = False
+    global event_name
+
+    tracking_dict = {}
     old_entry = {}
     last_sc = ""
-    force_update_no_drivers = False
     sleep_time = 0.5
     old_finishtime = 0
     old_startime = 0
     old_timetogo_sec = 999
     old_flag_state = {}
+    first_run = True
+
+    index_current()
+
+    # If we restored schedule state from DB, don't wait for schedule.xml to change
+    # before processing current.xml — otherwise current.xml gets skipped on restart.
+    with Session(engine) as session:
+        sc_proc = session.query(ScheduleEntry).count() > 0
+    if sc_proc:
+        logger.info("Restored schedule from DB, sc_proc=True")
 
     while True:
-        dir_files = os.scandir("/mnt/test/")
-        for file in dir_files:
-            if "current.xml" in file.path or "schedule.xml" in file.path:
-                if file.path not in tracking_dict:
-                    tracking_dict[file.path] = 0
-                if tracking_dict[file.path] < os.path.getmtime(file.path):
-                    tracking_dict[file.path] = os.path.getmtime(file.path)
-                    if "current.xml" in file.path:
-                        old_main_dict = main_dict
-                        file_dict = xml_to_dict(file.path)
-                        if "result" not in file_dict["results"]:
-                            no_drivers = True
-                        if file_dict != old_entry:
-                            trigger_update = False
-                            for a in file_dict["label"]:
-                                if a["type"] == "runname":
-                                    runname = a["_text"]
+        try:
+            with os.scandir("/mnt/test/") as dir_files:
+                for file in dir_files:
+                    if "current.xml" not in file.path and "schedule.xml" not in file.path:
+                        continue
+                        
+                    if file.path not in tracking_dict:
+                        tracking_dict[file.path] = 0
+                    
+                    if tracking_dict[file.path] < os.path.getmtime(file.path):
+                        tracking_dict[file.path] = os.path.getmtime(file.path)
 
-                                elif a["type"] == "groupname":
-                                    groupname = a["_text"]
+                        if "current.xml" in file.path and sc_proc:
+                            file_dict = xml_to_dict(file.path)
+                            
+                            if "result" not in file_dict.get("results", {}):
+                                no_drivers = True
+                            if file_dict != old_entry:
+                                trigger_update = False
+                                runname = ""
+                                groupname = ""
+                                flag_state = ""
+                                type_name = ""
+                                curr_time = "00:00:00"
+                                racetime = "00:00"
+                                timetogo = "00:00"
 
-                                elif a["type"] == "flag":
-                                    flag_state = a["_text"]
+                                for a in file_dict["label"]:
+                                    if a["type"] == "runname":
+                                        runname = a["_text"]
+                                    elif a["type"] == "groupname":
+                                        groupname = a["_text"]
+                                    elif a["type"] == "flag":
+                                        flag_state = a["_text"]
+                                    elif a["type"] == "runtype":
+                                        type_name = a["_text"]
+                                        if type_name == "Q":
+                                            type_name = "Qualifying"
+                                        elif type_name == "R":
+                                            type_name = "Race"
+                                        elif type_name == "P":
+                                            type_name = "Practice"
+                                    elif a["type"] == "timeofday" and race_type == 5:
+                                        curr_time = a["_text"]
+                                    elif a["type"] == "racetime" and len(a) > 1:
+                                        racetime = a["_text"]
+                                    elif a["type"] == "racetime" and len(a) == 1:
+                                        racetime = "00:00"
+                                    elif a["type"] == "timetogo" and len(a) > 1:
+                                        timetogo = a["_text"]
+                                    elif a["type"] == "timetogo" and len(a) == 1:
+                                        timetogo = "00:00"
 
-                                elif a["type"] == "runtype":
-                                    type_name = a["_text"]
-                                    if type_name == "Q":
-                                        type_name = "Qualifying"
-                                    elif type_name == "R":
-                                        type_name = "Race"
-                                    elif type_name == "P":
-                                        type_name = "Practice"
+                                if old_flag_state != flag_state:
+                                    current_flag = json.dumps({"current_flag": flag_state})
+                                    logger.info("Flag state changed: %s", current_flag)
+                                    try:
+                                        publish.single(
+                                            MQTT_TOPIC,
+                                            payload=current_flag,
+                                            hostname=MQTT_BROKER,
+                                        )
+                                    except Exception as e:
+                                        logger.error("MQTT publish error: %s", e)
+                                    trigger_update = True
+                                    old_flag_state = flag_state
 
-                                elif a["type"] == "timeofday" and race_type == 5:
-                                    curr_time = a["_text"]
+                                if race_type == 5:
+                                    if timetogo == "00:00" and racetime != "00:00":
+                                        run_starttime, run_finishtime, timetogo_sec = (
+                                            get_time_data(timetogo, racetime, curr_time)
+                                        )
 
-                                elif a["type"] == "racetime" and len(a) > 1:
-                                    racetime = a["_text"]
+                                    if "results" not in old_entry:
+                                        old_entry["results"] = {}
 
-                                elif a["type"] == "racetime" and len(a) == 1:
-                                    racetime = "00:00"
+                                    if timetogo != "00:00":
+                                        run_starttime, run_finishtime, timetogo_sec = (
+                                            get_time_data(timetogo, racetime, curr_time)
+                                        )
+                                        if (
+                                            old_finishtime != run_finishtime
+                                            or old_startime != run_starttime
+                                        ) and timetogo_sec != old_timetogo_sec:
+                                            old_startime = run_starttime
+                                            old_finishtime = run_finishtime
+                                            old_timetogo_sec = timetogo_sec
+                                            trigger_update = True
 
-                                elif a["type"] == "timetogo" and len(a) > 1:
-                                    timetogo = a["_text"]
+                                    if file_dict["results"] != old_entry["results"]:
+                                        trigger_update = True
 
-                                elif a["type"] == "timetogo" and len(a) == 1:
-                                    timetogo = "00:00"
-                            print(flag_state)
-                            if old_flag_state != flag_state:
-                                current_flag = json.dumps({"current_flag": flag_state})
-                                publish.single(
-                                    MQTT_TOPIC,
-                                    payload=current_flag,
-                                    hostname=MQTT_BROKER,
+                                elif race_type != 5:
+                                    trigger_update = True
+
+                                heat, run_name, heats = normalize_run_name(
+                                    groupname, runname, type_name
                                 )
-                                old_flag_state = flag_state
+                                
+                                if active_event != [heat, run_name] or first_run == True:
+                                    logger.info("Active event update: %s heat %s", run_name, heat)
+                                    event_id = create_event_id_checksum(run_name + " " + heat)
+                                    set_active_event(event_id)
 
+                                    clear_active_state()
+                                    active_event = [heat, run_name]
+                                    old_entry = {}  # reset so results comparison starts fresh for new heat
+                                    sleep_time = 1
+                                    trigger_update = True  # always process when heat changes or on startup
+                                else:
+                                    sleep_time = 0.5
+                                
+                                first_run = False
 
-                            print("UPDATE!")
-                            requests.get(
-                                "http://192.168.1.50:7777/api/active_event_update"
-                            )
+                                if race_type == 5:
+                                    schedule = get_schedule_entry(run_name, heat)
+                                    if schedule:
+                                        schedule["timedata"] = (
+                                            f"{run_starttime}:{run_finishtime}:{timetogo_sec}"
+                                        )
+                                        upsert_schedule(run_name, heat, schedule)
 
+                                if trigger_update == False:
+                                    logger.debug("No trigger, continuing")
+                                    continue
+
+                                proc_current(file_dict)
+                                old_entry = file_dict
+                                logger.info("Event data updated: %s heat %s", run_name, heat)
+                                event_id = create_event_id_checksum(run_name + " " + heat)
+                                try:
+                                    requests.get(f"http://192.168.1.50:7777/api/update_event?active=True", timeout=5)
+                                except requests.exceptions.RequestException as e:
+                                    logger.error("Error triggering event update: %s", e)
+
+                        elif "schedule.xml" in file.path:
+                            file_dict = xml_to_dict(file.path)
+                            if last_sc != file_dict:
+                                logger.info("Schedule updated")
+                                update_schedule(file_dict)
+                            sc_proc = True
+                            last_sc = file_dict
+
+        except Exception as e:
+            logger.error("Error in main loop: %s", e)
 
         time.sleep(sleep_time)
 

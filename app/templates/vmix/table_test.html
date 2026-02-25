@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Table Test</title>
+    <style>
+        html, body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            color: #fff;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .wrap {
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 16px;
+            display: inline-block;
+            box-sizing: border-box;
+            transform-origin: 0 0;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            background: rgba(255, 215, 0, 0.15);
+            color: #FFD700;
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 2px solid #FFD700;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        td:first-child {
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            width: 30px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+    <div class="title" id="title">Kvali test 22</div>
+    <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</div>
+
+<script>
+var defaultData = {
+    title: "Kvali test 22",
+    table: "ID,Navn,Kjøretøy,Beste Rundetid,Runder,Tid,Poeng\n9,Danil Haugå Løyland,-,0,0,0,25\n26,Kjell Hodn Syversn,-,0,0,0,25\n12,David Urvan,-,0,0,0,24\n17,Erlend Rørhol-Hov,-,0,0,0,23"
+};
+
+function renderTable(data) {
+    var lines = data.table.trim().split('\n');
+    var headers = lines[0].split(',');
+
+    document.getElementById('title').textContent = data.title || '';
+
+    var th = '';
+    headers.forEach(function(h) { th += '<th>' + h.trim() + '</th>'; });
+    document.getElementById('thead').innerHTML = th;
+
+    var tb = '';
+    for (var i = 1; i < lines.length; i++) {
+        var cols = lines[i].split(',');
+        tb += '<tr>';
+        cols.forEach(function(c) { tb += '<td>' + c.trim() + '</td>'; });
+        tb += '</tr>';
+    }
+    document.getElementById('tbody').innerHTML = tb;
+}
+
+function scaleToFit() {
+    var wrap = document.querySelector('.wrap');
+    if (!wrap) return;
+    wrap.style.transform = 'none';
+    var natW = wrap.offsetWidth;
+    var natH = wrap.offsetHeight;
+    var vpW = window.innerWidth;
+    var vpH = window.innerHeight;
+    if (natW === 0 || natH === 0) return;
+    var s = Math.min(vpW / natW, vpH / natH);
+    wrap.style.transform = 'scale(' + s + ')';
+}
+
+renderTable(defaultData);
+scaleToFit();
+window.addEventListener('resize', scaleToFit);
+
+var socket = io();
+socket.on('connect', function() {
+    socket.emit('join', { room: 'results_active_event', username: 'table_widget' });
+});
+socket.on('response', function(raw) {
+    try {
+        var msg = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (msg.title && msg.table) {
+            renderTable(msg);
+            scaleToFit();
+        }
+    } catch(e) {}
+});
+</script>
+</body>
+</html>

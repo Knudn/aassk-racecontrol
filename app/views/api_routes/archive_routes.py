@@ -30,6 +30,7 @@ def register_archive_routes(api_bp):
     @api_bp.route("/api/upate_remote_data", methods=["GET"])
     def upate_remote_data():
         from flask import current_app
+        from app.lib.utils import get_event_data, convert_to_remote_data_struct
         
         g_config = GetEnv()
 
@@ -53,28 +54,34 @@ def register_archive_routes(api_bp):
         if update_type == "single":
             from app.models import Session_Race_Records
 
-            send_data = get_active_startlist_w_timedate()
-            single_event = True
-            result = None
-            event_data = None
+            if int(g_config["race_type"]) == 5:
 
-            if not g_config["msport_tm"]:
-                for k, a in enumerate(send_data):
-                    if k == 0:
-                        title_1 = a["race_config"]["TITLE_1"]
-                        title_2 = a["race_config"]["TITLE_2"]
-                        heat = a["race_config"]["HEAT"]
-                        session_data = Session_Race_Records.query.filter(
-                            Session_Race_Records.title_1 == title_1,
-                            Session_Race_Records.title_2 == title_2,
-                            Session_Race_Records.heat == heat,
-                        ).all()
-                    else:
-                        for b in session_data:
-                            if a["drivers"][0]["id"] == b.cid:
-                                send_data[k]["drivers"][0]["time_info"]["POINTS"] = (
-                                    b.points
-                                )
+                send_data = convert_to_remote_data_struct(get_event_data(), race_type=g_config["race_type"])
+                
+            else:
+
+                send_data = get_active_startlist_w_timedate()
+                single_event = True
+                result = None
+                event_data = None
+
+                if not g_config["msport_tm"]:
+                    for k, a in enumerate(send_data):
+                        if k == 0:
+                            title_1 = a["race_config"]["TITLE_1"]
+                            title_2 = a["race_config"]["TITLE_2"]
+                            heat = a["race_config"]["HEAT"]
+                            session_data = Session_Race_Records.query.filter(
+                                Session_Race_Records.title_1 == title_1,
+                                Session_Race_Records.title_2 == title_2,
+                                Session_Race_Records.heat == heat,
+                            ).all()
+                        else:
+                            for b in session_data:
+                                if a["drivers"][0]["id"] == b.cid:
+                                    send_data[k]["drivers"][0]["time_info"]["POINTS"] = (
+                                        b.points
+                                    )
 
         elif update_type == "full_sync":
             from app.models import Session_Race_Records
@@ -133,14 +140,13 @@ def register_archive_routes(api_bp):
 
         else:
             return {"error": "Invalid update type"}, 400
-
+        single_event = True
         data = {
             "token": password,
             "data": send_data,
             "single_event": single_event,
             "race_type": race_type,
-            "kvali_ranking": json.dumps(result) if result else None,
-            "event_data": json.dumps(event_data) if event_data else None,
+            "kvali_ranking": None,
             "start_state": json.dumps(current_app.config["start_state"])
         }
 

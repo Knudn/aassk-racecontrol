@@ -1,0 +1,216 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<div class="container mt-4">
+    <h3 class="mb-4">Standing Config</h3>
+
+    <form id="configForm" class="mb-3">
+        <div class="form-group">
+            <label><strong>Sorteringsmetode</strong></label>
+            <small class="form-text text-muted mb-2">Velg hvordan forere rangeres i resultatlisten.</small>
+
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="radio" name="scoring_method" id="method_best_lap" value="best_lap" {% if scoring_method == 'best_lap' %}checked{% endif %}>
+                <label class="form-check-label" for="method_best_lap">Beste rundetid (Best Lap Time)</label>
+                <small class="form-text text-muted ml-4">Rangerer basert på den raskeste enkeltrunden.</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="radio" name="scoring_method" id="method_total_time" value="total_time" {% if scoring_method == 'total_time' %}checked{% endif %}>
+                <label class="form-check-label" for="method_total_time">Total tid (Total Time)</label>
+                <small class="form-text text-muted ml-4">Rangerer basert på samlet tid over alle runder.</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="radio" name="scoring_method" id="method_num_rounds" value="num_rounds" {% if scoring_method == 'num_rounds' %}checked{% endif %}>
+                <label class="form-check-label" for="method_num_rounds">Antall runder (Number of Rounds)</label>
+                <small class="form-text text-muted ml-4">Rangerer basert på antall fullforte runder.</small>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="mix_classes" name="mix_classes" {% if config and config.mix_classes %}checked{% endif %}>
+                <label class="custom-control-label" for="mix_classes"><strong>Mix classes in single run</strong></label>
+            </div>
+            <small class="form-text text-muted">
+                Aktiver dette for å slå sammen alle klasser i ett resultat. Hvis av, splittes resultatlisten per klasse når flere klasser kjorer sammen.
+            </small>
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="use_tiebreaker" name="use_tiebreaker" {% if config and config.use_tiebreaker %}checked{% endif %}>
+                <label class="custom-control-label" for="use_tiebreaker"><strong>Tie Breaker</strong></label>
+            </div>
+            <small class="form-text text-muted">
+                Aktiver for å bruke en sekundaer sorteringsmetode ved likt resultat.
+            </small>
+        </div>
+
+        <div id="tiebreaker_config" style="display: none;">
+            <div class="form-group">
+                <label for="tiebreaker_method">Tie breaker metode</label>
+                <select class="form-control" id="tiebreaker_method" name="tiebreaker_method">
+                    <option value="best_lap" {% if config and config.tiebreaker_method == 'best_lap' %}selected{% endif %}>Beste rundetid (Best Lap Time)</option>
+                    <option value="total_time" {% if config and config.tiebreaker_method == 'total_time' %}selected{% endif %}>Total tid (Total Time)</option>
+                    <option value="num_rounds" {% if config and config.tiebreaker_method == 'num_rounds' %}selected{% endif %}>Antall runder (Number of Rounds)</option>
+                </select>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="use_points" name="use_points" {% if config and config.use_points %}checked{% endif %}>
+                <label class="custom-control-label" for="use_points"><strong>Bruk poeng (Use Points)</strong></label>
+            </div>
+            <small class="form-text text-muted">
+                Aktiver for å tildele poeng basert på plassering. Posisjonen bestemmes av sorteringsmetoden over (beste runde eller total tid).
+            </small>
+        </div>
+
+        <div id="points_config" style="display: none;">
+            <h5 class="mb-3 mt-3">Poengkonfigurasjon</h5>
+
+            <div class="row form-group">
+                <div class="col">
+                    <label for="dnf_point">DNF Poeng</label>
+                    <input type="number" class="form-control" id="dnf_point" name="dnf_point" value="{{ config.dnf_point if config else 0 }}">
+                </div>
+                <div class="col">
+                    <label for="dns_point">DNS Poeng</label>
+                    <input type="number" class="form-control" id="dns_point" name="dns_point" value="{{ config.dns_point if config else 0 }}">
+                </div>
+                <div class="col">
+                    <label for="dsq_point">DSQ Poeng</label>
+                    <input type="number" class="form-control" id="dsq_point" name="dsq_point" value="{{ config.dsq_point if config else 0 }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="invert_score">Juster poeng basert på antall som fullforte</label>
+                <select class="form-control" id="invert_score" name="invert_score">
+                    <option value="true" {% if config and config.invert_score %}selected{% endif %}>Ja</option>
+                    <option value="false" {% if not config or not config.invert_score %}selected{% endif %}>Nei</option>
+                </select>
+                <small class="form-text text-muted">
+                    Justerer poengfordelingen basert på antall som faktisk fullforte.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="num_drivers">Antall posisjoner</label>
+                <input type="number" class="form-control" id="num_drivers" name="num_drivers" min="1" value="{{ config.driver_scores|length if config and config.driver_scores else 2 }}">
+            </div>
+            <hr>
+            <div id="driver_scores_container">
+            </div>
+        </div>
+    </form>
+    <button id="saveConfigBtn" class="btn btn-primary">Lagre</button>
+</div>
+
+<script>
+$(document).ready(function() {
+    function togglePointsConfig() {
+        if ($('#use_points').is(':checked')) {
+            $('#points_config').show();
+        } else {
+            $('#points_config').hide();
+        }
+    }
+
+    $('#use_points').change(togglePointsConfig);
+    togglePointsConfig();
+
+    function toggleTiebreakerConfig() {
+        if ($('#use_tiebreaker').is(':checked')) {
+            $('#tiebreaker_config').show();
+        } else {
+            $('#tiebreaker_config').hide();
+        }
+    }
+
+    $('#use_tiebreaker').change(toggleTiebreakerConfig);
+    toggleTiebreakerConfig();
+
+    var driverScores = {{ driver_scores_json|safe }};
+    var numDriversInput = document.getElementById('num_drivers');
+    var driverScoresContainer = document.getElementById('driver_scores_container');
+
+    function updateDriverScoresFields() {
+        var numDrivers = parseInt(numDriversInput.value, 10);
+        driverScoresContainer.innerHTML = '';
+
+        for (var i = 1; i <= numDrivers; i++) {
+            var formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+            var label = document.createElement('label');
+            label.textContent = 'Posisjon ' + i + ' Poeng:';
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'form-control';
+            input.name = 'driver_scores[' + i + ']';
+            input.value = driverScores[i] ? driverScores[i] : '0';
+
+            formGroup.appendChild(label);
+            formGroup.appendChild(input);
+            driverScoresContainer.appendChild(formGroup);
+        }
+    }
+
+    numDriversInput.addEventListener('change', updateDriverScoresFields);
+    updateDriverScoresFields();
+
+    $('#saveConfigBtn').click(function(e) {
+        e.preventDefault();
+
+        var formData = {
+            'scoring_method': $('input[name="scoring_method"]:checked').val()
+        };
+
+        if ($('#mix_classes').is(':checked')) {
+            formData['mix_classes'] = 'on';
+        }
+
+        if ($('#use_tiebreaker').is(':checked')) {
+            formData['use_tiebreaker'] = 'on';
+            formData['tiebreaker_method'] = $('#tiebreaker_method').val();
+        }
+
+        if ($('#use_points').is(':checked')) {
+            formData['use_points'] = 'on';
+            formData['dnf_point'] = $('#dnf_point').val();
+            formData['dns_point'] = $('#dns_point').val();
+            formData['dsq_point'] = $('#dsq_point').val();
+            formData['invert_score'] = $('#invert_score').val();
+            formData['num_drivers'] = $('#num_drivers').val();
+
+            $('#driver_scores_container input').each(function() {
+                formData[$(this).attr('name')] = $(this).val();
+            });
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/admin/standing_config',
+            data: formData,
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving configuration:', error);
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

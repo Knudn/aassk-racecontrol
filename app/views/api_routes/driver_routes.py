@@ -58,35 +58,43 @@ def register_driver_routes(api_bp):
     @api_bp.route('/api/set_active_state', methods=['POST'])
     def set_active_state():
         from app.views.api_view import send_data_to_room
-        
+        from app.lib.utils import get_event_data, set_active_event, create_event_id_checksum
         data = request.json
+        
+        
         driver_one = data.get("driver_one")
         driver_two = data.get("driver_two")
         event = data.get("event")
         heat = data.get("event_heat")
+        event_id = data.get("event_id")
+        push_to_room = data.get("push_to_room")
+        if push_to_room == None:
+            push_to_room = True
+        else:
+            push_to_room = bool(push_to_room)
+        
+        if event_id == None:
+            event_id = create_event_id_checksum(event + " " + heat)
 
         event_file = ActiveEvents.query.filter(
             ActiveEvents.event_name == data.get("event")).first()
-        
-        event_file_id = event_file.event_file[-3:]
-
-        if int(event_file_id[0]) == 0 and int(event_file_id[1]) == 0:
-            event_file_id = event_file_id[-1:]
-        elif int(event_file_id[0]) == 0:
-            event_file_id = event_file_id[-2:]
 
         current_active_state = ActiveDrivers.query.first()
-        current_active_state.Event = event_file_id
+        current_active_state.Event = event
         current_active_state.Heat = heat
         current_active_state.D1 = driver_one
         current_active_state.D2 = driver_two
+        current_active_state.Event_id = event_id
         db.session.commit()
         
-        # Import the send_data_to_room function
-        send_data_to_room(get_active_startlist())
-        
+        set_active_event(event, heat)
+        if push_to_room:
+            send_data_to_room(get_event_data())
+
         return {"status": "success", "message": "Active state updated"}
+
     
+
     @api_bp.route('/api/ready_state', methods=['GET', 'POST'])
     def ready_state():
         g_config = GetEnv()
@@ -398,15 +406,18 @@ def register_driver_routes(api_bp):
 
     @api_bp.route('/api/start_state', methods=['POST'])
     def start_state():
-        from flask import current_app 
+        from flask import current_app
         import json
         from app.models import archive_server
+        from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
+        from app import socketio
 
 
         archive_server_data = archive_server.query.first()
 
         current_app.config['start_state'] = json.loads(request.json)
-        
+        emit_to_room(socketio, current_app.config['start_state'], SOCKET_ROOMS['start_state'])
+
         if archive_server_data.enabled:
             password = archive_server_data.auth_token
             hostname = archive_server_data.hostname

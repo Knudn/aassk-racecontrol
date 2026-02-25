@@ -30,9 +30,52 @@ from app.config.websocket_config import emit_to_room, SOCKET_ROOMS
 from app import mqtt_client
 from app.lib.utils import get_upcoming_drivers
 
+
+
 def register_event_routes(api_bp):
     """Register all event-related routes with the API blueprint"""
-    
+
+    @api_bp.route('/api/get_standing_config', methods=['GET'])
+    def get_standing_config():
+        from app.models import StandingConfig
+        import json
+
+        data = StandingConfig.query.first()
+        
+        s_dict = {
+            "scoring_method": data.scoring_method,
+            "use_points": data.use_points,
+            "mix_classes": data.mix_classes,
+        }
+        
+        return s_dict
+
+
+
+    @api_bp.route('/api/get_event_results', methods=['GET'])
+    def get_event_data_agg():
+        from app.lib.utils import get_event_results
+
+        # Use one of the following types
+        # startlist_active_heat 
+        # startlist_upcoming_heat
+        # startlist : this option requires event_id
+        # startlist_all : returns all the startlists
+        # results_class_q : will return the combined for qualifying
+        # results_class_f : will return the combined for the finales
+        # results_active : will return the results for active heat 
+        # results : will return the results for a spesific heat, this requires an event_id
+        # results_all : return all the results
+        
+        data_type = "results_active"
+        dataset = get_event_results(data_type=data_type) 
+        return dataset
+
+    @api_bp.route('/api/get_full_standing', methods=['GET'])
+    def get_full_standing():
+       pass 
+
+
     # Event data endpoints
     @api_bp.route('/api/get_current_startlist', methods=['GET'])
     def get_current_startlist():
@@ -43,40 +86,76 @@ def register_event_routes(api_bp):
         data = get_upcoming_drivers(return_driver_context=True)
         return data
 
+    @api_bp.route('/api/update_event', methods=['GET'])
+    def event_update():
+        from app.lib.utils import insert_event_data, get_event_data, get_dash_data
+        from app.views.api_view import send_data_to_room
+        
+        event_id = request.args.get('event_id', default=None)
+        full_sync = bool(request.args.get('full_sync', default=False))
+        
+        active = bool(request.args.get('active', default=False))
+
+        if event_id == None and full_sync == False and active == False:
+            return {"Failed":"Include event_id"}, 404
+        elif full_sync:
+            insert_event_data(full_sync=True)
+        elif active == True:
+            insert_event_data(active=True)
+            send_data_to_room(get_event_data())
+            send_data_to_room(get_dash_data(),room="active_dash")
+        else:
+            insert_event_data(event_id=event_id)
+        return "asdasd"
+    
 
     @api_bp.route('/api/active_event_update', methods=['GET'])
     def active_event_update():
         from app.views.api_view import send_data_to_room
+        from app.lib.utils import insert_event_data, get_event_data, calculate_standing
+        from app.lib.db_func import insert_orbits_data
+        from app.lib.db_operation import get_active_event
 
+        event_id = get_active_event()[0]["event_id"]
+        g_config = GetEnv()
+        insert_event_data(event_id=event_id)
 
-        list_address = current_app.config['listen_address']
+        send_data_to_room(get_event_data())
         
-        if str(list_address) == "0.0.0.0":
-            list_address = "localhost"
+        return {"status": "success", "message": "Event data updated"}
 
-
-        update_active_event_stats()
-
-        event_data = get_active_startlist()
-        if current_app.config['event_content'] != event_data:
-            from app.lib.utils import update_led_panel_state
-            send_data_to_room(event_data)
+        if not bool(g_config["msport_tm"]):
+            return {"status": "success", "message": "Event data updated"}
+        else:
             
-            current_app.config['event_content'] = event_data
-            mqtt_client.connect("localhost", 1883, 60)
-
-
-            #upcoming_data = get_upcoming_drivers(return_driver_context=False)
+            list_address = current_app.config['listen_address']
             
-            #print(upcoming_data)
-            #mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
+            if str(list_address) == "0.0.0.0":
+                list_address = "localhost"
 
-            update_led_panel_state() 
 
-        remote_server_state = archive_server.query.first()
+            update_active_event_stats()
 
-        if remote_server_state.enabled:
-            requests.get(f'http://{list_address}:7777/api/upate_remote_data?type=single')
+            event_data = get_active_startlist()
+            if current_app.config['event_content'] != event_data:
+                from app.lib.utils import update_led_panel_state
+                send_data_to_room(event_data)
+                
+                current_app.config['event_content'] = event_data
+                mqtt_client.connect("localhost", 1883, 60)
+
+
+                #upcoming_data = get_upcoming_drivers(return_driver_context=False)
+                
+                #print(upcoming_data)
+                #mqtt_client.publish("prestage_drivers", json.dumps(upcoming_data))
+
+                update_led_panel_state() 
+
+            remote_server_state = archive_server.query.first()
+
+            if remote_server_state.enabled:
+                requests.get(f'http://{list_address}:7777/api/upate_remote_data?type=single')
 
         return {"status": "success", "message": "Event data updated"}
     
@@ -99,14 +178,31 @@ def register_event_routes(api_bp):
         else:
             return {'error': 'No events parameter provided'}, 400
     
+    #New route to get fetch data
+    @api_bp.route('/api/get_event_data', methods=['GET'])
+    def get_event_data():
+        from app.lib.utils import get_event_data
+
+        upcoming = request.args.get('upcoming')
+        event = request.args.get('event')
+        heat = request.args.get('heat')
+        event_comb = request.args.get('event_comb')
+        
+        if len(request.args) == 0:
+            return get_event_data(all_events=True)
+        else:
+            return get_event_data(event=event, heat=heat)
+
     @api_bp.route('/api/get_current_startlist_w_data', methods=['GET'])
     def get_current_startlist_w_data():
+        from app.lib.utils import get_event_data
+
         upcoming = request.args.get('upcoming')
         event = request.args.get('event')
         heat = request.args.get('heat')
         event_comb = request.args.get('event_comb')
 
-
+        return get_event_data(event=event, heat=heat)
         if event_comb is not None:
             events = []
             active_event_current = get_active_event()
@@ -373,9 +469,26 @@ def register_event_routes(api_bp):
             })
         
         return data
-    
-    @api_bp.route('/api/update_event', methods=['POST'])
-    def update_event():
+
+    @api_bp.route('/api/get_cross_results', methods=['GET'])
+    def get_cross_results_view():
+        from app.lib.utils import get_cross_results
+
+        event = request.args.get('event')
+        heat = request.args.get('heat')
+        all_events = request.args.get('all_events')
+
+        if all_events == 'true':
+            return get_cross_results(all_events=True)
+        elif heat is not None:
+            return get_cross_results(event=event, heat=heat)
+        elif event is not None:
+            return get_cross_results(event=event)
+        else:
+            return get_cross_results()
+
+    @api_bp.route('/api/update_event_old', methods=['POST'])
+    def update_event_old():
         g_config = GetEnv()
         active_event = get_active_event()
         

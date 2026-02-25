@@ -13,6 +13,23 @@ from sqlalchemy import func, and_
 vmix_bp = Blueprint('vmix', __name__)
 
 
+@vmix_bp.route('/vmix/raw/<path:template_name>', methods=['GET'])
+def vmix_raw(template_name):
+    """Serve any vmix template file by name (e.g. /vmix/raw/sample_standings.html)"""
+    import os
+    if not template_name.endswith('.html'):
+        template_name += '.html'
+    template_path = os.path.join('vmix', template_name)
+    return render_template(template_path)
+
+
+
+@vmix_bp.route('/vmix/test', methods=['GET'])
+def dash_test():
+    
+    return render_template('vmix/cross/basic_overlay.html')
+
+
 @vmix_bp.route('/vmix/startlist_cross_felles', methods=['GET'])
 def startlist_cross_felles():
     

@@ -112,10 +112,15 @@ def speaker():
     from app.lib.utils import GetEnv
     import json
     g_config = GetEnv()
+    race_type = int(g_config.get("race_type", 0))
 
+    if race_type == 5:
+        SpeakerPageConfig = SpeakerPageSettings.query.first()
+        SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
+        return render_template('board/speaker_board_cross_v2.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
 
     active_event = get_active_event()
-    
+
     query = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
     ActiveEvents.event_file == active_event[0]["db_file"]
     )
@@ -137,7 +142,7 @@ def speaker():
 
     SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
     cross_state = g_config["cross"]
-    
+
     if str(cross_state) == "True" and g_config["msport_tm"]:
         return render_template('board/speaker_board_cross.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
     elif str(cross_state) == "True" and not g_config["msport_tm"]:

@@ -3,6 +3,21 @@ import socketserver
 import socket
 import threading
 import urllib.parse
+import logging
+import os
+from logging.handlers import RotatingFileHandler
+
+_log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(_log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    handlers=[
+        RotatingFileHandler(os.path.join(_log_dir, 'cross_clock_server.log'), maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 SERVER_IP = "0.0.0.0"
 UDP_PORT = 2008
@@ -12,7 +27,7 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
-        print(f"Message from {self.client_address}: {data.decode()}")
+        logger.info("Message from %s: %s", self.client_address, data.decode())
         self.server.client_addresses.add(self.client_address)
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -40,13 +55,13 @@ class MyHTTPServer(socketserver.TCPServer):
 
 def run_udp_server(server_class, handler_class):
     server = server_class((SERVER_IP, UDP_PORT), handler_class)
-    print(f"UDP server started at {SERVER_IP}:{UDP_PORT}")
+    logger.info("UDP server started at %s:%s", SERVER_IP, UDP_PORT)
     return server
 
 def run_http_server(server_class, handler_class, udp_server):
     httpd = server_class((SERVER_IP, HTTP_PORT), handler_class)
     httpd.udp_server = udp_server
-    print(f"HTTP server started at {SERVER_IP}:{HTTP_PORT}")
+    logger.info("HTTP server started at %s:%s", SERVER_IP, HTTP_PORT)
     httpd.serve_forever()
 
 if __name__ == "__main__":

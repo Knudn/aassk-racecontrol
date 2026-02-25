@@ -7,6 +7,20 @@ import json
 import os
 import requests
 import sqlite3
+import logging
+from logging.handlers import RotatingFileHandler
+
+_log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(_log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    handlers=[
+        RotatingFileHandler(os.path.join(_log_dir, 'mqtt_middleware.log'), maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 current_working_directory = os.getcwd()
 
@@ -23,10 +37,7 @@ sl_use_warmup_image = bool(starter_config[4])
 use_orbits = bool(starter_config[6])
 req_orbits_warmup = bool(starter_config[5])
 orbits_warmup = False
-print(req_orbits_warmup, "asdasd")
 
-print(starter_config)
-print(sl_use_warmup_image)
 
 
 
@@ -39,16 +50,16 @@ current_state = {}
 
 
 # If the broker looses it's state, send this to the start/state topic on the broker
-# mosquitto_pub -t "start/state" -h 127.0.0.1 -m '{"man_ready": false, "ready": false, "started": false, "halt_race": false, "warmup": false, "running": false}' -r
+# mosquitto_pub -t "start/state" -h 127.0.0.1 -m '{"man_ready": false, "ready": false, "started": false, "halt_race": false, "warmup": false, "running": false, "orbits_warmup": false, "orbits_warmup":false, "orbits_finish":false}' -r
 # {"man_ready": true, "ready": true, "started": false, "halt_race": false, "warmup": false}
 
 
 def connect_mqtt() -> mqtt_client:
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker!")
+            logger.info("Connected to MQTT Broker!")
         else:
-            print("Failed to connect, return code %d\n", rc)
+            logger.error("Failed to connect, return code %d", rc)
 
     client = mqtt_client.Client(mqtt_client.CallbackAPIVersion.VERSION1, client_id)
     client.on_connect = on_connect
@@ -60,9 +71,9 @@ def publish(client, msg, topic_dev):
     result = client.publish(topic_dev, msg, retain=True)
     status = result[0]
     if status == 0:
-        print(f"Send `{msg}` to topic `{topic_dev}`")
+        logger.debug("Sent '%s' to topic '%s'", msg, topic_dev)
     else:
-        print(f"Failed to send message to topic {topic_dev}")
+        logger.error("Failed to send message to topic %s", topic_dev)
 
 def subscribe(client: mqtt_client):
     global current_state
@@ -80,19 +91,24 @@ def subscribe(client: mqtt_client):
         try:
             msg_dict = json.loads(msg)
         except Exception as err:
-            print(err)
+            logger.error("MQTT message parse error: %s", err)
             return
-        
+
         if topic == "start/state":
             current_state = msg_dict
-            print(current_state)
+            logger.debug("Current state: %s", current_state)
             try:
                 requests.post("http://192.168.1.50:7777/api/start_state", json=msg, timeout=1)
             except Exception as err:
-                print(err)
+                logger.error("Error posting start state: %s", err)
 
         if topic == "start/mylaps_inter":
-            print(msg_dict) 
+            logger.info("Mylaps inter: %s", msg_dict)
+
+            if msg_dict["current_flag"] == "finish":
+                current_state["orbits_finish"] = True
+            else:
+                current_state["orbits_finish"] = False
 
             if msg_dict["current_flag"] == "red":
                 current_state["halt_race"] = True
@@ -102,7 +118,8 @@ def subscribe(client: mqtt_client):
 
             if msg_dict["current_flag"] == "warmup":
                 orbits_warmup = True
-                print("Setting", orbits_warmup)
+                current_state["orbits_warmup"] = True
+                logger.debug("Setting orbits_warmup=%s", orbits_warmup)
                 if use_orbits:
                     current_state["warmup"] = True
                 
@@ -111,7 +128,6 @@ def subscribe(client: mqtt_client):
 
 
             elif msg_dict["current_flag"] == "green":
-                print(orbits_warmup)
                 if use_orbits:
                     if req_orbits_warmup:
                         if orbits_warmup:
@@ -129,15 +145,16 @@ def subscribe(client: mqtt_client):
                 else:
                     current_state["running"] = True
 
+                current_state["orbits_warmup"] = False
                 orbits_warmup = False 
             else:
-                if orbits_warmup == True:
-                    orbits_warmup = False
+                logger.debug("Unhandled flag state in mylaps_inter")
+                orbits_warmup = False
+                current_state["orbits_warmup"] = False
+
                 current_state["running"] = False
             
 
-                
-            
             publish(client, json.dumps(current_state), "start/state")
         
         elif topic == "start/starter_cr":
@@ -161,11 +178,17 @@ def subscribe(client: mqtt_client):
                 current_state["started"]
 
             elif msg_dict["action"] == "start":
-
                 if mon_can_start and current_state["ready"] and current_state["man_ready"] and current_state["started"] != True:
                     current_state["started"] = True
-                    current_state["man_ready"] = False
-                    current_state["ready"] = False
+                    
+                    if req_orbits_warmup and current_state["orbits_warmup"] == False:
+                        current_state["man_ready"] = True
+                        current_state["ready"] = True
+                    else:
+                        current_state["man_ready"] = False
+                        current_state["ready"] = False
+
+
                     if sl_use_warmup_image:
                         current_state["warmup"] = True
                     else:
@@ -173,6 +196,11 @@ def subscribe(client: mqtt_client):
                 else:
                     current_state["started"] = False
  
+            if req_orbits_warmup and current_state["orbits_warmup"] == False:
+                current_state["started"] = False
+                current_state["running"] = False
+                current_state["warmup"] = False
+
             publish(client, json.dumps(current_state), "start/state")
         elif topic == "start/starter_field":
             if current_state["halt_race"] == True:
@@ -207,7 +235,10 @@ def subscribe(client: mqtt_client):
                     current_state["started"] = False
                     
 
-
+            if req_orbits_warmup and orbits_warmup == False:
+                current_state["started"] = False
+                current_state["running"] = False
+                current_state["warmup"] = False
             publish(client, json.dumps(current_state), "start/state")
         
 

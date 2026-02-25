@@ -28,19 +28,12 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="activeEventsDropdown">
                         <a class="nav-link {% if active_tab == 'global-config' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='global-config') }}">Global Config</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.admin', tab_name='cross_config') }}">Cross/Watercross</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.admin', tab_name='race_setup') }}">Race Setup</a>
                     </div>
                 </li>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {% if active_tab == 'active_events' %}active{% endif %}" href="#" id="activeEventsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Active Events
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="activeEventsDropdown">
-                        <a class="dropdown-item" href="{{ url_for('admin.admin', tab_name='active_events') }}">Current Events</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.admin', tab_name='active_events_driver_data') }}">Driver Data</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.admin', tab_name='kvali_criteria') }}">Qualification Criteria</a>
-                    </div>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'active_events_driver_data' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='active_events_driver_data') }}">Driver Data</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if active_tab == 'test-service' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='start_logic') }}">Start Logic</a>
@@ -67,6 +60,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if active_tab == 'ledpanel' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='ledpanel') }}">Ledpanel</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'stream_overlay' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='stream_overlay') }}">Stream Overlay</a>
                 </li>
             </ul>
 

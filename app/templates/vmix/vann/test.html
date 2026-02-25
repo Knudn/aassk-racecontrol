@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body onload="displayUserName()">
+
+<h1 id="greeting" style="color: red;">Hello, User!</h1>
+
+<script>
+  function displayUserName() {
+    const queryString = window.location.search;
+
+    const urlParams = new URLSearchParams(queryString);
+
+    const userName = urlParams.get('name');
+
+    if (userName) {
+      document.getElementById("greeting").innerHTML = "Hello, " + userName + "!";
+    }
+  }
+</script>
+
+</body>
+</html>

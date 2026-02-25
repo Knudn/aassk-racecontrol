@@ -56,6 +56,245 @@ def xml_to_dict(element):
     
     return result
 
+def insert_orbits_data(active_only=False, event_id=None, calculate_points=False, ignore_locked=False, full_sync=False):
+    from app.models import Session_Race_Records, ActiveEvents, StandingConfig
+    import json
+    from sqlalchemy import func
+    from app import db as my_db
+    from app.lib.utils import calculate_standing
+    from app.lib.db_operation import get_active_event
+    
+
+
+    global_config = GetEnv()
+
+    wl_bool = bool(global_config["wl_bool"])
+    wl_title = bool(global_config["wl_title"])
+    event_dir = global_config["event_dir"]
+    race_mode = global_config["race_type"]
+
+    mix_classes = StandingConfig.query.first().mix_classes
+
+    with sqlite3.connect(event_dir+'/race_state.db') as conn:
+        
+        cursor = conn.cursor()
+        if active_only == True:
+            current_event_id = get_active_event()[0]["event_id"]
+            cursor.execute("select cid, run_name, heat, active_event, event_id, data from race_entries where event_id='{0}';".format(current_event_id))
+        elif event_id != None:
+            cursor.execute("select cid, run_name, heat, active_event, event_id, data from race_entries where event_id='{0}';".format(event_id))
+        elif full_sync == True:
+            cursor.execute("select cid, run_name, heat, active_event, event_id, data from race_entries;")        
+        
+        entries = cursor.fetchall()
+
+        cursor.execute("select run_name, heat, data, event_checksum from schedule_entries;")
+        active_events = cursor.fetchall()
+
+    # Make sure Active Event meta is inserted in the next insert
+    current_meta_config_q = ActiveEvents.query.all()
+    backup_event_lst = {}
+    for current_meta_config in current_meta_config_q:
+        finish_laps = current_meta_config.finish_laps
+        finish_time = current_meta_config.finish_time
+        finish_criteria = current_meta_config.finish_criteria
+        event_checksum = current_meta_config.event_checksum
+        override_finish = current_meta_config.override_finish
+
+        backup_event_lst[event_checksum] = [finish_criteria, finish_time, finish_laps, override_finish]
+
+    #Clear active events
+    ActiveEvents.query.delete()
+    my_db.session.commit() 
+
+    for b in active_events:
+
+        event_dict = json.loads(b[2])
+        event_name = b[0]
+        heat = b[1]
+        event_checksum = b[3]
+        sort_order = event_dict["sort_order"]
+        entry = ActiveEvents(event_name=event_name, run=heat, sort_order=sort_order, mode=race_mode)
+        if event_checksum in backup_event_lst:
+            entry.finish_criteria = backup_event_lst[event_checksum][0]
+            entry.finish_laps = backup_event_lst[event_checksum][2]
+            entry.finish_time = backup_event_lst[event_checksum][1]
+            entry.override_finish = backup_event_lst[event_checksum][3]
+
+        my_db.session.add(entry)
+    my_db.session.commit()
+
+    locked_lst = []
+
+    if not ignore_locked:
+        locked_entries = Session_Race_Records.query.filter(Session_Race_Records.locked == True).all()
+        for entry in locked_entries:
+            locked_lst.append(str(entry.cid)+str(entry.title_2)+str(entry.heat))
+
+    if active_only:
+        if entries == []:
+            return "NO ACTIVE EVENT!" 
+
+        Session_Race_Records.query.filter(Session_Race_Records.event_id == current_event_id, Session_Race_Records.locked == False).delete()
+        
+        groups = {}
+        score_dict = {}
+        for a in entries:
+            if bool(json.loads(a[5])["multi_class"]) and mix_classes == False:
+                event_id_ent = a[4] + "_" + json.loads(a[5])["class"]
+                if event_id_ent not in groups:
+                    groups[event_id_ent] = []
+                groups[event_id_ent].append(a)
+            else:
+                event_id = a[4]
+
+                if event_id not in groups:
+                    groups[event_id] = []
+                groups[event_id].append(a)
+        
+        for a in groups:
+            standings = calculate_standing(groups[a])
+            standings_dict = {cid: pos for cid, pos in standings}
+            score_dict[a] = standings_dict
+
+        for a in entries:
+            cid = a[0]
+            run_name = a[1]
+            heat = a[2]
+            event_id = a[4]
+            active_event = bool(a[3])
+            data = json.loads(a[5])
+            if bool(data["multi_class"]) and mix_classes == False:
+                event_id_ent = event_id + "_" + data["class"]
+            else:
+                event_id_ent = event_id
+
+            locked_str = str(cid)+str(run_name)+str(heat)
+            
+            if active_event == False:
+                continue
+            
+            if locked_str in locked_lst:
+                continue
+            
+            data["internal_standing"] = score_dict[event_id_ent][cid][0]
+            data["points"] = score_dict[event_id_ent][cid][1]
+            
+            entry = Session_Race_Records(cid=cid, title_2=run_name, heat=heat, active_event=active_event, event_id=event_id, data=data)
+            my_db.session.add(entry)
+
+        my_db.session.commit()
+
+    elif event_id != None:
+        Session_Race_Records.query.filter(Session_Race_Records.event_id == event_id).delete()
+        groups = {}
+        score_dict = {}
+        for a in entries:
+            if bool(json.loads(a[5])["multi_class"]) and mix_classes == False:
+                event_id_ent = a[4] + "_" + json.loads(a[5])["class"]
+                if event_id_ent not in groups:
+                    groups[event_id_ent] = []
+                groups[event_id_ent].append(a)
+            else:
+                event_id = a[4]
+
+                if event_id not in groups:
+                    groups[event_id] = []
+                groups[event_id].append(a)
+        
+        for a in groups:
+            standings = calculate_standing(groups[a])
+            standings_dict = {cid: pos for cid, pos in standings}
+            score_dict[a] = standings_dict
+
+        for a in entries:
+            cid = a[0]
+            run_name = a[1]
+            heat = a[2]
+            event_id = a[4]
+            active_event = bool(a[3])
+            data = json.loads(a[5])
+            if bool(data["multi_class"]):
+                event_id_ent = event_id + "_" + data["class"]
+            else:
+                event_id_ent = event_id
+
+            locked_str = str(cid)+str(run_name)+str(heat)
+            
+            if active_event == False:
+                continue
+            
+            if locked_str in locked_lst:
+                continue
+            
+            data["internal_standing"] = score_dict[event_id_ent][cid][0]
+            data["points"] = score_dict[event_id_ent][cid][1]
+            
+            entry = Session_Race_Records(cid=cid, title_2=run_name, heat=heat, active_event=active_event, event_id=event_id, data=data)
+            my_db.session.add(entry)
+        my_db.session.commit()
+
+    else:
+        from app.models import ActiveDrivers
+        Session_Race_Records.query.filter(Session_Race_Records.locked == False).delete()
+        my_db.session.commit()
+        
+
+        
+        grouped = {}
+        standings_dict_group = {}
+        found_active_event = False
+
+        for t in entries:
+            event_id = t[4]
+
+            if bool(json.loads(t[5])["multi_class"]) and mix_classes == False:
+                event_id_ent = event_id + "_" +json.loads(t[5])["class"]
+            else:
+                event_id_ent = event_id
+
+            if event_id_ent not in grouped:
+                grouped[event_id_ent] = []
+            grouped[event_id_ent].append(t)
+        
+
+
+        for a in grouped:
+            standings = calculate_standing(grouped[a])
+
+            standings_dict = {cid: pos for cid, pos in standings}
+            standings_dict_group[a] = standings_dict
+
+        for a in entries:
+            cid = a[0]
+            run_name = a[1]
+            heat = a[2]
+            event_id = a[4]
+            active_event = bool(a[3])
+            if active_event and found_active_event == False:
+               current_active_state = ActiveDrivers.query.first()
+               current_active_state.Event_id = event_id
+
+               my_db.session.commit()
+               found_active_event = True
+            data = json.loads(a[5])
+            locked_str = str(cid)+str(run_name)+str(heat)
+            
+            if locked_str in locked_lst:
+                continue
+            if data["multi_class"] and mix_classes == False:
+                event_id_ent = event_id + "_" + data["class"]
+            else:
+                event_id_ent = event_id
+            if cid in standings_dict_group[event_id_ent]:
+                data["internal_standing"] = standings_dict_group[event_id_ent][cid][0]
+                data["points"] = standings_dict_group[event_id_ent][cid][1]
+
+            entry = Session_Race_Records(cid=cid, title_2=run_name, event_id=event_id, heat=heat, active_event=active_event, data=data)
+            my_db.session.add(entry)
+
+        my_db.session.commit()
+
 def map_database_files(global_config, Event=None, event_only=False):
     
     db_data = []
@@ -224,7 +463,6 @@ def init_database(event_files, driver_db_data, g_config, init_mode=True, exclude
 def calculate_kvali_nr(event_dict):
     from app.models import EventKvaliRate
     from app import db as my_db
-    from app.lib.utils import GetEnv
 
     g_config = GetEnv()
 
@@ -259,7 +497,7 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
 
     from app.models import ActiveEvents
     from app import db as my_db
-    from app.models import Session_Race_Records, CrossConfig
+    from app.models import Session_Race_Records, StandingConfig
     
 
     event_dict_kvali = {}
@@ -505,7 +743,7 @@ def insert_driver_stats(db, g_config, exclude_lst=False, init_mode=True, sync=Fa
                     current_title = combined_title[0]
                     
                     if mode == str(0) and g_config["cross"] and g_config["wl_cross_title"] in current_title:
-                         cross_config = CrossConfig.query.first()
+                         cross_config = StandingConfig.query.first()
                          driver_scores = cross_config.driver_scores
                          dnf_score = cross_config.dnf_point
                          dns_score = cross_config.dns_point

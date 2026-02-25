@@ -8,6 +8,7 @@ from app.views.api_routes.driver_routes import register_driver_routes
 from app.views.api_routes.timedata_routes import register_timedata_routes
 from app.views.api_routes.archive_routes import register_archive_routes
 from app.views.api_routes.system_routes import register_system_routes
+from app.views.api_routes.overlay_routes import register_overlay_routes
 
 # Create the main API blueprint
 api_bp = Blueprint('api', __name__)
@@ -20,10 +21,12 @@ def register_all_routes(api_blueprint):
     register_timedata_routes(api_blueprint)
     register_archive_routes(api_blueprint)
     register_system_routes(api_blueprint)
+    register_overlay_routes(api_blueprint)
 
 # Helper function for sending data to a socket room
 @api_bp.route('/api/send_data')
 def send_data_to_room(msg, room=None):
+    print(SOCKET_ROOMS)
     """Sends data to a specified socket room"""
     if request.args.get('room'):
         room = request.args.get('room')

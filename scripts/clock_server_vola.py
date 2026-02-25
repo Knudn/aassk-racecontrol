@@ -4,6 +4,20 @@ import threading
 import sqlite3
 from flask_cors import CORS
 import os
+import logging
+from logging.handlers import RotatingFileHandler
+
+_log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(_log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    handlers=[
+        RotatingFileHandler(os.path.join(_log_dir, 'clock_server_vola.log'), maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -28,32 +42,32 @@ def tcp_server():
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((tcp_host, tcp_port))
         server_socket.listen(5)
-        print(f"TCP server listening on {tcp_host}:{tcp_port}")
+        logger.info("TCP server listening on %s:%s", tcp_host, tcp_port)
 
         while True:
             try:
                 connection, client_address = server_socket.accept()
-                print(f"TCP client connected: {client_address}")
+                logger.info("TCP client connected: %s", client_address)
                 connected_clients.append(connection)
             except Exception as e:
-                print(f"Error accepting connections: {e}")
+                logger.error("Error accepting connections: %s", e)
                 continue
     except Exception as e:
-        print(f"Failed to start TCP server: {e}")
+        logger.error("Failed to start TCP server: %s", e)
 
 def send_timestamp_to_clients(timestamp):
     data = f"TN_{timestamp}\r\n".encode('utf-8')
-    print(data)
+    logger.debug("Sending timestamp: %s", data)
     for client in connected_clients[:]:  # Iterate over a shallow copy of the list
         try:
             client.sendall(data)
-            print(f"Sent timestamp to {client.getpeername()}")
+            logger.debug("Sent timestamp to %s", client.getpeername())
         except Exception as e:
-            print(f"Error sending to client: {e}")
+            logger.error("Error sending to client: %s", e)
             try:
                 client.close()
             except Exception as close_e:
-                print(f"Error closing client socket: {close_e}")
+                logger.error("Error closing client socket: %s", close_e)
             connected_clients.remove(client)
 
 @app.route('/send-timestamp', methods=['POST', 'OPTIONS'])

@@ -62,6 +62,35 @@
                       <button type="button" style="border-radius: 0px; width: 49%" class="btn btn-primary btn-lg" id="mylaps_btn" onclick="toggleBackend('mylaps')">Mylaps</button>
                     </td>
                 </tr>
+                <tr id="normalization_rules_row" style="display: none;">
+                    <td>Event Normalization Rules</td>
+                    <td>
+                        <small class="form-text text-muted mb-2">Regex patterns to classify events as Qualifying, Finale, or Other. Tested against the run name.</small>
+                        <div class="form-group mb-2">
+                            <label class="small font-weight-bold">Qualifying pattern</label>
+                            <input type="text" class="form-control form-control-sm" name="norm_qualifying" id="norm_qualifying" value="{{ config.normalization_rules.qualifying if config.normalization_rules else 'Kvali|Qualifying' }}" placeholder="e.g. Kvali|Qualifying">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="small font-weight-bold">Finale pattern</label>
+                            <input type="text" class="form-control form-control-sm" name="norm_finale" id="norm_finale" value="{{ config.normalization_rules.finale if config.normalization_rules else '' }}" placeholder="e.g. [ABC]\\s*Finale|Finale">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="small font-weight-bold">Other pattern</label>
+                            <input type="text" class="form-control form-control-sm" name="norm_other" id="norm_other" value="{{ config.normalization_rules.other if config.normalization_rules else '' }}" placeholder="e.g. Training|Warmup (optional, everything else is Other)">
+                        </div>
+                        <hr>
+                        <div class="form-group mb-0">
+                            <label class="small font-weight-bold">Test string</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="norm_test_input" placeholder="Enter a run name to test...">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="norm_test_btn">Test</button>
+                                </div>
+                            </div>
+                            <div id="norm_test_result" class="mt-1 small" style="display:none;"></div>
+                        </div>
+                    </td>
+                </tr>
                 <tr>
                     <td>Race mode</td>
                     <td>
@@ -158,7 +187,7 @@
                     <td>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="keep_qualification" {% if config.keep_qualification %}checked{% endif %}>
-                            <i class="form-text text-muted">This will keep the qualification from previous session, configure <a href="/admin/kvali_criteria">HERE</a></i>
+                            <i class="form-text text-muted">This will keep the qualification from previous session, configure <a href="/admin/active_events">HERE</a></i>
                         </div>
                     </td>
                 </tr>
@@ -167,7 +196,7 @@
                     <td>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="cross" id="cross_checkbox" {% if config.cross %}checked{% endif %} onclick="toggleCrossWhitelist();">
-                            <i class="form-text text-muted">If enabled, make sure you have configured the <a href="/admin/cross_config" class="your-optional-class-for-styling">cross profile</a> <b>before</b> reloading</i>
+                            <i class="form-text text-muted">If enabled, make sure you have configured the <a href="/admin/standing_config" class="your-optional-class-for-styling">standing config</a> <b>before</b> reloading</i>
                         </div>
                     </td>
                 </tr>
@@ -217,6 +246,7 @@
         mylapsBtn.classList.add('disabled');
         hiddenInput.value = 'false';
     }
+    toggleNormalizationRules();
 }
 
 // Initialize on page load
@@ -235,10 +265,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+    function toggleNormalizationRules() {
+        var hiddenInput = document.getElementById('msport_tm');
+        var row = document.getElementById('normalization_rules_row');
+        if (hiddenInput.value === 'false') {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         toggleCrossWhitelist();
         toggleIntermediatePath();
         toggleSortingFields();
+        toggleNormalizationRules();
 
         // Add form submission handler
         document.getElementById('configForm').addEventListener('submit', function(e) {
@@ -295,6 +336,42 @@ document.addEventListener('DOMContentLoaded', function() {
         var intermediatePathInput = document.getElementById("intermediate_path");
         intermediatePathInput.disabled = !useIntermediateCheckbox.checked;
     }
+
+    document.getElementById('norm_test_btn').addEventListener('click', function() {
+        var testStr = document.getElementById('norm_test_input').value;
+        var qualPattern = document.getElementById('norm_qualifying').value;
+        var finalePattern = document.getElementById('norm_finale').value;
+        var otherPattern = document.getElementById('norm_other').value;
+        var resultDiv = document.getElementById('norm_test_result');
+
+        if (!testStr) {
+            resultDiv.style.display = 'none';
+            return;
+        }
+
+        var match = 'Other';
+        var matchColor = '#6c757d';
+
+        try {
+            if (qualPattern && new RegExp(qualPattern).test(testStr)) {
+                match = 'Qualifying';
+                matchColor = '#007bff';
+            } else if (finalePattern && new RegExp(finalePattern).test(testStr)) {
+                match = 'Finale';
+                matchColor = '#28a745';
+            } else if (otherPattern && new RegExp(otherPattern).test(testStr)) {
+                match = 'Other';
+                matchColor = '#6c757d';
+            }
+        } catch(e) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<span class="text-danger">Invalid regex: ' + e.message + '</span>';
+            return;
+        }
+
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '"' + testStr + '" &rarr; <strong style="color:' + matchColor + '">' + match + '</strong>';
+    });
 </script>
 
 {% endblock %}

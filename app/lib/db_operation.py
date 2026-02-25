@@ -229,17 +229,15 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
 
         return combined_data
 
-
     if event_wl != None:
         event_db_file = (g_config["db_location"]+event_wl[0]["db_file"]+".sqlite")
         event_wl[0]["db_file"] = event_db_file
         data = format_startlist(event_wl, include_timedata=True)
         return data
 
-    event = get_active_event()
-    print(event) 
-    current_db_file = event[0]["db_file"]
-    current_heat = event[0]["SPESIFIC_HEAT"]
+    #event = get_active_event()
+    #current_db_file = event[0]["db_file"]
+    #current_heat = event[0]["SPESIFIC_HEAT"]
 
     if upcoming == True:
 
@@ -263,11 +261,12 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
 
     else:
         
-        event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
+        #event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
 
-        event[0]["db_file"] = event_db_file
+        #event[0]["db_file"] = event_db_file
+        pass
 
-    data = format_startlist(event, include_timedata=True)
+    data = format_startlist(include_timedata=True)
     #data = json.dumps(format_startlist(event, include_timedata=True))
 
     return data
@@ -300,7 +299,7 @@ def get_active_event():
 
     event = str(data.Event).zfill(3)
 
-    return [{"db_file": "Event"+str(event), "SPESIFIC_HEAT": str(data.Heat)}]
+    return [{"db_file": "Event"+str(event), "SPESIFIC_HEAT": str(data.Heat), "event_id": str(data.Event_id)}]
     
 def update_active_event(g_conf):
     from app.models import ActiveDrivers

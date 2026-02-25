@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+    <title>Race Overlay</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        #tower {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        #tower.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Flag state line */
+        #flag-line {
+            height: 3px;
+            min-height: 3px;
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 2px;
+            width: 100%;
+        }
+
+        #flag-left, #flag-right {
+            flex: 1;
+            height: 3px;
+            background: rgba(255,255,255,0.15);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Driver rows */
+        #driver-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .driver-row {
+            display: flex;
+            align-items: stretch;
+            height: 28px;
+            opacity: 0;
+            transform: translateX(-16px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .driver-row.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .pos {
+            width: 28px;
+            min-width: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.75);
+        }
+
+        .cid {
+            width: 30px;
+            min-width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.45);
+            background: rgba(15,15,19,0.9);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .driver-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(20,20,24,0.88);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        .driver-name span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .time-cell {
+            width: 68px;
+            min-width: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            background: rgba(14,14,18,0.9);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .info-cell {
+            width: 60px;
+            min-width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            background: rgba(10,10,14,0.9);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-cell .info-content {
+            position: absolute;
+            right: 6px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .info-cell .info-content.fade-out {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+
+        .info-cell .info-content.fade-in {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        .class-header {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            background: rgba(30,30,34,0.85);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 4px;
+        }
+
+        .class-header:first-child {
+            margin-top: 0;
+        }
+
+        .driver-row.penalty .driver-name { color: rgba(255,100,100,0.9); }
+        .driver-row.penalty .info-cell { color: rgba(255,100,100,0.9); }
+
+        @keyframes row-flash {
+            0%   { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .driver-row.flash {
+            animation: row-flash 0.4s ease-out;
+        }
+    </style>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        document.addEventListener('DOMContentLoaded', function() {
+            const tower = document.getElementById('tower');
+            const w = params.get('w');
+            const mirror = params.get('mirror');
+            if (w) {
+                tower.style.right = 'auto';
+                tower.style.width = w + 'px';
+            }
+            if (mirror === '1' || mirror === 'true') {
+                tower.style.left = 'auto';
+                tower.style.right = '0';
+            }
+            const scale = params.get('scale');
+            if (scale) {
+                const origin = (mirror === '1' || mirror === 'true') ? 'top right' : 'top left';
+                document.body.style.transformOrigin = origin;
+                document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+            }
+        });
+    </script>
+</head>
+<body>
+
+<div id="tower">
+    <div id="flag-line">
+        <div id="flag-left"></div>
+        <div id="flag-right"></div>
+    </div>
+    <div id="driver-list"></div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    let previousPositions = {};
+    let globalBestLap = null;
+    let infoCyclePhase = 0;
+    let raceFinished = false;
+    let cycleTimer = null;
+
+    const INFO_PHASES = ['gap', 'laps'];
+    const CYCLE_INTERVAL = 5000;
+
+    socket.on('connect', function() {
+        console.log('Connected to the server');
+        socket.emit('join', { username: 'overlay', room: 'active_dash' });
+        socket.emit('join', { username: 'overlay', room: 'start_state' });
+    });
+
+    socket.on('response', function(dataString) {
+        console.log("Raw response:", dataString);
+        let data;
+        if (typeof dataString === 'string') {
+            data = JSON.parse(dataString);
+        } else {
+            data = dataString;
+        }
+
+        // start_state room sends the flag dict directly
+        if (data.man_ready !== undefined) {
+            updateFlagLine(data);
+        }
+        if (data.event_data) {
+            $('#tower').addClass('visible');
+            startInfoCycle();
+            updateDrivers(data.event_data);
+        }
+    });
+
+    function updateFlagLine(state) {
+        const $left = $('#flag-left');
+        const $right = $('#flag-right');
+
+        // Priority: halt > warmup > started > ready states
+        if (state.halt_race) {
+            $left.css('background', '#cc2222');
+            $right.css('background', '#cc2222');
+        } else if (state.warmup) {
+            $left.css('background', '#8b32c8');
+            $right.css('background', '#8b32c8');
+        } else if (state.started) {
+            $left.css('background', '#1a8f1a');
+            $right.css('background', '#1a8f1a');
+            raceFinished = false;
+        } else {
+            // Ready states: each half independent
+            $left.css('background', state.man_ready ? '#c8a800' : 'transparent');
+            $right.css('background', state.ready ? '#c8a800' : 'transparent');
+        }
+    }
+
+    let previousDriverData = {}; // cid -> snapshot of last data
+    let isFirstRender = true;
+
+    function updateDrivers(eventData) {
+        const drivers = [];
+        for (const key in eventData) {
+            drivers.push(eventData[key]);
+        }
+        drivers.sort((a, b) => a.position - b.position);
+
+        // Check if all finished
+        const allFinished = drivers.length > 0 && drivers.every(d => d.finished);
+        raceFinished = allFinished;
+
+        // Check if multi_class
+        const isMultiClass = drivers.some(d => d.mutli_class);
+
+        const $list = $('#driver-list');
+
+        // Build class groups if needed
+        let classGroups = null;
+        let classOrder = null;
+        if (isMultiClass) {
+            classGroups = {};
+            classOrder = [];
+            drivers.forEach(d => {
+                const cls = d.class || 'Unknown';
+                if (!classGroups[cls]) {
+                    classGroups[cls] = [];
+                    classOrder.push(cls);
+                }
+                classGroups[cls].push(d);
+            });
+        }
+
+        // Rebuild DOM order (headers + rows)
+        const newCids = new Set(drivers.map(d => d.cid));
+        $list.empty();
+
+        if (isMultiClass) {
+            let totalIdx = 0;
+            classOrder.forEach(cls => {
+                const $header = $(`<div class="class-header"></div>`).text(cls);
+                $list.append($header);
+
+                classGroups[cls].forEach(driver => {
+                    const $row = getOrCreateRow(driver, totalIdx);
+                    $row.data('classGroup', classGroups[cls]);
+                    updateRow($row, driver);
+                    $list.append($row);
+                    totalIdx++;
+                });
+            });
+        } else {
+            drivers.forEach((driver, idx) => {
+                const $row = getOrCreateRow(driver, idx);
+                updateRow($row, driver);
+                $list.append($row);
+            });
+        }
+
+        // Remove rows for drivers no longer present
+        for (const cid of Object.keys(rowCache)) {
+            if (!newCids.has(cid)) {
+                delete rowCache[cid];
+                delete previousDriverData[cid];
+            }
+        }
+
+        isFirstRender = false;
+        updateInfoCells();
+    }
+
+    let rowCache = {}; // cid -> $row element
+
+    function getOrCreateRow(driver, animIdx) {
+        if (rowCache[driver.cid]) {
+            return rowCache[driver.cid];
+        }
+
+        const $row = $(`
+            <div class="driver-row" data-cid="${driver.cid}">
+                <div class="pos"></div>
+                <div class="cid"></div>
+                <div class="driver-name"><span></span></div>
+                <div class="time-cell"></div>
+                <div class="info-cell"><span class="info-content"></span></div>
+            </div>
+        `);
+
+        if (isFirstRender) {
+            setTimeout(() => $row.addClass('show'), 40 * animIdx);
+        } else {
+            $row.addClass('show');
+        }
+
+        rowCache[driver.cid] = $row;
+        return $row;
+    }
+
+    function updateRow($row, driver) {
+        const cid = driver.cid;
+        const prev = previousDriverData[cid];
+        const changed = hasChanged(prev, driver);
+
+        $row.find('.pos').text(driver.position);
+        $row.find('.cid').text(driver.cid);
+        $row.find('.driver-name span').text(formatName(driver.first_name, driver.last_name));
+        $row.find('.time-cell').text(driver.totaltime || '');
+
+        $row.removeClass('penalty');
+        if (driver.penalty && driver.penalty !== '') {
+            $row.addClass('penalty');
+        }
+
+        // Flash only if data changed (and not first render)
+        if (changed && !isFirstRender) {
+            $row.removeClass('flash');
+            // Force reflow to restart animation
+            void $row[0].offsetWidth;
+            $row.addClass('flash');
+            setTimeout(() => $row.removeClass('flash'), 400);
+        }
+
+        previousPositions[cid] = driver.position;
+        $row.data('driver', driver);
+
+        // Snapshot for next comparison
+        previousDriverData[cid] = {
+            position: driver.position,
+            totaltime: driver.totaltime,
+            laps: driver.laps,
+            penalty: driver.penalty,
+            finished: driver.finished,
+            points: driver.points
+        };
+    }
+
+    function hasChanged(prev, curr) {
+        if (!prev) return false;
+        return prev.position !== curr.position ||
+               prev.totaltime !== curr.totaltime ||
+               prev.laps !== curr.laps ||
+               prev.penalty !== curr.penalty ||
+               prev.finished !== curr.finished ||
+               prev.points !== curr.points;
+    }
+
+    function updateInfoCells() {
+        $('#driver-list .driver-row').each(function() {
+            const $row = $(this);
+            const driver = $row.data('driver');
+            if (!driver) return;
+
+            const $content = $row.find('.info-content');
+            let text = '';
+
+            if (driver.penalty && driver.penalty !== '') {
+                text = getPenaltyText(driver.penalty);
+            } else if (raceFinished && driver.points && String(driver.points) !== '0') {
+                text = driver.points + 'p';
+            } else {
+                const len = INFO_PHASES.length;
+                const phase = INFO_PHASES[((infoCyclePhase % len) + len) % len];
+                switch (phase) {
+                    case 'gap':
+                        text = calcGapToLeader(driver, $row);
+                        break;
+                    case 'laps':
+                        text = driver.laps ? 'Lap ' + driver.laps : '';
+                        break;
+                }
+            }
+
+            const currentText = $content.text();
+            if (currentText !== text) {
+                $content.addClass('fade-out');
+                setTimeout(() => {
+                    $content.text(text).removeClass('fade-out').addClass('fade-in');
+                    setTimeout(() => $content.removeClass('fade-in'), 20);
+                }, 200);
+            }
+        });
+    }
+
+    function startInfoCycle() {
+        if (cycleTimer) return;
+        cycleTimer = setInterval(() => {
+            if (raceFinished) return;
+            infoCyclePhase = (infoCyclePhase + 1) % INFO_PHASES.length;
+            updateInfoCells();
+        }, CYCLE_INTERVAL);
+    }
+
+    function calcGapToLeader(driver, $row) {
+        // Find the leader: first driver in the same class group, or first overall
+        let leaderData = null;
+        const classGroup = $row.data('classGroup');
+        if (classGroup && classGroup.length > 0) {
+            leaderData = classGroup[0];
+        } else {
+            const $leader = $('#driver-list .driver-row').first();
+            leaderData = $leader.data('driver');
+        }
+        if (!leaderData || leaderData.cid === driver.cid) return '';
+
+        const leaderLaps = parseInt(leaderData.laps) || 0;
+        const driverLaps = parseInt(driver.laps) || 0;
+        if (leaderLaps > driverLaps) {
+            return '+' + (leaderLaps - driverLaps) + 'L';
+        }
+
+        const leaderTime = parseTime(leaderData.totaltime);
+        const driverTime = parseTime(driver.totaltime);
+        if (leaderTime > 0 && driverTime > 0) {
+            const gap = (driverTime - leaderTime) / 1000;
+            if (gap > 0) return '+' + gap.toFixed(3);
+        }
+        return '';
+    }
+
+    function parseTime(timeStr) {
+        if (!timeStr || timeStr === '' || timeStr === '0') return 0;
+        if (timeStr.includes(':')) {
+            const parts = timeStr.split(':');
+            return ((parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0)) * 1000;
+        }
+        return parseFloat(timeStr) * 1000;
+    }
+
+    function formatName(firstName, lastName) {
+        const first = firstName || '';
+        const last = lastName || '';
+        if (first && last) {
+            const display = first.charAt(0) + '. ' + last;
+            return display.length > 16 ? display.substring(0, 15) + '.' : display;
+        }
+        const fallback = last || first || '';
+        return fallback.length > 16 ? fallback.substring(0, 15) + '.' : fallback;
+    }
+
+    function getPenaltyText(penalty) {
+        switch (String(penalty)) {
+            case '1': return 'DNS';
+            case '2': return 'DNF';
+            case '3': return 'DSQ';
+            default: return penalty;
+        }
+    }
+});
+</script>
+
+</body>
+</html>

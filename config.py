@@ -7,7 +7,7 @@ PORT = 7777
 DEFAULT_HOST = "0.0.0.0"
 
 # Logging configuration
-LOG_LEVEL = "INFO"
+LOG_LEVEL = "DEBUG"
 LOG_DIRECTORY = os.path.join(os.getcwd(), 'logs')
 LOG_FILE = os.path.join(LOG_DIRECTORY, 'app.log')
 LOG_FORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
@@ -50,8 +50,42 @@ DEFAULT_ARCHIVE_SERVER = {
 
 # LED Panel configurations
 DEFAULT_LED_PANELS = [
-    {"endpoint": "192.168.20.219", "active_playlist": "none", "brightness": 100},
-    {"endpoint": "192.168.20.220", "active_playlist": "none", "brightness": 100}
+    {
+        "endpoint": "192.168.20.219", "active_playlist": "none", "brightness": 100,
+        "active_mode": "off", "mqtt_subscribe_topic": "", "flag_enabled": False,
+        "flag_colors": {
+            "halt_race": "#FF0000", "warmup": "#FFAA00", "running": "#00FF00",
+            "ready": "#00FF00", "started": "#FFFFFF", "orbits_finish": "#FFFFFF",
+            "orbits_warmup": "#FFAA00", "man_ready": "#0000FF"
+        },
+        "flag_priorities": [
+            "halt_race", "orbits_finish", "running", "warmup",
+            "orbits_warmup", "started", "ready", "man_ready"
+        ],
+        "flag_fields_enabled": {
+            "halt_race": True, "warmup": True, "running": True,
+            "ready": True, "started": True, "orbits_finish": True,
+            "orbits_warmup": True, "man_ready": True
+        }
+    },
+    {
+        "endpoint": "192.168.20.220", "active_playlist": "none", "brightness": 100,
+        "active_mode": "off", "mqtt_subscribe_topic": "", "flag_enabled": False,
+        "flag_colors": {
+            "halt_race": "#FF0000", "warmup": "#FFAA00", "running": "#00FF00",
+            "ready": "#00FF00", "started": "#FFFFFF", "orbits_finish": "#FFFFFF",
+            "orbits_warmup": "#FFAA00", "man_ready": "#0000FF"
+        },
+        "flag_priorities": [
+            "halt_race", "orbits_finish", "running", "warmup",
+            "orbits_warmup", "started", "ready", "man_ready"
+        ],
+        "flag_fields_enabled": {
+            "halt_race": True, "warmup": True, "running": True,
+            "ready": True, "started": True, "orbits_finish": True,
+            "orbits_warmup": True, "man_ready": True
+        }
+    }
 ]
 
 # Microservices configuration
@@ -61,6 +95,7 @@ DEFAULT_MICROSERVICES = [
     {"name": "Backup Clock", "path": "clock_server_vola.py", "params": "192.168.1.51"},
     {"name": "PDF Converter", "path": "pdf_converter.py", "params": "None"},
     {"name": "Intermediate Listener", "path": "intermediate_list.py", "params": "None"},
+    {"name": "Intermediate Listener Mylaps", "path": "intermediate_list_mylaps.py", "params": "None"},
     {"name": "MQTT Middleware", "path": "mqtt_middleware.py", "params": "None"}
 ]
 

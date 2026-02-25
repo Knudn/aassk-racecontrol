@@ -1,5 +1,5 @@
 from app import create_app, db, socketio
-from app.models import StartLogic, GlobalConfig, ActiveDrivers, SpeakerPageSettings, InfoScreenAssets, MicroServices, CrossConfig, ledpanel, archive_server
+from app.models import StartLogic, GlobalConfig, ActiveDrivers, SpeakerPageSettings, InfoScreenAssets, MicroServices, StandingConfig, ledpanel, archive_server
 from app.lib.db_operation import update_active_event
 import os
 import logging
@@ -12,9 +12,6 @@ import config
 
 # In-memory timestamp request tracker
 virtual_clock_request = []
-
-
-
 
 def configure_logging(app):
     if not os.path.exists(config.LOG_DIRECTORY):
@@ -45,7 +42,7 @@ def create_tables(app):
         ActiveDrivers_db = ActiveDrivers.query.get(1)
         SpeakerPageSettings_db = SpeakerPageSettings.query.get(1)
         InfoScreenAssets_db = InfoScreenAssets.query.get(1)
-        Cross_db = CrossConfig.query.all()
+        StandingConfig_db = StandingConfig.query.all()
         MicroServices_db = MicroServices.query.all()
         ledpanel_db = ledpanel.query.all()
         archive_server_db = archive_server.query.all()
@@ -85,18 +82,46 @@ def create_tables(app):
             db.session.add(default_config)
             db.session.commit()
 
-        # Initialize LED panels if they don't exist
+        # Initialize LED panels — migrate schema if new columns are missing
         if ledpanel_db == []:
             app.logger.info('Configuring DB for Ledpanel')
             for panel_config in config.DEFAULT_LED_PANELS:
                 new_entry = ledpanel(**panel_config)
                 db.session.add(new_entry)
             db.session.commit()
+        else:
+            # Check if new columns exist by testing first row
+            try:
+                _ = ledpanel_db[0].active_mode
+            except Exception:
+                app.logger.info('Migrating ledpanel table to add new columns')
+                # Save existing endpoint data
+                old_panels = []
+                for p in ledpanel_db:
+                    old_panels.append({
+                        'endpoint': p.endpoint,
+                        'active_playlist': p.active_playlist,
+                        'brightness': p.brightness,
+                    })
+                # Drop and recreate
+                ledpanel.__table__.drop(db.engine)
+                ledpanel.__table__.create(db.engine)
+                # Re-seed with old endpoints + new defaults
+                for i, panel_config in enumerate(config.DEFAULT_LED_PANELS):
+                    merged = dict(panel_config)
+                    if i < len(old_panels):
+                        merged['endpoint'] = old_panels[i]['endpoint']
+                        merged['active_playlist'] = old_panels[i]['active_playlist']
+                        merged['brightness'] = old_panels[i]['brightness']
+                    new_entry = ledpanel(**merged)
+                    db.session.add(new_entry)
+                db.session.commit()
+                app.logger.info('Ledpanel table migrated successfully')
 
-        # Initialize cross config if it doesn't exist
-        if Cross_db == []:
-            app.logger.info('Configuring DB for Cross Config')
-            default_config = CrossConfig()
+        # Initialize standing config if it doesn't exist
+        if StandingConfig_db == []:
+            app.logger.info('Configuring DB for Standing Config')
+            default_config = StandingConfig()
             db.session.add(default_config)
             db.session.commit()
 
@@ -163,6 +188,7 @@ def create_tables(app):
 if __name__ == '__main__':
 
     from app.lib.db_operation import get_active_startlist
+    from app.lib.utils import find_active_event
 
 
     parser = argparse.ArgumentParser(description='Run the web server with specific host.')
@@ -179,9 +205,10 @@ if __name__ == '__main__':
     app.config['remote_result_page_enabled'] = False
     app.config['event_content'] = ""
     app.config['stage_ready'] = 0
-    app.config['start_state'] = {"man_ready": False, "ready": False, "started": False, "halt_race": False, "warmup": False, "running": True}
-    
+    app.config['start_state'] = {"man_ready": False, "ready": False, "started": False, "halt_race": False, "warmup": False, "running": False, "orbits_warmup":False, "orbits_finish":False}
+
     configure_logging(app)
+    
     app.logger.info('App started')
     create_tables(app)
     
@@ -190,4 +217,4 @@ if __name__ == '__main__':
         event_data = get_active_startlist()
         app.config['event_content'] = event_data
     
-    socketio.run(app, debug=config.DEBUG, host=args.host, port=config.PORT)
+    socketio.run(app, debug=True, host=args.host, port=config.PORT)

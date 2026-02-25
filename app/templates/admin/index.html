@@ -11,30 +11,22 @@
     /* Microservices container styles */
     .microservices-container {
         width: 100%;
-        overflow-x: auto;
-        padding-bottom: 15px;
     }
-    
+
     .microservices-scroll {
         display: flex;
-        flex-wrap: nowrap;
-        gap: 15px;
-        padding-bottom: 5px; /* For scrollbar space */
+        flex-wrap: wrap;
+        gap: 6px;
     }
-    
-    /* Microservice card styles */
+
+    /* Microservice item styles */
     .microservice-card {
         flex: 0 0 auto;
-        width: 200px;
-        height: 100px;
         display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        text-align: center;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-        transition: box-shadow 0.3s ease;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 4px;
     }
     .external-website-card {
         background-color: white;
@@ -51,71 +43,36 @@
         background-color: ;
         transition: box-shadow 0.3s ease;
     }
-    .microservice-card:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .microservice-card .card-body {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        padding: 10px;
-        background: white;
-    }
-    
+
     .microservice-name {
-        font-size: 0.9rem;
-        margin-bottom: 5px;
-        word-wrap: break-word;
-        hyphens: auto;
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+        margin: 0;
     }
-    
+
     .microservice-name[data-state="True"] {
         color: #28a745;
     }
-    
+
     .microservice-name[data-state="False"] {
         color: #dc3545;
     }
-    
+
+    .microservice-sep {
+        font-size: 0.78rem;
+        color: #999;
+    }
+
     .action-icons {
         display: flex;
-        justify-content: center;
-        gap: 15px;
+        gap: 4px;
     }
-    
+
     .action-icon {
         cursor: pointer;
-        font-size: 1.2rem;
-    }
-    
-    /* Scrollbar styles */
-    .microservices-container::-webkit-scrollbar {
-        height: 8px;
-    }
-    
-    .microservices-container::-webkit-scrollbar-thumb {
-        background: #007bff;
-        border-radius: 4px;
-    }
-    
-    .microservices-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .microservice-card {
-            width: 150px;
-            height: 80px;
-        }
-        .microservice-name {
-            font-size: 0.8rem;
-        }
-        .action-icon {
-            font-size: 1rem;
-        }
+        font-size: 0.95rem;
+        line-height: 1;
     }
 
     .external-website-card {
@@ -241,32 +198,27 @@
     
 </div>
 
-  <div class="container-fluid mt-5">
-    <div class="microservices-container">
-        <div class="microservices-scroll">
-            {% for d in microservices %}
-            {% set state = d.state | string() %}
-            {% set name_json = d.name %}
-            {% if d.name == "Backup Clock" %}
-            <script>
-                var backupClockParams = "{{ d.params }}"
-            </script>
-            {% endif %}
-            <div class="microservice-card">
-                <div class="card-body">
-                    <h6 class="card-title microservice-name" data-state="{{ state }}">
-                        {{ d.name }}
-                    </h6>
-                    <div class="action-icons">
-                        <i class="bi bi-play-fill text-success action-icon" onclick="changeStatus(this, 'start', '{{ name_json }}', backupClockParams)"></i>
-                        <i class="bi bi-stop-fill text-danger action-icon" onclick="changeStatus(this, 'stop', '{{ name_json }}')"></i>
-                    </div>
-                </div>
+  <div class="microservices-container mt-3">
+    <div class="microservices-scroll">
+        {% for d in microservices %}
+        {% set state = d.state | string() %}
+        {% set name_json = d.name %}
+        {% if d.name == "Backup Clock" %}
+        <script>
+            var backupClockParams = "{{ d.params }}"
+        </script>
+        {% endif %}
+        <div class="microservice-card">
+            <span class="microservice-name" data-state="{{ state }}">{{ d.name }}</span>
+            <span class="microservice-sep">:</span>
+            <div class="action-icons">
+                <i class="bi bi-play-fill text-success action-icon" onclick="changeStatus(this, 'start', '{{ name_json }}', backupClockParams)"></i>
+                <i class="bi bi-stop-fill text-danger action-icon" onclick="changeStatus(this, 'stop', '{{ name_json }}')"></i>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
-</div>
+  </div>
 
 
 <br>
@@ -622,60 +574,59 @@ $(document).ready(function() {
             var driversTable = $('#driversTable');
             driversTable.empty(); // Clear existing entries
 
-            if (!Array.isArray(response)) {
-                console.error('Expected response to be an array, received:', response);
-                return; // Stop the function if response is not an array
+            if (!response || !Array.isArray(response.time_info)) {
+                console.error('Expected response with time_info array, received:', response);
+                return;
             }
 
-            var activeRow; // Variable to store the active row reference
+            var drivers = response.time_info;
+            var raceType = response.RACE_TYPE;
+            var isParallel = (raceType == 2 || raceType == 3);
 
-            response.forEach(function(race) {
-                console.log("Race Data:", race);
+            if (isParallel) {
+                // Pair drivers two at a time for parallel race formats
+                for (var i = 0; i < drivers.length; i += 2) {
+                    var row = $('<tr style="text-align: center;"></tr>').click(function(e) {
+                        e.stopPropagation();
+                        $('tr', driversTable).removeClass('table-active');
+                        $(this).addClass('table-active');
+                    });
 
-                if (!Array.isArray(race.drivers)) {
-                    console.error('Expected race.drivers to be an array, received:', race.drivers);
-                    return; // Skip this race if drivers is not an array
+                    var d1 = drivers[i];
+                    var d2 = (i + 1 < drivers.length) ? drivers[i + 1] : null;
+
+                    if (d2) {
+                        var driver_1 = d1.first_name + " " + d1.last_name;
+                        var driver_2 = d2.first_name + " " + d2.last_name;
+                        row.data('driverIds', [d1.cid, d2.cid]);
+                        var name_combined = "[" + d1.cid + "] " + driver_1 + "    ➖    " + driver_2 + " [" + d2.cid + "]";
+                        row.append($('<td></td>').text(name_combined));
+                    } else {
+                        var driver_1 = d1.first_name + " " + d1.last_name;
+                        row.data('driverIds', [d1.cid, 0]);
+                        row.append($('<td></td>').text(driver_1));
+                    }
+
+                    driversTable.append(row);
                 }
+            } else {
+                // Single driver per row for non-parallel formats
+                drivers.forEach(function(driver) {
+                    var row = $('<tr style="text-align: center;"></tr>').click(function(e) {
+                        e.stopPropagation();
+                        $('tr', driversTable).removeClass('table-active');
+                        $(this).addClass('table-active');
+                    });
 
-                var row = $('<tr style="text-align: center;"></tr>').click(function(e) {
-                    e.stopPropagation(); // Stop the event from bubbling up
-                    $('tr', driversTable).removeClass('table-active');
-                    $(this).addClass('table-active');
+                    row.data('driverIds', [driver.cid, 0]);
+                    var name_combined = "[" + driver.cid + "] " + driver.first_name + " " + driver.last_name;
+                    row.append($('<td></td>').text(name_combined));
+                    driversTable.append(row);
                 });
-
-                if (race.drivers.length == 2) {
-                    driver_1 = race.drivers[0].first_name + " " + race.drivers[0].last_name;
-                    driver_2 = race.drivers[1].first_name + " " + race.drivers[1].last_name;
-                    row.data('driverIds', [race.drivers[0].id, race.drivers[1].id]);
-                    
-                    name_combined =  "["+race.drivers[0].id+"] " + driver_1 + "    ➖    " + driver_2 + " ["+race.drivers[1].id+"]";
-                    row.append($('<td></td>').text(`${name_combined}`));
-                    
-
-                    if (race.drivers[0].active || race.drivers[1].active) {
-                        activeRow = row; 
-                    }
-                }
-
-                if (race.drivers.length == 1) {
-                    driver_1 = race.drivers[0].first_name + " " + race.drivers[0].last_name;
-                    row.data('driverIds', [race.drivers[0].id,0])
-                    name_combined = driver_1;
-                    row.append($('<td></td>').text(`${name_combined}`));
-
-                    if (race.drivers[0].active) {
-                        activeRow = row;
-                    }
-                }
-                driversTable.append(row);
-            });
-
-            if (activeRow) {
-                activeRow.trigger('click');
             }
 
-            var driversTable = $('#driversTable').closest('.table-responsive');
-            driversTable.scrollTop(0);
+            var driversTableContainer = $('#driversTable').closest('.table-responsive');
+            driversTableContainer.scrollTop(0);
         },
         error: function() {
             alert('Error fetching driver data');

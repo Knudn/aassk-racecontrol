@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultater</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%; height: 100%;
+            position: relative;
+        }
+
+        #backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(8, 8, 13, 0.96);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #page-header, #table-wrap {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Page header ─────────────────────────────────── */
+        #page-header {
+            flex-shrink: 0;
+            text-align: center;
+            padding: 20px 40px 0;
+            background: rgba(10, 10, 16, 0.92);
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #page-header.show { opacity: 1; transform: translateY(0); }
+
+        #result-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            margin-bottom: 6px;
+        }
+
+        #title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        #heat-label {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.30);
+        }
+
+        /* ── Table area ──────────────────────────────────── */
+        #table-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px 12px;
+            gap: 2px;
+            overflow: hidden;
+            background: rgba(10, 10, 16, 0.92);
+        }
+
+        /* ── Column header row ───────────────────────────── */
+        #col-headers {
+            display: flex;
+            align-items: center;
+            padding: 14px 0 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease 0.15s;
+        }
+        #col-headers.show { opacity: 1; }
+
+        .ch {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.80);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .ch.right { text-align: right; }
+        .ch.center { text-align: center; }
+
+        /* ── Class header slice ──────────────────────────── */
+        .class-slice {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            height: 26px;
+            padding: 0 10px;
+            background: rgba(30, 30, 42, 0.95);
+            border-left: 2px solid rgba(255,255,255,0.12);
+            opacity: 0;
+            transform: translateX(-16px);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+        .class-slice.show { opacity: 1; transform: translateX(0); }
+
+        .class-slice-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+        }
+
+        /* ── Data row slice ──────────────────────────────── */
+        .row-slice {
+            display: flex;
+            align-items: center;
+            height: 38px;
+            background: rgba(22, 22, 32, 0.95);
+            border-left: 2px solid transparent;
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .row-slice.show { opacity: 1; transform: translateX(0); }
+
+        .row-slice.rank-1 { border-left-color: #e8b840; background: rgba(232,184,64,0.12); }
+        .row-slice.rank-2 { border-left-color: rgba(210,210,220,0.4); background: rgba(22,22,32,0.95); }
+        .row-slice.rank-3 { border-left-color: #c07030; background: rgba(192,112,48,0.10); }
+        .row-slice.is-penalty { opacity: 0.35 !important; }
+
+        /* ── Column widths (shared between header + rows) ── */
+        .c-pos   { width: 58px;  min-width: 58px;  }
+        .c-cid   { width: 42px;  min-width: 42px;  }
+        .c-name  { flex: 1;      min-width: 0;     }
+        .c-club  { width: 16%;   min-width: 80px;  }
+        .c-sled  { width: 13%;   min-width: 60px;  }
+        .c-laps  { width: 56px;  min-width: 56px;  }
+        .c-best  { width: 82px;  min-width: 82px;  }
+        .c-total { width: 96px;  min-width: 96px;  }
+        .c-gap   { width: 96px;  min-width: 96px;  }
+        .c-pts   { width: 50px;  min-width: 50px;  }
+
+        /* ── Cell content ────────────────────────────────── */
+        .cell {
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .cell.right  { justify-content: flex-end; }
+        .cell.center { justify-content: center; }
+
+        /* Position badge */
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.40);
+            background: rgba(255,255,255,0.05);
+        }
+        .rank-1 .pos-badge { color: #e8b840; background: rgba(232,184,64,0.14); }
+        .rank-2 .pos-badge { color: rgba(210,210,225,0.85); background: rgba(210,210,225,0.10); }
+        .rank-3 .pos-badge { color: #c07030; background: rgba(192,112,48,0.14); }
+        .is-penalty .pos-badge {
+            font-size: 9px;
+            letter-spacing: 0.5px;
+            color: rgba(210,70,70,0.85);
+            background: rgba(210,70,70,0.10);
+        }
+
+        /* CID */
+        .val-cid {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.25);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Name */
+        .val-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* Club / sled */
+        .val-club, .val-sled {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.38);
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* Laps */
+        .val-laps {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.50);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Best lap */
+        .val-best {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.50);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Total time */
+        .val-total {
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.82);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .val-total.penalty-text {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: rgba(210, 70, 70, 0.85);
+        }
+
+        /* Gap */
+        .val-gap {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.35);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Points */
+        .val-pts {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.25);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-pts.lit { color: rgba(255,255,255,0.55); }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="backdrop"></div>
+
+    <div id="page-header">
+        <div id="result-label">Resultater</div>
+        <div id="title">—</div>
+        <div id="heat-label">—</div>
+    </div>
+
+    <div id="table-wrap">
+
+        <div id="col-headers">
+            <div class="ch center c-pos">Pos</div>
+            <div class="ch center c-cid">#</div>
+            <div class="ch c-name">Fører</div>
+            <div class="ch c-club">Klubb</div>
+            <div class="ch c-sled">Snøscooter</div>
+            <div class="ch center c-laps">Runder</div>
+            <div class="ch right c-best">Beste runde</div>
+            <div class="ch right c-total">Totaltid</div>
+            <div class="ch right c-gap">Gap</div>
+            <div class="ch right c-pts">Pkt</div>
+        </div>
+
+        <div id="rows"></div>
+
+    </div>
+</div>
+
+<script>
+    // ── URL params ───────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+
+    (function applyParams() {
+        const app    = document.getElementById('app');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+        const w      = params.get('w');
+        const h      = params.get('h');
+        if (w) app.style.width  = w + 'px';
+        if (h) app.style.height = h + 'px';
+
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const alpha = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.getElementById('backdrop').style.background = `rgba(8, 8, 13, ${alpha})`;
+        }
+
+        if (scale) {
+            document.body.style.transformOrigin = mirror ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    const DNX = { DNS: 1, DNF: 1, DSQ: 1, DQ: 1 };
+
+    function isPenalty(pos) { return DNX[String(pos || '').toUpperCase()] === 1; }
+
+    function rowRankClass(standing, penalty) {
+        if (penalty) return 'is-penalty';
+        const n = parseInt(standing);
+        if (n === 1) return 'rank-1';
+        if (n === 2) return 'rank-2';
+        if (n === 3) return 'rank-3';
+        return '';
+    }
+
+    function formatName(f, l) {
+        if (!f && !l) return '—';
+        if (f === l)  return l || '—';
+        if (!l) return f;
+        if (!f) return l;
+        return f.charAt(0) + '. ' + l;
+    }
+
+    function div(cls, inner) {
+        const el = document.createElement('div');
+        el.className = cls;
+        if (inner !== undefined) el.textContent = inner;
+        return el;
+    }
+
+    // ── Build rows ───────────────────────────────────────────────
+    function makeClassSlice(label) {
+        const el = div('class-slice');
+        el.appendChild(div('class-slice-label', label));
+        return el;
+    }
+
+    function makeDataSlice(d) {
+        const pos      = String(d.position ?? '—').toUpperCase();
+        const penalty  = isPenalty(pos);
+        const standing = d.internal_standing ?? '';
+        const rank     = rowRankClass(standing, penalty);
+
+        const row = div('row-slice ' + rank);
+
+        // Pos badge — use internal_standing for display; blank for penalty rows
+        const posCell = div('cell center c-pos');
+        const badge = div('pos-badge', penalty ? '' : standing);
+        posCell.appendChild(badge);
+        row.appendChild(posCell);
+
+        // CID
+        const cidCell = div('cell center c-cid');
+        cidCell.appendChild(div('val-cid', d.cid ?? ''));
+        row.appendChild(cidCell);
+
+        // Name
+        const nameCell = div('cell c-name');
+        nameCell.appendChild(div('val-name', formatName(d.first_name, d.last_name)));
+        row.appendChild(nameCell);
+
+        // Klubb
+        const clubCell = div('cell c-club');
+        clubCell.appendChild(div('val-club', d.club || ''));
+        row.appendChild(clubCell);
+
+        // Snøscooter
+        const sledCell = div('cell c-sled');
+        sledCell.appendChild(div('val-sled', d.snowmobile || ''));
+        row.appendChild(sledCell);
+
+        // Runder
+        const lapsCell = div('cell center c-laps');
+        lapsCell.appendChild(div('val-laps', d.laps ?? ''));
+        row.appendChild(lapsCell);
+
+        // Beste runde
+        const bestCell = div('cell right c-best');
+        bestCell.appendChild(div('val-best', !penalty && d.best_time ? d.best_time : ''));
+        row.appendChild(bestCell);
+
+        // Totaltid
+        const totalCell = div('cell right c-total');
+        totalCell.appendChild(div('val-total' + (penalty ? ' penalty-text' : ''), !penalty ? (d.totaltime || '—') : pos));
+        row.appendChild(totalCell);
+
+        // Gap
+        const gapCell = div('cell right c-gap');
+        gapCell.appendChild(div('val-gap', !penalty && d.gap ? d.gap : ''));
+        row.appendChild(gapCell);
+
+        // Pkt
+        const ptsCell = div('cell right c-pts');
+        ptsCell.appendChild(div('val-pts' + (d.points > 0 ? ' lit' : ''), d.points > 0 ? d.points : ''));
+        row.appendChild(ptsCell);
+
+        return row;
+    }
+
+    // ── Stagger animation ────────────────────────────────────────
+    function animateIn(container) {
+        const header  = document.getElementById('page-header');
+        const colHdrs = document.getElementById('col-headers');
+
+        header.classList.add('show');
+        setTimeout(() => colHdrs.classList.add('show'), 120);
+
+        const slices = container.querySelectorAll('.row-slice, .class-slice');
+        slices.forEach((el, i) => {
+            setTimeout(() => el.classList.add('show'), 200 + i * 38);
+        });
+    }
+
+    // ── Render ───────────────────────────────────────────────────
+    function render(data) {
+        document.getElementById('title').textContent      = data.TITLE_2 || data.TITLE_1 || '—';
+        document.getElementById('heat-label').textContent = 'Heat ' + (data.HEAT ?? '—') + ' / ' + (data.HEATS ?? '—');
+
+        const container = document.getElementById('rows');
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '2px';
+        container.style.flex = '1';
+
+        const entries = (data.time_info || []).slice()
+            .sort((a, b) => (a.internal_standing ?? 999) - (b.internal_standing ?? 999));
+
+        if (data.MULTI_CLASS) {
+            const groups = {}, order = [];
+            entries.forEach(d => {
+                const cls = d.class || 'Ukjent';
+                if (!groups[cls]) { groups[cls] = []; order.push(cls); }
+                groups[cls].push(d);
+            });
+            order.forEach(cls => {
+                container.appendChild(makeClassSlice(cls));
+                groups[cls].forEach(d => container.appendChild(makeDataSlice(d)));
+            });
+        } else {
+            entries.forEach(d => container.appendChild(makeDataSlice(d)));
+        }
+
+        requestAnimationFrame(() => animateIn(container));
+    }
+
+    // ── Fetch ────────────────────────────────────────────────────
+    fetch('http://192.168.1.50:7777/api/get_event_data?active=true')
+        .then(r => r.json())
+        .then(render)
+        .catch(e => console.error('[resultater] feil:', e));
+</script>
+</body>
+</html>

@@ -26,8 +26,17 @@ def vmix_raw(template_name):
 
 @vmix_bp.route('/vmix/test', methods=['GET'])
 def dash_test():
-    
+
     return render_template('vmix/cross/basic_overlay.html')
+
+
+@vmix_bp.route('/vmix/kvali_results_overlay', methods=['GET'])
+def kvali_results_overlay():
+    return render_template('vmix/cross/kvali_results_overlay.html')
+
+@vmix_bp.route('/vmix/kvali_loop_overlay', methods=['GET'])
+def kvali_loop_overlay():
+    return render_template('vmix/cross/kvali_loop_overlay.html')
 
 
 @vmix_bp.route('/vmix/startlist_cross_felles', methods=['GET'])

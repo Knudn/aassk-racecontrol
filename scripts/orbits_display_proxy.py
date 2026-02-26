@@ -80,8 +80,11 @@ def build_output() -> dict:
     status = race_state["status"]
 
     # Warmup: Orbits uses 9999 as a sentinel for "countdown/warmup, no lap count yet"
+    tmp_status = status
     if laps == 9999 and status == "":
         status = "warmup"
+    elif status == "":
+        tmp_status = True
 
     if status != "Green" and status != "Finish":
         # Race has not started — show the planned format from the API
@@ -95,6 +98,9 @@ def build_output() -> dict:
             laps = 0
         if event_state["finish_time"]:
             timer = "00:00"
+    if tmp_status == True:
+        timer = "00:00"
+        laps = 0
     else:
         # Race running — if Orbits still reports 9999, cap to API finish laps
         if laps == 9999 and event_state["finish_laps"]:
@@ -103,6 +109,7 @@ def build_output() -> dict:
             min_v = str(timer).split(":")[1]
             sec_v = str(timer).split(":")[2]
             timer = min_v + ":" + sec_v
+
     return {
         "timer": timer,
         "laps_to_go": laps,

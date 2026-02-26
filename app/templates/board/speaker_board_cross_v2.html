@@ -123,6 +123,52 @@
         .class-separator::after { margin-left: 8px; }
         .finished-driver { background-color: #e8f5e9; }
         .penalty-driver { background-color: #ffebee; }
+        .next-event-banner {
+            display: flex;
+            align-items: center;
+            padding: 5px 12px;
+            background: #2980b9;
+            color: #fff;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .next-event-banner:hover { background: #2471a3; }
+        .next-event-banner .neb-toggle {
+            font-size: 1.1em;
+            padding: 0 10px;
+        }
+        .all-events-panel {
+            display: none;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            margin-bottom: 6px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .all-events-panel .evt-row {
+            display: flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85em;
+            gap: 8px;
+        }
+        .all-events-panel .evt-row:last-child { border-bottom: none; }
+        .all-events-panel .evt-row.evt-current {
+            background: #fff3cd;
+            border-left: 3px solid #e67e22;
+            font-weight: bold;
+        }
+        .all-events-panel .evt-row.evt-finished { color: #aaa; }
+        .tb-highlight {
+            box-shadow: inset 0 0 0 2px #e67e22;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #c0550a;
+        }
         .race-banner {
             display: flex;
             align-items: center;
@@ -169,6 +215,17 @@
             <span id="dayLeader"><strong>Day:</strong> --</span>
         </div>
 
+        <!-- Next event banner -->
+        <div class="next-event-banner" id="nextEventBanner">
+            <span style="flex:1;">Neste løp: <span id="nextEventText">--</span></span>
+            <span class="neb-toggle" id="nebToggle" title="Vis alle løp">&#9660;</span>
+            <span style="flex:1;"></span>
+        </div>
+        <!-- All events expanded panel -->
+        <div class="all-events-panel" id="allEventsPanel">
+            <div id="allEventsList"></div>
+        </div>
+
         <!-- Navigation for active heat table -->
         <div class="nav-controls">
             <button class="btn btn-secondary" id="btnPrevHeat"><i class="fas fa-arrow-left"></i></button>
@@ -180,7 +237,8 @@
         <div class="info-section">
             <div class="race-banner" id="raceBanner" style="display:none;">
                 <span><span class="flag-dot" id="flagDot"></span><span id="flagLabel">--</span></span>
-                <span class="countdown" id="countdownDisplay">--</span>
+                <span id="orbitsHeatInfo" style="font-size:0.9em; opacity:0.85;"></span>
+                <span class="countdown" id="countdownDisplay">--:--</span>
             </div>
             <div class="section-title" id="heatTableTitle">Heat Resultater</div>
             <div id="activeHeatContent"></div>
@@ -212,17 +270,9 @@
         let heatBrowseIndex = null; // null = showing active event (default)
         let raceState = { man_ready: false, ready: false, started: false, halt_race: false, warmup: false, running: false };
         let prevRaceState = {};
-        let countdownInterval = null;
 
-        // Timer state — set once when race starts, frozen until next race
-        let timerLocked = false;      // true = we captured the epochs, don't recalculate
-        let timerStartEpoch = 0;      // epoch when race started
-        let timerFinishEpoch = 0;     // epoch when timer runs out
-        let timerTotalSec = 0;        // total duration in seconds (for display)
-        let timerLapsToGo = 0;        // laps remaining (from driver data)
-        let timerHalted = false;      // currently paused by halt
-        let timerHaltedAt = 0;        // epoch when halt began
-        let timerAllFinished = false; // all drivers finished
+        // Orbits display proxy WebSocket state
+        let orbitsData = null;
 
         // --- Race status banner ---
         function updateRaceBanner() {
@@ -233,7 +283,6 @@
             }
             banner.style.display = 'flex';
             updateFlagIndicator();
-            updateCountdown();
         }
 
         function updateFlagIndicator() {
@@ -241,14 +290,17 @@
             let label = document.getElementById('flagLabel');
             let banner = document.getElementById('raceBanner');
             let s = raceState;
+            let orbitsStatus = orbitsData ? (orbitsData.status || '') : '';
 
             let color, text, bg;
             if (s.halt_race) {
                 color = '#e74c3c'; text = 'Rodt flagg'; bg = '#c0392b';
-            } else if (s.warmup) {
+            } else if (orbitsStatus === 'warmup' || s.warmup) {
                 color = '#9b59b6'; text = 'Oppvarming'; bg = '#7d3c98';
-            } else if (s.running || s.started) {
+            } else if (orbitsStatus === 'Green' || s.running || s.started) {
                 color = '#2ecc71'; text = 'Grønt'; bg = '#27ae60';
+            } else if (orbitsStatus === 'Finish') {
+                color = '#3498db'; text = 'Ferdig'; bg = '#2980b9';
             } else if (s.man_ready && s.ready) {
                 color = '#f1c40f'; text = 'Klar'; bg = '#d4a017';
             } else if (s.man_ready || s.ready) {
@@ -262,132 +314,59 @@
         }
 
         function onRaceStateChanged(newState) {
-            let prev = prevRaceState;
-            let wasHalted = prev.halt_race;
-            let isHalted = newState.halt_race;
-            let wasStarted = prev.started || prev.running;
-            let isStarted = newState.started || newState.running;
-
-            prevRaceState = Object.assign({}, newState);
+            prevRaceState = Object.assign({}, raceState);
             raceState = newState;
-
-            // Race just started — lock the timer from the epoch values
-            if (!wasStarted && isStarted && !timerLocked) {
-                lockTimer();
-            }
-
-            // Halt just triggered — pause the timer
-            if (!wasHalted && isHalted && !timerHalted) {
-                timerHalted = true;
-                timerHaltedAt = Math.floor(Date.now() / 1000);
-            }
-
-            // Halt just removed — resync by shifting finish epoch forward
-            if (wasHalted && !isHalted && timerHalted) {
-                let pausedFor = Math.floor(Date.now() / 1000) - timerHaltedAt;
-                timerFinishEpoch += pausedFor;
-                timerHalted = false;
-                timerHaltedAt = 0;
-            }
-
-            // Race no longer active at all — reset for next race
-            if (!newState.started && !newState.running && !newState.man_ready && !newState.ready && !newState.warmup && !newState.halt_race) {
-                resetTimer();
-            }
-
             if (heatBrowseIndex === null) updateFlagIndicator();
         }
 
-        function lockTimer() {
-            if (timerLocked) return;
-            if (timerStartEpoch === 0 || timerFinishEpoch === 0) return;
-            timerTotalSec = timerFinishEpoch - timerStartEpoch;
-            timerLocked = true;
+        // --- Orbits display proxy WebSocket ---
+        function connectOrbitsWS() {
+            let ws = new WebSocket('ws://' + window.location.hostname + ':4444');
+            ws.onopen = function() { console.log('Orbits WS connected'); };
+            ws.onmessage = function(event) {
+                try {
+                    orbitsData = JSON.parse(event.data);
+                    updateOrbitsDisplay();
+                } catch(e) { console.error('Orbits WS parse error:', e); }
+            };
+            ws.onclose = function() {
+                console.log('Orbits WS disconnected, reconnecting in 3s...');
+                setTimeout(connectOrbitsWS, 3000);
+            };
+            ws.onerror = function(e) { console.error('Orbits WS error:', e); };
         }
 
-        function resetTimer() {
-            timerLocked = false;
-            timerStartEpoch = 0;
-            timerFinishEpoch = 0;
-            timerTotalSec = 0;
-            timerLapsToGo = 0;
-            timerHalted = false;
-            timerHaltedAt = 0;
-            timerAllFinished = false;
-        }
+        function updateOrbitsDisplay() {
+            if (!orbitsData) return;
+            let timer = orbitsData.timer || '--:--';
+            let laps = orbitsData.laps_to_go || 0;
+            let status = orbitsData.status || '';
+            let heat = orbitsData.heat || 0;
+            let heats = orbitsData.heats || 0;
 
-        function parseTimedataFromDrivers(data) {
-            let drivers = data.time_info || [];
-            if (drivers.length === 0) return;
-            let d = drivers[0];
-
-            // Parse epoch values from timedata "start:finish:secondsLeft"
-            let td = d.timedata || '';
-            let parts = td.split(':');
-            if (parts.length >= 3 && !timerLocked) {
-                let s = parseInt(parts[0]) || 0;
-                let f = parseInt(parts[1]) || 0;
-                if (s > 0 && f > 0) {
-                    timerStartEpoch = s;
-                    timerFinishEpoch = f;
-                }
+            // Update countdown / timer display
+            let timerEl = document.getElementById('countdownDisplay');
+            if (status === 'Finish') {
+                timerEl.textContent = 'Ferdig';
+            } else if (laps > 0 && status === 'Green') {
+                let lapsText = laps === 1 ? 'Siste runde' : laps + ' runder igjen';
+                timerEl.textContent = timer + '  ·  ' + lapsText;
+            } else {
+                timerEl.textContent = timer;
             }
 
-            // Always update laps_to_go from latest data
-            timerLapsToGo = parseInt(d.laps_to_go) || 0;
-
-            // Check if all drivers are finished
-            if (drivers.length > 0) {
-                timerAllFinished = drivers.every(dr =>
-                    dr.finished === true || dr.finished === "true"
-                );
-            }
-        }
-
-        function formatMMSS(sec) {
-            if (sec < 0) sec = 0;
-            let m = Math.floor(sec / 60);
-            let s = sec % 60;
-            return m + ':' + String(s).padStart(2, '0');
-        }
-
-        function updateCountdown() {
-            let el = document.getElementById('countdownDisplay');
-
-            // Not locked yet — race hasn't started
-            if (!timerLocked) {
-                el.textContent = '--:-- / --:--';
-                return;
+            // Update heat info in banner
+            let heatEl = document.getElementById('orbitsHeatInfo');
+            if (heats > 1) {
+                heatEl.textContent = 'Heat ' + heat + '/' + heats;
+            } else if (heat) {
+                heatEl.textContent = 'Heat ' + heat;
+            } else {
+                heatEl.textContent = '';
             }
 
-            // All drivers finished
-            if (timerAllFinished) {
-                el.textContent = 'Ferdig';
-                return;
-            }
-
-            // Laps to go takes precedence — time is up, show laps
-            if (timerLapsToGo > 0) {
-                let lapsText = timerLapsToGo === 1 ? 'Siste runde' : timerLapsToGo + ' runder igjen';
-                el.textContent = '0:00 / ' + formatMMSS(timerTotalSec) + '  ' + lapsText;
-                return;
-            }
-
-            // Calculate remaining time
-            let now = Math.floor(Date.now() / 1000);
-            if (timerHalted) now = timerHaltedAt; // freeze at halt moment
-
-            let remaining = timerFinishEpoch - now;
-            if (remaining < 0) remaining = 0;
-
-            el.textContent = formatMMSS(remaining) + ' / ' + formatMMSS(timerTotalSec);
-        }
-
-        function startCountdownTicker() {
-            if (countdownInterval) return;
-            countdownInterval = setInterval(function() {
-                if (heatBrowseIndex === null) updateCountdown();
-            }, 1000);
+            // Refresh flag indicator with latest Orbits status
+            if (heatBrowseIndex === null) updateFlagIndicator();
         }
 
         // --- MD5 hash function ---
@@ -507,8 +486,7 @@
         function updateActiveHeat(data) {
             if (!data || data.ERROR) return;
             activeEventData = data;
-
-            parseTimedataFromDrivers(data);
+            updateNextEventBanner();
 
             // Only update the visible top table if we're on the default (active) view
             if (heatBrowseIndex === null) {
@@ -627,147 +605,167 @@
             }
         }
 
-        // --- Aggregated results (bottom table) ---
-        function buildAggregatedHeader() {
-            let timeCol = '';
-            if (standingConfig.use_points) {
-                timeCol = `<div class="info-cell"><i class="fas fa-clock"></i> Beste Runde</div>
-                <div class="info-cell"><i class="fas fa-clock"></i> Total Tid</div>
-                <div class="info-cell"><i class="fas fa-star"></i> Poeng</div>`;
-            } else if (standingConfig.scoring_method === 'total_time') {
-                timeCol = `<div class="info-cell"><i class="fas fa-clock"></i> Beste Total Tid</div>`;
-            } else {
-                timeCol = `<div class="info-cell"><i class="fas fa-stopwatch"></i> Beste Runde</div>`;
+        // --- Aggregated results (bottom table) — fetched from API ---
+        async function fetchKvaliResults(eventPrefix) {
+            try {
+                let url = `http://192.168.1.50:7777/api/get_kvali_results?event_prefix=${encodeURIComponent(eventPrefix)}`;
+                let res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return await res.json();
+            } catch (e) {
+                console.error('Failed to fetch kvali results:', e);
+                return null;
             }
+        }
+
+        function getRKeys(results) {
+            // Collect sorted R1, R2, R3... keys present in any result row
+            let keys = new Set();
+            results.forEach(r => {
+                Object.keys(r).forEach(k => { if (/^R\d+$/.test(k)) keys.add(k); });
+            });
+            return Array.from(keys).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+        }
+
+        function parseTbTime(str) {
+            if (!str || str === '0.000' || str === 'DNF' || str === 'DNS' || str === '--') return Infinity;
+            if (str.includes(':')) {
+                let parts = str.split(':');
+                return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+            }
+            let v = parseFloat(str);
+            return isNaN(v) || v <= 0 ? Infinity : v;
+        }
+
+        // Returns a map of cid -> Set of tiebreaker field names to highlight for that driver.
+        // A driver is highlighted on the tiebreaker that put them above the next driver when points are equal.
+        function computeTiebreakerHighlights(results, tiebreakers) {
+            const tbDef = {
+                laps:                { field: 'total_laps',         cmp: (a, b) => parseInt(b||0) - parseInt(a||0) }, // more = better
+                combined_finishtime: { field: 'combined_finishtime', cmp: (a, b) => parseTbTime(a) - parseTbTime(b) }, // lower = better
+                lowest_finishtime:   { field: 'lowest_finishtime',   cmp: (a, b) => parseTbTime(a) - parseTbTime(b) },
+                best_lap_time:       { field: 'best_lap_time',       cmp: (a, b) => parseTbTime(a) - parseTbTime(b) },
+            };
+            let highlights = {};
+            for (let i = 0; i < results.length - 1; i++) {
+                let a = results[i], b = results[i + 1];
+                if ((a.combined_points || 0) !== (b.combined_points || 0)) continue;
+                for (let tb of tiebreakers) {
+                    let def = tbDef[tb];
+                    if (!def) continue;
+                    if (def.cmp(a[def.field], b[def.field]) !== 0) {
+                        if (!highlights[a.cid]) highlights[a.cid] = new Set();
+                        highlights[a.cid].add(tb);
+                        break;
+                    }
+                }
+            }
+            return highlights;
+        }
+
+        function buildKvaliHeader(showClassCol, rKeys, tiebreakers) {
+            let showLaps     = tiebreakers.includes('laps');
+            let showBestLap  = tiebreakers.includes('best_lap_time');
+            let showLowest   = tiebreakers.includes('lowest_finishtime');
+            let rCols = rKeys.map(k => `<div class="info-cell info-cell-time"><i class="fas fa-flag"></i> ${k}</div>`).join('');
             return `<div class="info-header">
                 <div class="info-cell-pos"><i class="fas fa-trophy"></i> #</div>
                 <div class="info-cell-pos"><i class="fas fa-id-badge"></i> CID</div>
                 <div class="info-cell-name"><i class="fas fa-user"></i> Navn</div>
-                ${timeCol}
+                ${showClassCol ? '<div class="info-cell"><i class="fas fa-tag"></i> Klasse</div>' : ''}
+                ${rCols}
+                ${showLaps    ? '<div class="info-cell info-cell-time"><i class="fas fa-redo"></i> Runder</div>' : ''}
+                ${showBestLap ? '<div class="info-cell info-cell-time"><i class="fas fa-stopwatch"></i> Beste Runde</div>' : ''}
+                ${showLowest  ? '<div class="info-cell info-cell-time"><i class="fas fa-flag-checkered"></i> Beste Løpstid</div>' : ''}
+                <div class="info-cell info-cell-time"><i class="fas fa-star"></i> Poeng</div>
+                <div class="info-cell info-cell-time"><i class="fas fa-clock"></i> Sammenlagt Tid</div>
             </div>`;
         }
 
-        function buildAggregatedRow(item) {
-            let timeCols = '';
-            if (standingConfig.use_points) {
-                timeCols = `<div class="info-cell">${formatTime(item.best_time)}</div>
-                <div class="info-cell">${formatTime(item.totaltime)}</div>
-                <div class="info-cell">${item.points || 0}</div>`;
-            } else if (standingConfig.scoring_method === 'total_time') {
-                timeCols = `<div class="info-cell">${formatTime(item.totaltime)}</div>`;
-            } else {
-                timeCols = `<div class="info-cell">${formatTime(item.best_time)}</div>`;
-            }
+        function buildKvaliRow(item, showClassCol, rKeys, tiebreakers, driverHighlights) {
+            let showLaps    = tiebreakers.includes('laps');
+            let showBestLap = tiebreakers.includes('best_lap_time');
+            let showLowest  = tiebreakers.includes('lowest_finishtime');
+            let hl = driverHighlights || new Set();
+
+            let rCols = rKeys.map(k => {
+                let time = item[k];
+                let pts = item[k + '_POINTS'];
+                let display = (time && time !== '0.000') ? time : '--';
+                let ptsDisplay = (pts && pts > 0) ? `<span style="font-size:0.8em;color:#888;">(${pts}p)</span>` : '';
+                return `<div class="info-cell info-cell-time">${display} ${ptsDisplay}</div>`;
+            }).join('');
+
+            let combinedTime = item.combined_finishtime || '--';
+            let hlCombined  = hl.has('combined_finishtime') ? ' tb-highlight' : '';
+            let hlLowest    = hl.has('lowest_finishtime')   ? ' tb-highlight' : '';
+            let hlBestLap   = hl.has('best_lap_time')       ? ' tb-highlight' : '';
+            let hlLaps      = hl.has('laps')                ? ' tb-highlight' : '';
+
+            let lowestTime = (item.lowest_finishtime && item.lowest_finishtime !== '0.000') ? item.lowest_finishtime : '--';
+
             return `<div class="info-row">
-                <div class="info-cell-pos">${item.position}</div>
+                <div class="info-cell-pos">${item.internal_standing}</div>
                 <div class="info-cell-pos">${item.cid || ''}</div>
                 <div class="info-cell-name">${item.first_name} ${item.last_name}</div>
-                ${timeCols}
+                ${showClassCol ? `<div class="info-cell">${item.class || ''}</div>` : ''}
+                ${rCols}
+                ${showLaps    ? `<div class="info-cell info-cell-time${hlLaps}">${item.total_laps || 0}</div>` : ''}
+                ${showBestLap ? `<div class="info-cell info-cell-time${hlBestLap}">${item.best_lap_time || '--'}</div>` : ''}
+                ${showLowest  ? `<div class="info-cell info-cell-time${hlLowest}">${lowestTime}</div>` : ''}
+                <div class="info-cell info-cell-time">${item.combined_points || 0}</div>
+                <div class="info-cell info-cell-time${hlCombined}">${combinedTime}</div>
             </div>`;
         }
 
-        // Aggregate drivers across all heats for a given TITLE_2
-        function getAggregatedDrivers(title2) {
-            let driverMap = {};
-            allEventsData.filter(e => e.TITLE_2 === title2).forEach(evt => {
-                (evt.time_info || []).forEach(d => {
-                    let cid = d.cid;
-                    if (!cid) return;
+        async function loadAggregatedForTitle(title2) {
+            document.getElementById('aggregatedTableTitle').textContent = `${title2} - Sammenlagt`;
+            document.getElementById('aggregatedContent').innerHTML = '<div style="padding:10px;text-align:center;color:#888;">Laster...</div>';
 
-                    if (!driverMap[cid]) {
-                        // First entry for this driver — clone it
-                        driverMap[cid] = Object.assign({}, d);
-                        driverMap[cid]._totalPoints = parseFloat(d.points) || 0;
-                        driverMap[cid]._bestLap = (d.best_time && parseFloat(d.best_time) > 0) ? parseFloat(d.best_time) : Infinity;
-                        driverMap[cid]._bestTotal = (d.totaltime && parseFloat(d.totaltime) > 0) ? parseFloat(d.totaltime) : Infinity;
-                        driverMap[cid]._hasPenaltyOnly = isPenalty(d.position);
-                    } else {
-                        let existing = driverMap[cid];
-                        // Sum points from every heat
-                        existing._totalPoints += parseFloat(d.points) || 0;
+            let data = await fetchKvaliResults(title2);
 
-                        let bt = (d.best_time && parseFloat(d.best_time) > 0) ? parseFloat(d.best_time) : Infinity;
-                        let tt = (d.totaltime && parseFloat(d.totaltime) > 0) ? parseFloat(d.totaltime) : Infinity;
-
-                        // Track best lap time across all heats
-                        if (bt < existing._bestLap) {
-                            existing._bestLap = bt;
-                            existing.best_time = d.best_time;
-                        }
-
-                        // Track best total time across all heats
-                        if (tt < existing._bestTotal) {
-                            existing._bestTotal = tt;
-                            existing.totaltime = d.totaltime;
-                        }
-
-                        // If this heat is not a penalty, mark driver as having a valid run
-                        if (!isPenalty(d.position)) {
-                            existing._hasPenaltyOnly = false;
-                        }
-                    }
-                });
-            });
-
-            let drivers = Object.values(driverMap);
-
-            // Assign aggregated points back
-            drivers.forEach(d => {
-                d.points = d._totalPoints;
-            });
-
-            // Sort based on config
-            if (standingConfig.use_points) {
-                // Higher total points = better
-                drivers.sort((a, b) => {
-                    if (a._hasPenaltyOnly && !b._hasPenaltyOnly) return 1;
-                    if (!a._hasPenaltyOnly && b._hasPenaltyOnly) return -1;
-                    return (b._totalPoints || 0) - (a._totalPoints || 0);
-                });
-            } else if (standingConfig.scoring_method === 'total_time') {
-                // Lower total time = better
-                drivers.sort((a, b) => {
-                    if (a._hasPenaltyOnly && !b._hasPenaltyOnly) return 1;
-                    if (!a._hasPenaltyOnly && b._hasPenaltyOnly) return -1;
-                    return (a._bestTotal || Infinity) - (b._bestTotal || Infinity);
-                });
-            } else {
-                // Default: best lap — lower = better
-                drivers.sort((a, b) => {
-                    if (a._hasPenaltyOnly && !b._hasPenaltyOnly) return 1;
-                    if (!a._hasPenaltyOnly && b._hasPenaltyOnly) return -1;
-                    return (a._bestLap || Infinity) - (b._bestLap || Infinity);
-                });
+            if (!data || !data.results) {
+                document.getElementById('aggregatedContent').innerHTML = '<div style="padding:10px;text-align:center;color:#c00;">Ingen data tilgjengelig</div>';
+                return;
             }
 
-            drivers.forEach((d, i) => { d.position = i + 1; });
-            return drivers;
-        }
+            let meta = data.meta;
+            let results = data.results;
+            let hasMultipleClasses = meta.has_multiple_classes;
+            let mixClasses = meta.mix_classes;
+            let tiebreakers = meta.tiebreakers || [];
+            let rKeys = getRKeys(results);
+            // Show class column only when classes are mixed together (separator handles it otherwise)
+            let showClassCol = hasMultipleClasses && mixClasses;
 
-        // Check if any event with this TITLE_2 is multi-class
-        function isMultiClassEvent(title2) {
-            return allEventsData.some(e => e.TITLE_2 === title2 && e.MULTI_CLASS);
-        }
+            let highlights = computeTiebreakerHighlights(results, tiebreakers);
 
-        function loadAggregatedForTitle(title2) {
-            document.getElementById('aggregatedTableTitle').textContent = `${title2} - Sammenlagt`;
-
-            let drivers = getAggregatedDrivers(title2);
-            let multiClass = isMultiClassEvent(title2);
             let container = document.getElementById('aggregatedContent');
-            let html = buildAggregatedHeader();
+            let html = buildKvaliHeader(showClassCol, rKeys, tiebreakers);
             html += '<div class="info-body">';
 
-            if (multiClass && !standingConfig.mix_classes) {
-                let groups = groupByClass(drivers);
-                for (let cls in groups) {
+            if (hasMultipleClasses && !mixClasses) {
+                // Separate by class, re-numbering within each group
+                let groups = {};
+                let groupOrder = [];
+                results.forEach(r => {
+                    let cls = r.class || 'Ukjent';
+                    if (!groups[cls]) { groups[cls] = []; groupOrder.push(cls); }
+                    groups[cls].push(r);
+                });
+                groupOrder.forEach(cls => {
+                    // Recompute highlights within each class group independently
+                    let groupHighlights = computeTiebreakerHighlights(groups[cls], tiebreakers);
                     html += `<div class="class-separator">${cls}</div>`;
-                    // Re-number positions within each class
-                    groups[cls].forEach((item, i) => { item.position = i + 1; });
-                    groups[cls].forEach(item => { html += buildAggregatedRow(item); });
-                }
+                    groups[cls].forEach((item, i) => {
+                        let it = Object.assign({}, item, { internal_standing: i + 1 });
+                        html += buildKvaliRow(it, showClassCol, rKeys, tiebreakers, groupHighlights[item.cid]);
+                    });
+                });
             } else {
-                drivers.forEach(item => { html += buildAggregatedRow(item); });
+                results.forEach(item => {
+                    html += buildKvaliRow(item, showClassCol, rKeys, tiebreakers, highlights[item.cid]);
+                });
             }
 
             html += '</div>';
@@ -803,6 +801,55 @@
             return unique;
         }
 
+        // --- Active events list (from /api/get_active_events) ---
+        let activeEventsList = [];
+
+        async function fetchActiveEvents() {
+            try {
+                let res = await fetch('/api/get_active_events');
+                activeEventsList = await res.json();
+                updateNextEventBanner();
+            } catch(e) {
+                console.error('Failed to fetch active events:', e);
+            }
+        }
+
+        function findCurrentInActiveList() {
+            if (!activeEventData || !activeEventsList.length) return -1;
+            return activeEventsList.findIndex(e =>
+                e.event_name === activeEventData.TITLE_2 && e.run === activeEventData.HEAT
+            );
+        }
+
+        function updateNextEventBanner() {
+            if (!activeEventsList.length) return;
+
+            let currentIdx = findCurrentInActiveList();
+            let nextEvt = (currentIdx >= 0 && currentIdx < activeEventsList.length - 1)
+                ? activeEventsList[currentIdx + 1]
+                : null;
+
+            let nextText = nextEvt
+                ? `${nextEvt.event_name} — Heat ${nextEvt.run}`
+                : 'Ingen kommende løp';
+            document.getElementById('nextEventText').textContent = nextText;
+
+            // Rebuild the expanded event list
+            let html = '';
+            activeEventsList.forEach((evt, i) => {
+                let isCurrent = (i === currentIdx);
+                let cls = 'evt-row' + (isCurrent ? ' evt-current' : '') + (evt.finished && !isCurrent ? ' evt-finished' : '');
+                let icon = isCurrent
+                    ? '<i class="fas fa-play" style="color:#e67e22;font-size:0.8em;"></i>'
+                    : `<span style="display:inline-block;width:14px;"></span>`;
+                let finishedTag = (evt.finished && !isCurrent)
+                    ? '<span style="font-size:0.78em;margin-left:auto;opacity:0.6;">Ferdig</span>'
+                    : '';
+                html += `<div class="${cls}">${icon}<span>${evt.event_name} — Heat ${evt.run}</span>${finishedTag}</div>`;
+            });
+            document.getElementById('allEventsList').innerHTML = html;
+        }
+
         // --- Find the active event from allEventsData ---
         function findActiveEvent(events) {
             let active = events.find(e => e.ACTIVE_EVENT === true);
@@ -811,11 +858,12 @@
 
         // --- Initial load ---
         async function initialLoad() {
-            // Fetch standing config and all events in parallel
+            // Fetch standing config, all events, and active events list in parallel
             let [configRes, eventsRes] = await Promise.all([
                 fetch('/api/get_standing_config').then(r => r.json()),
                 fetch('/api/get_event_data').then(r => r.json())
             ]);
+            fetchActiveEvents();
 
             standingConfig = configRes;
 
@@ -839,6 +887,13 @@
         // --- Event handlers ---
         document.addEventListener('DOMContentLoaded', function() {
             initialLoad();
+
+            document.getElementById('nextEventBanner').addEventListener('click', function() {
+                let panel = document.getElementById('allEventsPanel');
+                let open = panel.style.display === 'block';
+                panel.style.display = open ? 'none' : 'block';
+                document.getElementById('nebToggle').innerHTML = open ? '&#9660;' : '&#9650;';
+            });
 
             document.getElementById('eventDropdown').addEventListener('change', function() {
                 if (this.value === '') {
@@ -877,6 +932,7 @@
             });
 
             initializeWebSocket();
+            connectOrbitsWS();
         });
 
         // --- WebSocket ---
@@ -929,7 +985,6 @@
                 }
             });
 
-            startCountdownTicker();
         }
     </script>
 </body>

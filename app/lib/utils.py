@@ -12,6 +12,224 @@ from flask import current_app
 import json
 
 
+
+
+def extract_class(name: str) -> str:
+    import re
+    """Extract the base class name (e.g., '600 Stock') from a full event name."""
+    # Remove known suffixes: Finale, Kvalifisering, C Finale, B Finale, A Finale, Heat, etc.
+    suffixes = r'\s*[-–]\s*(A|B|C|D)?\s*(Finale|Kvalifisering|Heat|Semi|Semifinale)\w*$'
+    return re.sub(suffixes, '', name, flags=re.IGNORECASE).strip()
+
+def combine_qualifying_results(
+    results,
+    tiebreakers: list[str] = ["combined_finishtime"]
+):
+    INVALID_STATUSES = {'DNF', 'DSQ', 'DNS'}
+    VALID_TIEBREAKERS = {"combined_finishtime", "lowest_finishtime", "best_lap_time", "laps"}
+
+    from app.models import StandingConfig
+    mix_classes = bool(StandingConfig.query.first().mix_classes)
+
+    for tb in tiebreakers:
+        if tb not in VALID_TIEBREAKERS:
+            raise ValueError(f"Invalid tiebreaker '{tb}'. Must be one of: {VALID_TIEBREAKERS}")
+    if len(tiebreakers) != len(set(tiebreakers)):
+        raise ValueError("Tiebreakers list cannot contain duplicates.")
+    if len(tiebreakers) > 2:
+        raise ValueError("Maximum 2 tiebreakers allowed (primary and secondary).")
+
+    def parse_time(value):
+        value = str(value).strip()
+        if ':' in value:
+            parts = value.split(':')
+            return int(parts[0]) * 60 + float(parts[1])
+        return float(value)
+
+    def format_time(seconds):
+        if seconds >= 60:
+            minutes = int(seconds // 60)
+            secs = seconds % 60
+            return f"{minutes}:{secs:06.3f}"
+        return f"{round(seconds, 3):.3f}"
+
+    def build_drivers(entries):
+        drivers = {}
+        total_heats = 0
+
+        for entry in entries:
+            cid = entry['cid']
+            heat_num = int(entry['heat'])
+
+            if heat_num > total_heats:
+                total_heats = heat_num
+
+            if cid not in drivers:
+                drivers[cid] = {
+                    'cid': cid,
+                    'first_name': entry['first_name'],
+                    'last_name': entry['last_name'],
+                    'club': entry['club'],
+                    'class': entry['class'],
+                    'run_name': entry['run_name'],
+                    'heats': {}
+                }
+            else:
+                if entry['first_name'] != entry['last_name']:
+                    drivers[cid]['first_name'] = entry['first_name']
+                    drivers[cid]['last_name'] = entry['last_name']
+
+            position = entry['position']
+            time_value = position if position in INVALID_STATUSES else parse_time(entry['totaltime'])
+            best_lap = parse_time(entry['best_time']) if entry.get('best_time') and entry['best_time'] not in INVALID_STATUSES else None
+
+            drivers[cid]['heats'][heat_num] = {
+                'totaltime': time_value,
+                'points': entry['points'],
+                'position': position,
+                'best_lap': best_lap,
+                'laps': int(entry.get('laps', 0)),
+            }
+
+        return drivers, total_heats
+
+    def build_combined(drivers, total_heats):
+        combined = []
+
+        for cid, driver in drivers.items():
+            row = {
+                'cid': cid,
+                'first_name': driver['first_name'],
+                'last_name': driver['last_name'],
+                'club': driver['club'],
+                'class': driver['class'],
+            }
+
+            total_points = 0
+            valid_times = []
+            best_laps = []
+            total_laps = 0
+
+            for h in range(1, total_heats + 1):
+                time_key = f'R{h}'
+                points_key = f'R{h}_POINTS'
+
+                if h in driver['heats']:
+                    heat = driver['heats'][h]
+                    t = heat['totaltime']
+                    pts = heat['points']
+                    total_points += pts
+                    total_laps += heat['laps']
+
+                    row[time_key] = format_time(t) if isinstance(t, float) else t
+                    row[points_key] = pts
+
+                    if isinstance(t, float):
+                        valid_times.append(t)
+                    if heat['best_lap'] is not None:
+                        best_laps.append(heat['best_lap'])
+                else:
+                    row[time_key] = "0.000"
+                    row[points_key] = 0
+
+            combined_secs = sum(valid_times)
+            lowest_secs = min(valid_times) if valid_times else 0
+            best_lap_secs = min(best_laps) if best_laps else None
+
+            row['combined_points'] = total_points
+            row['combined_finishtime'] = format_time(combined_secs) if combined_secs > 0 else "0.000"
+            row['lowest_finishtime'] = format_time(lowest_secs) if lowest_secs > 0 else "0.000"
+            row['best_lap_time'] = format_time(best_lap_secs) if best_lap_secs is not None else "0.000"
+            row['total_laps'] = total_laps
+
+            row['_sort_combined'] = combined_secs
+            row['_sort_lowest'] = lowest_secs
+            row['_sort_best_lap'] = best_lap_secs if best_lap_secs is not None else float('inf')
+            row['_sort_laps'] = total_laps
+            row['_sort_points'] = total_points
+
+            combined.append(row)
+
+        return combined
+
+    def get_sort_value(row, criterion):
+        if criterion == "combined_finishtime":
+            return row['_sort_combined'] if row['_sort_combined'] > 0 else float('inf')
+        elif criterion == "lowest_finishtime":
+            return row['_sort_lowest'] if row['_sort_lowest'] > 0 else float('inf')
+        elif criterion == "best_lap_time":
+            return row['_sort_best_lap']
+        elif criterion == "laps":
+            return -row['_sort_laps']  # More laps = better, so negate
+
+    def make_sort_key(row):
+        # Points always primary, tiebreakers applied in order after
+        key = [-row['_sort_points']]
+        for tb in tiebreakers:
+            key.append(get_sort_value(row, tb))
+        return tuple(key)
+
+    def assign_standings(combined, mix_classes):
+        if mix_classes:
+            combined.sort(key=make_sort_key)
+            for i, row in enumerate(combined):
+                row['internal_standing'] = i + 1
+        else:
+            class_groups = {}
+            for row in combined:
+                class_groups.setdefault(row['class'], []).append(row)
+
+            combined.clear()
+            for cls, group in class_groups.items():
+                group.sort(key=make_sort_key)
+                for i, row in enumerate(group):
+                    row['internal_standing'] = i + 1
+                combined.extend(group)
+
+        for row in combined:
+            for key in ['_sort_combined', '_sort_lowest', '_sort_best_lap', '_sort_laps', '_sort_points']:
+                del row[key]
+
+        return combined
+
+    # --- Main ---
+    run_name = results[0]['run_name'] if results else ''
+    unique_classes = set(entry['class'] for entry in results)
+    has_multiple_classes = len(unique_classes) > 1
+
+    drivers, total_heats = build_drivers(results)
+    combined = build_combined(drivers, total_heats)
+    combined = assign_standings(combined, mix_classes)
+
+    return {
+        'meta': {
+            'run_name': run_name,
+            'mix_classes': mix_classes,
+            'has_multiple_classes': has_multiple_classes,
+            'tiebreakers': tiebreakers,
+        },
+        'results': combined
+    }
+
+def get_combined_results(event_prefix, kvali=False):
+    from app.models import Session_Race_Records
+    
+    if kvali:
+        data = Session_Race_Records.query.filter(
+            Session_Race_Records.title_2.ilike(event_prefix + " - Kvalifisering")).all()
+    else:
+        data = Session_Race_Records.query.filter(Session_Race_Records.title_2.like(event_prefix)).all()
+    data_list = []
+    
+    for a in data:
+        data_list.append(a.data)
+
+    data = combine_qualifying_results(data_list, tiebreakers=["laps", "combined_finishtime"])
+
+    return data
+
+
+
 def get_dash_data():
     from app.models import Session_Race_Records, ActiveDrivers, GlobalConfig
     from sqlalchemy import cast, String

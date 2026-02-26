@@ -13,7 +13,8 @@ from app.lib.utils import (
     intel_sort,
     update_info_screen,
     export_events,
-    GetEnv
+    GetEnv,
+    get_combined_results
 )
 from app.models import (
     ActiveEvents,
@@ -50,7 +51,98 @@ def register_event_routes(api_bp):
         
         return s_dict
 
+    @api_bp.route('/api/get_active_events', methods=['GET'])
+    def get_active_events_order():
+        from app.models import ActiveEvents
+        from app.lib.db_operation import get_active_event
+        import json
+        
+        active_event_id = get_active_event()[0]["event_id"]
 
+        data = [event.to_dict() for event in ActiveEvents.query.filter(ActiveEvents.enabled==True).order_by(ActiveEvents.sort_order).all()]
+        for a in data:
+            if a["event_checksum"] == active_event_id:
+                a["active"] = True
+            else:
+                a["active"] = False 
+
+        data = json.dumps(data)
+
+        return data
+
+    @api_bp.route('/api/get_startlist', methods=['GET'])
+    def get_startlists():
+        from app.models import Session_Race_Records
+        from app.lib.utils import get_combined_results, extract_class
+
+        r_type = ""
+        event_name = request.args.get('event_name', default=None)
+        heat = request.args.get('heat', default=None)
+
+        if event_name == "active":
+            from app.lib.db_operation import get_active_event
+            event_name = get_active_event()[0]["event_id"]
+
+        
+        records = Session_Race_Records.query.filter(Session_Race_Records.title_2==event_name, Session_Race_Records.heat==heat).all()
+        if len(records) == 0:
+            return "No events found!" 
+
+        start_lst = {"entries":[]}
+        driver_q_p = {}
+        
+        for k, a in enumerate(records):
+            k += 1
+            if r_type == "":
+                if "kvali" in a.title_2.lower():
+                    r_type = "kvali"
+                    start_lst["track_placement"] = "random"
+                elif "finale" in a.title_2.lower():
+                    kvali_title = a.title_2.replace(a.title_2.split("-")[-1], "")
+
+                    prefix = extract_class(a.title_2)
+                    results_from_kvali = get_combined_results(prefix, kvali=True)
+                    r_type = "finale"
+                    start_lst["track_placement"] = "best_from_kvali"
+                    
+                    driver_q_p = {}
+                    
+                    for t in results_from_kvali["results"]:
+                        driver_q_p[t["cid"]] = t["internal_standing"]
+                    
+                else:
+                    r_type = "other"
+                    start_lst["track_placement"] = "random"
+                
+                
+                start_lst["mode"] = r_type
+                start_lst["event"] = a.title_2
+                start_lst["heat"] = a.heat
+
+            
+            data = {
+                "num": k,
+                "cid": a.data["cid"],
+                "first_name": a.data["first_name"],
+                "last_name": a.data["last_name"],
+                "club": a.data["club"],
+                "snowmobile": a.data["snowmobile"],
+                "klasse": a.data["class"],
+                "qualifying_standing": driver_q_p[a.data["cid"]] if a.data["cid"] in driver_q_p else k,
+            }
+            
+            
+
+            
+            
+            start_lst["entries"].append(data)
+
+            
+        if "finale".lower() in event_name.lower():
+            start_lst["entries"] = sorted(start_lst["entries"], key=lambda x: x["qualifying_standing"])
+
+
+        return start_lst
 
     @api_bp.route('/api/get_event_results', methods=['GET'])
     def get_event_data_agg():
@@ -71,9 +163,23 @@ def register_event_routes(api_bp):
         dataset = get_event_results(data_type=data_type) 
         return dataset
 
-    @api_bp.route('/api/get_full_standing', methods=['GET'])
-    def get_full_standing():
-       pass 
+    @api_bp.route('/api/get_kvali_results', methods=['GET'])
+    def get_kvali_resuts():
+
+
+        event_prefix = request.args.get('event_prefix', default=None)
+
+        if event_prefix == None:
+            return "Invalid prefix"
+
+        if event_prefix == "active":
+            from app.lib.db_operation import get_active_event
+            from app.models import ActiveEvents
+
+            active_event_id = get_active_event()[0]["event_id"]
+            event_prefix = ActiveEvents.query.filter(ActiveEvents.event_checksum == active_event_id).first().event_name
+            
+        return get_combined_results(event_prefix)
 
 
     # Event data endpoints

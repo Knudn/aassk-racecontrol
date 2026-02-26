@@ -112,11 +112,12 @@ def create_event_id_checksum(event_entry):
 
 
 def upsert_schedule(run_name, heat, data):
-
+    logger.info(run_name)
     with Session(engine) as session:
         existing = session.query(ScheduleEntry).filter_by(
             run_name=run_name, heat=str(heat)
         ).first()
+             
         if existing:
             existing.data = data
         else:
@@ -562,6 +563,7 @@ def proc_current(current_dict):
 
 def build_schedule_api(sc_data):
     data = {"table_data": json.dumps(sc_data), "src": "orbits"}
+
     logger.debug("Posting schedule: %s", data)
     try:
         requests.post(
@@ -598,10 +600,18 @@ def update_schedule(entry):
             upsert_schedule(norm_group_name, str(heat), existing)
         else:
             logger.info("Added schedule entry: %s", norm_group_name)
-
+            if "kvali".lower() in norm_group_name.lower():
+                event_type = "kvali"
+            elif "finale".lower() in norm_group_name.lower():
+                event_type = "finale"
+            elif "chance" in norm_group_name.lower():
+                event_type = "finale"
+            else:
+                event_type = "other"
             event_checksum = create_event_id_checksum(norm_group_name + " " + heat)
             upsert_schedule(norm_group_name, str(heat), {
                 "event_name": event_name,
+                "event_type": event_type,
                 "heats": heats,
                 "laps": 0,
                 "time": results["datetime"],

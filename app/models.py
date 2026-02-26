@@ -182,8 +182,28 @@ class ActiveEvents(db.Model):
     finish_laps = db.Column(db.Integer, nullable=True, default=0)
     finish_time = db.Column(db.Integer, nullable=True, default=0)
     override_finish = db.Column(db.Boolean, default=False)
-    event_stage = db.Column(db.Integer, default=1)  # 1=qualifying, 2=finale, 3=other
+    event_stage = db.Column(db.Integer, default=1)
+    event_type =  db.Column(db.String(20))
+    finished = db.Column(db.Integer, default=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_name': self.event_name,
+            'event_file': self.event_file,
+            'run': self.run,
+            'enabled': self.enabled,
+            'sort_order': self.sort_order,
+            'mode': self.mode,
+            'event_checksum': self.event_checksum,
+            'finish_criteria': self.finish_criteria,
+            'finish_laps': self.finish_laps,
+            'finish_time': self.finish_time,
+            'override_finish': self.override_finish,
+            'event_stage': self.event_stage,
+            'finished': self.finished,
+        }
+    
     def __repr__(self):
         return (f"<ActiveEvents(id={self.id}, event_name='{self.event_name}', event_file='{self.event_file}', "
                 f"run={self.run}, enabled={self.enabled}, sort_order={self.sort_order}, mode={self.mode})>")

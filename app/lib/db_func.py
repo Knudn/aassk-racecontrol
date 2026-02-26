@@ -100,8 +100,9 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
         finish_criteria = current_meta_config.finish_criteria
         event_checksum = current_meta_config.event_checksum
         override_finish = current_meta_config.override_finish
+        finished = current_meta_config.finished
 
-        backup_event_lst[event_checksum] = [finish_criteria, finish_time, finish_laps, override_finish]
+        backup_event_lst[event_checksum] = [finish_criteria, finish_time, finish_laps, override_finish, finished]
 
     #Clear active events
     ActiveEvents.query.delete()
@@ -114,12 +115,15 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
         heat = b[1]
         event_checksum = b[3]
         sort_order = event_dict["sort_order"]
-        entry = ActiveEvents(event_name=event_name, run=heat, sort_order=sort_order, mode=race_mode)
+        event_type = event_dict["event_type"]
+        entry = ActiveEvents(event_name=event_name, run=heat, sort_order=sort_order, mode=race_mode, event_type=event_type)
         if event_checksum in backup_event_lst:
             entry.finish_criteria = backup_event_lst[event_checksum][0]
             entry.finish_laps = backup_event_lst[event_checksum][2]
             entry.finish_time = backup_event_lst[event_checksum][1]
             entry.override_finish = backup_event_lst[event_checksum][3]
+            entry.finished = backup_event_lst[event_checksum][4]
+
 
         my_db.session.add(entry)
     my_db.session.commit()
@@ -139,6 +143,16 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
         
         groups = {}
         score_dict = {}
+
+        ex_dict = json.loads(entries[0][5])
+        event_id = ex_dict["event_id"]
+        finish_state = ex_dict["finished"]
+        active_event = ActiveEvents.query.filter(ActiveEvents.event_checksum==event_id).first()
+        
+        if bool(active_event.finished) != bool(finish_state):
+             active_event.finished = bool(finish_state)
+             my_db.session.commit()
+
         for a in entries:
             if bool(json.loads(a[5])["multi_class"]) and mix_classes == False:
                 event_id_ent = a[4] + "_" + json.loads(a[5])["class"]
@@ -164,6 +178,7 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
             event_id = a[4]
             active_event = bool(a[3])
             data = json.loads(a[5])
+
             if bool(data["multi_class"]) and mix_classes == False:
                 event_id_ent = event_id + "_" + data["class"]
             else:
@@ -248,6 +263,14 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
         for t in entries:
             event_id = t[4]
 
+            ex_dict = json.loads(t[5])
+
+            finish_state = ex_dict["finished"]
+            active_event = ActiveEvents.query.filter(ActiveEvents.event_checksum==event_id).first()
+            
+            if bool(active_event.finished) != bool(finish_state):
+                active_event.finished = bool(finish_state)
+                my_db.session.commit()
             if bool(json.loads(t[5])["multi_class"]) and mix_classes == False:
                 event_id_ent = event_id + "_" +json.loads(t[5])["class"]
             else:
@@ -258,7 +281,13 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
             grouped[event_id_ent].append(t)
         
 
-
+        def extract_class(name: str) -> str:
+            import re
+            """Extract the base class name (e.g., '600 Stock') from a full event name."""
+            # Remove known suffixes: Finale, Kvalifisering, C Finale, B Finale, A Finale, Heat, etc.
+            suffixes = r'\s*[-–]\s*(A|B|C|D)?\s*(Finale|Kvalifisering|Heat|Semi|Semifinale)\w*$'
+            return re.sub(suffixes, '', name, flags=re.IGNORECASE).strip()
+        
         for a in grouped:
             standings = calculate_standing(grouped[a])
 
@@ -267,7 +296,9 @@ def insert_orbits_data(active_only=False, event_id=None, calculate_points=False,
 
         for a in entries:
             cid = a[0]
+            
             run_name = a[1]
+            print(extract_class(run_name))
             heat = a[2]
             event_id = a[4]
             active_event = bool(a[3])

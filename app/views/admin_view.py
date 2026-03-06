@@ -48,6 +48,8 @@ def admin(tab_name):
         return kvali_criteria()
     elif tab_name == "stream_overlay":
         return stream_overlay()
+    elif tab_name == "race_results":
+        return race_results()
     else:
         return "Invalid tab", 404
 
@@ -64,7 +66,7 @@ def s_set_active_driver():
             cur = con.cursor()
             cur.execute("UPDATE active_drivers SET  D1 = ?;", (active_driver_id,))
 
-        requests.get("http://{0}:7777/api/active_event_update".format(list_address))
+        requests.get("http://{0}:7777/api/update_event?active=True".format(list_address))
 
         con.commit()
         return {"synced": "True"}
@@ -880,6 +882,8 @@ def active_events_driver_data():
         .all()
     )
 
+    extra_keys = ["id", "event_id", "title_2", "active_event", "heat"]
+
     if request.method == "POST":
         # JSON update from Tabulator
         if request.content_type and "application/json" in request.content_type:
@@ -891,9 +895,25 @@ def active_events_driver_data():
                 cid = row.pop("CID")
                 locked = row.pop("LOCKED", False)
 
+                for k in extra_keys:
+                    row.pop(k, None)
+
                 record = Session_Race_Records.query.filter_by(
                     title_2=title_2, heat=heat, cid=cid
                 ).first()
+
+                # Restore essential fields that were popped but are needed in the data JSON
+                row["cid"] = int(cid)
+                row["title_2"] = title_2
+                row["heat"] = heat
+
+                int_fields = ["finishtime", "penalty", "reaction", "inter_1", "inter_2", "inter_3", "speed", "laps", "points", "start_pos", "heat", "heats", "cid"]
+                for field in int_fields:
+                    if field in row and row[field] is not None and row[field] != "":
+                        try:
+                            row[field] = int(row[field])
+                        except (ValueError, TypeError):
+                            pass
 
                 if record:
                     record.data = row
@@ -908,43 +928,70 @@ def active_events_driver_data():
 
             if use_active:
                 records = Session_Race_Records.query.filter_by(active_event=True).all()
+                print(records)
                 if not records:
                     return render_template(
                         "admin/active_events_driver_data.html",
                         unique_events=unique_events,
                         sqldata="None",
+                        extra_keys=extra_keys,
+                        dynamic_keys=[],
                         event_entry_file="None",
                         returned_event_info="No active event found",
                     )
                 selected_event = records[0].title_2
                 selected_heat = records[0].heat
+
             else:
                 selected_event = request.form.get("event_name")
-                selected_heat = int(request.form.get("run"))
+                run_val = request.form.get("run")
+                
+                if not run_val or not run_val.isdigit():
+                    return render_template(
+                        "admin/active_events_driver_data.html",
+                        unique_events=unique_events,
+                        sqldata="None",
+                        extra_keys=extra_keys,
+                        dynamic_keys=[],
+                        event_entry_file="None",
+                        returned_event_info="Please select a valid event and heat.",
+                    )
+                selected_heat = int(run_val)
                 records = Session_Race_Records.query.filter_by(
                     title_2=selected_event, heat=selected_heat
                 ).all()
-
+            
             table_data = []
             for r in records:
-                row = {"CID": r.cid, "LOCKED": r.locked}
+                row = {
+                    "CID": r.cid,
+                    "LOCKED": r.locked,
+                    "id": r.id,
+                    "event_id": r.event_id,
+                    "title_2": r.title_2,
+                    "active_event": r.active_event,
+                    "heat": r.heat,
+                }
                 if r.data:
                     row.update(r.data)
                 table_data.append(row)
-
-            # Extract dynamic column names from JSON data (exclude CID/LOCKED)
+            
+            print(table_data)
+            # Extract dynamic column names from JSON data (exclude CID/LOCKED and extra_keys)
             dynamic_keys = []
             if table_data:
                 for key in table_data[0]:
-                    if key not in ("CID", "LOCKED"):
+                    if key not in ("CID", "LOCKED") and key not in extra_keys:
                         dynamic_keys.append(key)
 
             event_info = f"{selected_event} - Heat: {selected_heat}"
-            
+            print("extra_k:", extra_keys)
+            print("dyn_k:", dynamic_keys)
             return render_template(
                 "admin/active_events_driver_data.html",
                 unique_events=unique_events,
-                sqldata = json.dumps(table_data),
+                sqldata=json.dumps(table_data),
+                extra_keys=extra_keys,
                 dynamic_keys=dynamic_keys,
                 event_entry_file={"title_2": selected_event, "heat": selected_heat},
                 returned_event_info=event_info,
@@ -954,6 +1001,7 @@ def active_events_driver_data():
         "admin/active_events_driver_data.html",
         unique_events=unique_events,
         sqldata="None",
+        extra_keys=extra_keys,
         dynamic_keys=[],
         event_entry_file="None",
         returned_event_info="None",
@@ -1406,3 +1454,7 @@ def led_panel():
 
 def stream_overlay():
     return render_template("admin/overlay_editor.html")
+
+
+def race_results():
+    return render_template("admin/race_results.html", active_tab="race_results")

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktiv Kjøring</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* overridden by JS */
+            align-items: center;
+        }
+
+        #app {
+            width: 100%;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        #app.show { opacity: 1; transform: translateY(0); }
+
+        .race-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .racer {
+            display: flex;
+            align-items: center;
+            width: 50%;
+            background: rgba(10, 12, 20, 0.97);
+            border: 1px solid rgba(255,255,255,0.07);
+            padding: 10px 14px;
+            position: relative;
+            gap: 12px;
+        }
+
+        .racer.left  {
+            border-left: 3px solid #e8453c;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+        }
+        .racer.right {
+            border-right: 3px solid #4d79ff;
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            flex-direction: row-reverse;
+        }
+
+        .track-label {
+            position: absolute;
+            top: -18px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+            background: rgba(14, 16, 28, 0.98);
+            padding: 2px 8px;
+            border-radius: 3px 3px 0 0;
+        }
+        .left  .track-label { left: 0; color: rgba(232, 69, 60, 0.80); }
+        .right .track-label { right: 0; color: rgba(77, 121, 255, 0.80); }
+
+        .driver-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            gap: 3px;
+        }
+        .left  .driver-info { align-items: flex-start; }
+        .right .driver-info { align-items: flex-end; }
+
+        .driver-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .driver-vehicle {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.45);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .time-display {
+            font-size: 20px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+            flex-shrink: 0;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 4px;
+        }
+        .left  .time-display { color: #e8453c; border-left: 2px solid rgba(232,69,60,0.35); }
+        .right .time-display { color: #4d79ff; border-right: 2px solid rgba(77,121,255,0.35); }
+        .time-display.empty  { color: rgba(255,255,255,0.18); font-size: 14px; font-weight: 500; }
+
+        .vs-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: rgba(14, 16, 28, 0.98);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.35);
+        }
+
+        @keyframes nameFlash {
+            0%   { background: rgba(255,255,255,0.07); }
+            100% { background: rgba(10, 12, 20, 0.97); }
+        }
+        .racer.changed { animation: nameFlash 0.4s ease-out; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="race-container">
+
+        <div class="racer left" id="racer1">
+            <div class="track-label">Bane 1</div>
+            <div class="driver-info">
+                <div class="driver-name"  id="name1">—</div>
+                <div class="driver-vehicle" id="vehicle1">—</div>
+            </div>
+            <div class="time-display empty" id="time1">—</div>
+        </div>
+
+        <div class="vs-container">VS</div>
+
+        <div class="racer right" id="racer2">
+            <div class="track-label">Bane 2</div>
+            <div class="driver-info">
+                <div class="driver-name"  id="name2">—</div>
+                <div class="driver-vehicle" id="vehicle2">—</div>
+            </div>
+            <div class="time-display empty" id="time2">—</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const wsHost = params.get('host') || '192.168.1.50';
+    const ws     = new WebSocket(`ws://${wsHost}:4444/`);
+
+    (function applyParams() {
+        const app    = document.getElementById('app');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+        const w      = params.get('w');
+        const h      = params.get('h');
+        if (w) app.style.width  = w + 'px';
+        if (h) app.style.height = h + 'px';
+
+        const pos = params.get('pos') || 'top';
+        const posMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' };
+        document.body.style.justifyContent = posMap[pos] || 'flex-start';
+
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const alpha = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.querySelectorAll('.racer').forEach(el => {
+                el.style.background = `rgba(10, 12, 20, ${alpha})`;
+            });
+        }
+
+        if (scale) {
+            document.body.style.transformOrigin = mirror ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    let current = { Driver1: {}, Driver2: {} };
+
+    function fmtMs(ms) {
+        const total = parseFloat(ms) / 1000;
+        if (!ms || isNaN(total) || total <= 0) return '—';
+        if (total < 60) return total.toFixed(3);
+        const mins = Math.floor(total / 60);
+        const secs = (total % 60).toFixed(3).padStart(6, '0');
+        return `${mins}:${secs}`;
+    }
+
+    function formatName(first, last) {
+        const f = (first || '').trim(), l = (last || '').trim();
+        if (!f && !l) return '—';
+        return (f + ' ' + l).trim();
+    }
+
+    function setRacer(racerId, nameId, vehicleId, timeId, driver, changed) {
+        document.getElementById(nameId).textContent    = formatName(driver.first_name, driver.last_name);
+        document.getElementById(vehicleId).textContent = driver.snowmobile || '—';
+
+        const t       = parseFloat(driver.time);
+        const isEmpty = !driver.time || isNaN(t) || t <= 0;
+        const timeEl  = document.getElementById(timeId);
+        timeEl.textContent = isEmpty ? '—' : fmtMs(driver.time);
+        timeEl.classList.toggle('empty', isEmpty);
+
+        if (changed) {
+            const racer = document.getElementById(racerId);
+            racer.classList.remove('changed');
+            void racer.offsetWidth;
+            racer.classList.add('changed');
+        }
+    }
+
+    function updateContent(data) {
+        if (!data || !data.Driver1 || !data.Driver2) return;
+
+        const d1Changed = data.Driver1.first_name !== current.Driver1.first_name ||
+                          data.Driver1.last_name  !== current.Driver1.last_name;
+        const d2Changed = data.Driver2.first_name !== current.Driver2.first_name ||
+                          data.Driver2.last_name  !== current.Driver2.last_name;
+
+        current = JSON.parse(JSON.stringify(data));
+        setRacer('racer1', 'name1', 'vehicle1', 'time1', data.Driver1, d1Changed);
+        setRacer('racer2', 'name2', 'vehicle2', 'time2', data.Driver2, d2Changed);
+    }
+
+    ws.onmessage = function(event) {
+        try { updateContent(JSON.parse(event.data)); }
+        catch(e) { console.error('[ws] parse error:', e); }
+    };
+    ws.onerror = function(e) { console.error('[ws] error:', e); };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => document.getElementById('app').classList.add('show'), 150);
+    });
+</script>
+</body>
+</html>

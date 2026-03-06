@@ -5,12 +5,20 @@ import requests
 import xml.etree.ElementTree as ET
 import json
 import sys
+import signal
 import paho.mqtt.publish as publish
 from sqlalchemy import create_engine, Column, Integer, Text, JSON, Boolean, event
 from sqlalchemy.orm import declarative_base, Session
 import zlib
 import logging
 from logging.handlers import RotatingFileHandler
+
+LOOP_TIMEOUT_SECONDS = 20
+
+def _watchdog_handler(signum, frame):
+    raise TimeoutError(f"Loop iteration exceeded {LOOP_TIMEOUT_SECONDS}s — likely blocked on network mount or MQTT")
+
+signal.signal(signal.SIGALRM, _watchdog_handler)
 
 _log_dir = os.path.join(os.getcwd(), 'logs')
 os.makedirs(_log_dir, exist_ok=True)
@@ -102,6 +110,7 @@ if race_type == 2 or race_type == 3:
 
 event_name = ""
 active_event = []
+heat_assignments = {}  # (norm_group_name, group_nr, heat_nr) → sequential heat number
 
 
 def create_event_id_checksum(event_entry):
@@ -236,6 +245,21 @@ def clear_all():
         session.commit()
 
 
+def rebuild_heat_assignments_from_db():
+    """Repopulate heat_assignments from stored schedule entries after a restart."""
+    global heat_assignments
+    heat_assignments = {}
+    with Session(engine) as session:
+        rows = session.query(ScheduleEntry).all()
+        for row in rows:
+            data = row.data or {}
+            g = data.get("group_nr")
+            h = data.get("heat_nr")
+            if g and h:
+                heat_assignments[(row.run_name, int(g), int(h))] = int(row.heat)
+    logger.info("Rebuilt %d heat assignments from DB", len(heat_assignments))
+
+
 def sync_to_schedule():
     """Remove any race entries that no longer exist in the schedule"""
     schedule_keys = get_all_schedule_keys()
@@ -293,6 +317,39 @@ def xml_to_dict(file):
 # --- Helpers ---
 
 def normalize_run_name(groupname, runname, runtype):
+    if race_type == 1:
+        # Race type 1 (bakkecross) uses Orbits naming format:
+        #   Qualifying runname: "Kvalifisering - Gruppe 1 - Heat 1"
+        #   Finale runname:     "Finale C1" / "Finale C2" / "Finale B" / "Finale A"
+        rn = runname.strip()
+
+        if runtype == "Qualifying" or "kvali" in rn.lower():
+            group_nr = 1
+            heat_nr = 1
+            for part in rn.split(" - "):
+                p = part.strip()
+                if p.lower().startswith("heat "):
+                    try:
+                        heat_nr = int(p.split()[-1])
+                    except (ValueError, IndexError):
+                        pass
+                elif p.lower().startswith("gruppe "):
+                    try:
+                        group_nr = int(p.split()[-1])
+                    except (ValueError, IndexError):
+                        pass
+            norm_group_name = groupname + " - Kvalifisering"
+            heat = heat_assignments.get((norm_group_name, group_nr, heat_nr), group_nr)
+            heats = 0  # patched to actual count later in update_schedule
+        else:
+            # Finale C1 / C2 / B / A — each is its own distinct event, heat=1
+            norm_group_name = groupname + " - " + rn
+            heat = 1
+            heats = 1
+
+        return str(heat), norm_group_name, heats
+
+    # Original logic for race_type 5 / other
     if runtype == "Qualifying":
         try:
             heat = runname[-1]
@@ -402,13 +459,15 @@ def extract_driver_data(data):
     if isinstance(data, dict):
         data = [data]
     for a in data:
+        if str(a.get("no", "")).strip().startswith("-"):
+            continue  # placeholder slot (e.g. -??-)
         first_name = a["firstname"]
         last_name = a["lastname"]
         laps = a["laps"] if a["laps"] != "" else 0
         pen = a["position"]
         cid = a["no"]
         club = a["additional5"]
-        snowmobile = a["additional1"]
+        snowmobile = a["additional3"]
         best_time = a["besttime"]
         last_time = a["lasttime"]
         driver_class = a["class"]
@@ -419,17 +478,27 @@ def extract_driver_data(data):
             totale_time = 0
         else:
             totale_time = a["totaltime"]
+
+        if race_type == 1:
+            best_time = totale_time
+            last_time = totale_time
         
         if driver_class not in class_lst:
             class_lst.append(driver_class)
 
-        if str(pen).upper() == "DQ":
+        pen_upper = str(pen).upper()
+        if pen_upper in ("DQ", "DSQ"):
+            pen = "DSQ"
             penalty = "DSQ"
-        elif "D" in str(pen).upper():
+        elif "D" in pen_upper:
             penalty = ""
         else:
             penalty = ""
 
+        if "D" in pen_upper:
+            totale_time = 0
+            best_time = 0
+            last_time = 0
 
         tmp_driver_data = {
             "cid": cid,
@@ -469,6 +538,7 @@ def index_current():
             return
 
         logger.info("Restored state: %d schedule entries, %d race entries", schedule_count, race_count)
+        rebuild_heat_assignments_from_db()
 
         # Restore event_name from first schedule entry
         first_schedule = session.query(ScheduleEntry).first()
@@ -546,6 +616,7 @@ def proc_current(current_dict):
             driver["run_name"] = run_name
             driver["event_name"] = event_name
             driver["heat"] = str(heat)
+            driver["heats"] = schedule.get("heats", 1)
             driver["timedata"] = timedata
             driver["time_to_go"] = time_to_go
             driver["multi_class"] = multi_class
@@ -575,7 +646,7 @@ def build_schedule_api(sc_data):
 
 
 def update_schedule(entry):
-    global event_name
+    global event_name, heat_assignments
 
     if event_name == "":
         event_name = get_event_name_from_xml()
@@ -583,14 +654,53 @@ def update_schedule(entry):
     current_schedule_keys = get_all_schedule_keys()
     new_schedule_keys = set()
     schedule_lst = []
+    event_heats = {}  # norm_group_name -> set of heat strings
 
-    for k, results in enumerate(entry["results"]["result"]):
+    results_list = entry["results"]["result"]
+    if isinstance(results_list, dict):
+        results_list = [results_list]
+
+    # Pre-pass for race_type 1: compute sequential heat numbers
+    # Formula: heat = (heat_nr - 1) * max_groups + group_nr  (unique, ordered)
+    if race_type == 1:
+        kvali_entries = {}   # norm_group_name → list of (group_nr, heat_nr)
+        kvali_max_g   = {}   # norm_group_name → max group_nr
+
+        for results in results_list:
+            rn = results["runname"].strip()
+            gn = results["groupname"]
+            rt = results["runtype"]
+            if rt == "Q" or "kvali" in rn.lower():
+                group_nr = 1
+                heat_nr  = 1
+                for part in rn.split(" - "):
+                    p = part.strip()
+                    if p.lower().startswith("heat "):
+                        try: heat_nr = int(p.split()[-1])
+                        except (ValueError, IndexError): pass
+                    elif p.lower().startswith("gruppe "):
+                        try: group_nr = int(p.split()[-1])
+                        except (ValueError, IndexError): pass
+                norm = gn + " - Kvalifisering"
+                kvali_max_g[norm] = max(kvali_max_g.get(norm, 0), group_nr)
+                kvali_entries.setdefault(norm, []).append((group_nr, heat_nr))
+
+        heat_assignments = {}
+        for norm, max_g in kvali_max_g.items():
+            for (g, h) in kvali_entries[norm]:
+                heat_assignments[(norm, g, h)] = (h - 1) * max_g + g
+        logger.info("Computed %d heat assignments (max groups per event: %s)",
+                    len(heat_assignments),
+                    {k: v for k, v in kvali_max_g.items()})
+
+    for k, results in enumerate(results_list):
         k += 1
         heat, norm_group_name, heats = normalize_run_name(
             results["groupname"], results["runname"], results["runtype"]
         )
         schedule_lst.append({"name": norm_group_name, "run": heat, "sort_order": k})
         new_schedule_keys.add((norm_group_name, str(heat)))
+        event_heats.setdefault(norm_group_name, set()).add(str(heat))
 
         existing = get_schedule_entry(norm_group_name, heat)
 
@@ -609,7 +719,7 @@ def update_schedule(entry):
             else:
                 event_type = "other"
             event_checksum = create_event_id_checksum(norm_group_name + " " + heat)
-            upsert_schedule(norm_group_name, str(heat), {
+            entry_data = {
                 "event_name": event_name,
                 "event_type": event_type,
                 "heats": heats,
@@ -618,7 +728,24 @@ def update_schedule(entry):
                 "timedata": "",
                 "sort_order": k,
                 "event_checksum": event_checksum,
-            })
+            }
+            # Store group/heat for restart recovery of heat_assignments
+            key = (norm_group_name, results["groupname"], results["runname"])
+            for (norm, g, h_nr), seq in heat_assignments.items():
+                if norm == norm_group_name and str(seq) == str(heat):
+                    entry_data["group_nr"] = g
+                    entry_data["heat_nr"]  = h_nr
+                    break
+            upsert_schedule(norm_group_name, str(heat), entry_data)
+
+    # Patch heats count: use max heat value so display shows correct total
+    for norm_group_name, heats_set in event_heats.items():
+        actual_heats = max(int(h) for h in heats_set)
+        for h in heats_set:
+            existing = get_schedule_entry(norm_group_name, h)
+            if existing and existing.get("heats") != actual_heats:
+                existing["heats"] = actual_heats
+                upsert_schedule(norm_group_name, h, existing)
 
     build_schedule_api(schedule_lst)
 
@@ -663,12 +790,15 @@ def file_monitor():
         logger.info("Restored schedule from DB, sc_proc=True")
 
     while True:
+        signal.alarm(LOOP_TIMEOUT_SECONDS)
         try:
+            # Keep the SMB session alive — prevents stale connection hangs
+            os.stat("/mnt/test/")
+
             with os.scandir("/mnt/test/") as dir_files:
                 for file in dir_files:
                     if "current.xml" not in file.path and "schedule.xml" not in file.path:
                         continue
-                        
                     if file.path not in tracking_dict:
                         tracking_dict[file.path] = 0
                     
@@ -806,8 +936,12 @@ def file_monitor():
                             sc_proc = True
                             last_sc = file_dict
 
+        except TimeoutError as e:
+            logger.error("Watchdog triggered: %s", e)
         except Exception as e:
             logger.error("Error in main loop: %s", e)
+        finally:
+            signal.alarm(0)
 
         time.sleep(sleep_time)
 

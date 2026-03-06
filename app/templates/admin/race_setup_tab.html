@@ -63,6 +63,15 @@
         </div>
         <div id="collapseEvents" class="collapse" aria-labelledby="headingEvents">
             <div class="card-body">
+                <div class="mb-2 d-flex align-items-center flex-wrap" style="gap:8px;">
+                    <button type="button" id="autoSortRunBtn" class="btn btn-sm btn-outline-secondary">
+                        Sort by Run
+                    </button>
+                    <button type="button" id="finalesLastBtn" class="btn btn-sm btn-outline-secondary">
+                        Finales Last
+                    </button>
+                    <small class="text-muted ml-2">Auto-sort is applied to grid order only. Click <strong>Update Table</strong> to save.</small>
+                </div>
                 <div id="example-table" class="ag-theme-alpine" style="width:100%; height:60vh;"></div>
                 <form id="update-form" method="post" class="mt-2">
                     <input type="hidden" id="table-data" name="table_data" value="">
@@ -740,6 +749,80 @@ $(document).ready(function() {
             document.getElementById("table-data").value = JSON.stringify(rowData);
         });
     }
+
+    // =====================
+    // Auto-Sort Buttons
+    // =====================
+    var sortByRun = false;
+    var finalesLast = false;
+    var originalRowOrder = null;
+
+    function isFinale(row) {
+        return (row.name || '').toLowerCase().indexOf('finale') !== -1;
+    }
+
+    function getCurrentRows() {
+        var rows = [];
+        gridOptions.api.forEachNode(function(node) { rows.push(Object.assign({}, node.data)); });
+        return rows;
+    }
+
+    function applyAutoSort() {
+        // Snapshot original order on first use so we can restore it
+        if (!originalRowOrder) {
+            originalRowOrder = getCurrentRows().map(function(r) { return r.id; });
+        }
+
+        var rows = getCurrentRows();
+        var origPos = {};
+        originalRowOrder.forEach(function(id, idx) { origPos[id] = idx; });
+
+        if (!sortByRun && !finalesLast) {
+            rows.sort(function(a, b) {
+                return (origPos[a.id] !== undefined ? origPos[a.id] : 9999) -
+                       (origPos[b.id] !== undefined ? origPos[b.id] : 9999);
+            });
+        } else {
+            rows.sort(function(a, b) {
+                var aF = isFinale(a) ? 1 : 0;
+                var bF = isFinale(b) ? 1 : 0;
+
+                if (finalesLast && aF !== bF) return aF - bF;
+
+                if (sortByRun) {
+                    var runDiff = (a.run || 0) - (b.run || 0);
+                    if (runDiff !== 0) return runDiff;
+                }
+
+                // Preserve original relative order as tiebreaker
+                return (origPos[a.id] !== undefined ? origPos[a.id] : 9999) -
+                       (origPos[b.id] !== undefined ? origPos[b.id] : 9999);
+            });
+        }
+
+        rows.forEach(function(row, idx) { row.sort_order = idx + 1; });
+        gridOptions.api.setGridOption('rowData', rows);
+    }
+
+    function setButtonActive($btn, active) {
+        if (active) {
+            $btn.removeClass('btn-outline-secondary').addClass('btn-secondary');
+        } else {
+            $btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
+        }
+    }
+
+    $('#autoSortRunBtn').click(function() {
+        sortByRun = !sortByRun;
+        setButtonActive($(this), sortByRun);
+        applyAutoSort();
+    });
+
+    $('#finalesLastBtn').click(function() {
+        finalesLast = !finalesLast;
+        setButtonActive($(this), finalesLast);
+        applyAutoSort();
+    });
 });
 </script>
 

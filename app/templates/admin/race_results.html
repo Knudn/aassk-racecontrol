@@ -1,0 +1,1647 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    .results-page { padding: 16px 0; }
+
+    .event-block {
+        margin-bottom: 28px;
+    }
+    .event-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        background: #2c3e50;
+        color: #fff;
+        border-radius: 4px 4px 0 0;
+    }
+    .event-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+    .event-header .badge-finished {
+        font-size: 0.72rem;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #27ae60;
+        color: #fff;
+    }
+    .event-header .badge-active {
+        font-size: 0.72rem;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #e67e22;
+        color: #fff;
+    }
+    .event-header .badge-pending {
+        font-size: 0.72rem;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #7f8c8d;
+        color: #fff;
+    }
+
+    .class-separator {
+        background: #ecf0f1;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 4px 10px;
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        border: 1px solid #dee2e6;
+        border-top: none;
+    }
+    .results-table thead th {
+        background: #34495e;
+        color: #fff;
+        padding: 6px 10px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        border: none;
+    }
+    .results-table thead th:first-child,
+    .results-table thead th:nth-child(2) { text-align: left; }
+    .results-table thead th.name-col { text-align: left; }
+
+    .results-table tbody tr:nth-child(even) { background: #f8f9fa; }
+    .results-table tbody tr:hover { background: #eaf4fb; }
+    .results-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .results-table td.name-col { text-align: left; font-weight: 600; }
+    .results-table td.pos-col  { font-weight: 700; color: #2c3e50; width: 36px; }
+    .results-table td.cid-col  { color: #7f8c8d; width: 46px; }
+    .results-table td.pts-col  { font-weight: 700; color: #2980b9; }
+    .results-table td.time-col { font-variant-numeric: tabular-nums; color: #555; }
+    .results-table td.time-col.best { color: #27ae60; font-weight: 700; }
+    .results-table td.dnf { color: #c0392b; font-style: italic; }
+
+    .no-data { padding: 14px; color: #aaa; text-align: center; font-size: 0.9rem; border: 1px solid #dee2e6; border-top: none; }
+
+    .refresh-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+    .refresh-bar .last-update { font-size: 0.8rem; color: #888; }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid #ccc;
+        border-top-color: #2c3e50;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .heat-pills {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 3px;
+    }
+    .heat-pill {
+        font-size: 0.7rem;
+        padding: 1px 7px;
+        border-radius: 10px;
+        border: 1px solid #bdc3c7;
+        color: #555;
+        background: #fff;
+    }
+    .heat-pill.finished { background: #eafaf1; border-color: #27ae60; color: #27ae60; }
+    .heat-pill.active   { background: #fef9e7; border-color: #e67e22; color: #e67e22; }
+
+    /* Finale bracket styles */
+    .finale-section { margin-bottom: 32px; }
+    .finale-section h6 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 8px;
+    }
+    .finale-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .finale-grid.single { grid-template-columns: 1fr; }
+    .finale-card {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .finale-card-header {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .finale-card-header.c-finale  { background: #7f8c8d; }
+    .finale-card-header.b-finale  { background: #2980b9; }
+    .finale-card-header.a-finale  { background: #c0392b; }
+    .finale-card table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }
+    .finale-card table td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .finale-card table tr:last-child td { border-bottom: none; }
+    .finale-card table td:first-child { color: #7f8c8d; width: 28px; text-align: center; font-size: 0.75rem; }
+    .finale-card table td:nth-child(2) { font-weight: 600; }
+    .finale-card table td:last-child { color: #7f8c8d; font-size: 0.78rem; text-align: right; }
+    .finale-card .promotes-to {
+        font-size: 0.7rem;
+        color: #bbb;
+        font-style: italic;
+        padding: 3px 12px 4px;
+        background: #fafafa;
+        border-top: 1px dashed #e0e0e0;
+    }
+    .finale-card .promotes-badge {
+        font-size: 0.68rem;
+        padding: 1px 6px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+    }
+    .tab-nav {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    .tab-nav button {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        padding: 7px 18px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #7f8c8d;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-nav button.active {
+        color: #2c3e50;
+        border-bottom-color: #2c3e50;
+    }
+    .tab-nav button:hover:not(.active) { color: #2c3e50; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Startlist styles */
+    .sl-event-list { margin-bottom: 0; }
+    .sl-event-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 14px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        background: #fff;
+        transition: background 0.1s;
+        user-select: none;
+    }
+    .sl-event-row:first-child { border-top: 1px solid #dee2e6; border-radius: 4px 4px 0 0; }
+    .sl-event-row:last-child { border-radius: 0 0 4px 4px; }
+    .sl-event-row:hover { background: #eaf4fb; }
+    .sl-event-row.active { background: #eaf4fb; font-weight: 700; border-left: 3px solid #2c3e50; }
+    .sl-event-row .sl-name { flex: 1; }
+    .sl-event-row .sl-heat { color: #7f8c8d; font-size: 0.78rem; margin-left: 10px; }
+    .sl-event-row .sl-arrow { color: #bbb; font-size: 0.8rem; margin-left: 8px; }
+    .sl-detail {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        background: #fafafa;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+    }
+    .sl-detail-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 8px;
+    }
+    .sl-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        padding: 1px 7px;
+        border-radius: 8px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    .sl-badge.random   { background: #ecf0f1; color: #7f8c8d; border: 1px solid #bdc3c7; }
+    .sl-badge.best     { background: #fef9e7; color: #e67e22; border: 1px solid #e67e22; }
+    .sl-toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .sl-filter-input {
+        flex: 1;
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        outline: none;
+    }
+    .sl-filter-input:focus { border-color: #2c3e50; }
+    .sl-settings-panel {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        font-size: 0.82rem;
+    }
+    .sl-settings-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .sl-settings-label { font-weight: 600; color: #555; white-space: nowrap; }
+    .sl-settings-sep { width: 1px; height: 18px; background: #dee2e6; margin: 0 4px; }
+    .sl-check-label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: #444; white-space: nowrap; }
+    .sl-actions { display: flex; gap: 4px; margin-left: 10px; flex-shrink: 0; }
+    .sl-action-btn {
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 3px;
+        background: #fff;
+        cursor: pointer;
+        color: #555;
+        line-height: 1.4;
+        transition: background 0.1s, border-color 0.1s;
+    }
+    .sl-action-btn:hover { background: #e9ecef; border-color: #adb5bd; color: #222; }
+</style>
+
+<div class="results-page">
+    <div class="tab-nav">
+        <button class="active" onclick="switchTab('results', this)">Resultater</button>
+        <button onclick="switchTab('finaler', this)">Finale Kalkulator</button>
+        <button onclick="switchTab('startlists', this)">Startlister</button>
+        <button onclick="switchTab('resultlists', this)">Resultatliste</button>
+    </div>
+
+    <div id="tab-results" class="tab-pane active">
+        <div id="resultsContainer">
+            <div style="text-align:center;padding:40px;color:#aaa;">
+                <span class="loading-spinner"></span> Laster resultater...
+            </div>
+        </div>
+    </div>
+    <div id="tab-finaler" class="tab-pane">
+        <div id="finalerContainer">
+            <div style="text-align:center;padding:40px;color:#aaa;">
+                <span class="loading-spinner"></span> Laster finaleoppstilling...
+            </div>
+        </div>
+    </div>
+    <div id="tab-startlists" class="tab-pane">
+        <div class="sl-toolbar">
+            <input type="text" id="slFilter" class="sl-filter-input" placeholder="Filtrer løp (f.eks. Pro, Kvali, Finale)..." oninput="renderStartlistFromCache()">
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleSlSettings()">&#9881; Innstillinger</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="printStartlists()" id="slPrintBtn">&#128438; Skriv ut</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportStartlists()" id="slExportBtn">&#8595; Eksporter ZIP</button>
+        </div>
+        <div class="sl-settings-panel" id="slSettingsPanel" style="display:none;">
+            <div class="sl-settings-row">
+                <label class="sl-settings-label">Tekststørrelse:</label>
+                <input type="number" id="slFontSize" value="10" min="7" max="14" style="width:52px;padding:2px 5px;border:1px solid #dee2e6;border-radius:3px;">
+                <span style="color:#7f8c8d;font-size:0.8rem;">pt</span>
+                <div class="sl-settings-sep"></div>
+                <label class="sl-settings-label">Tilleggsfelter:</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-extra-field" value="reaction"> Reaksjonstid</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-extra-field" value="finishtime"> Tid</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-extra-field" value="points"> Poeng</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-extra-field" value="penalty"> Straff</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-extra-field" value="laps"> Runder</label>
+            </div>
+            <div class="sl-settings-row" style="margin-top:6px;padding-top:6px;border-top:1px solid #dee2e6;">
+                <label class="sl-settings-label">Skjul felter:</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-hide-field" value="klasse"> Klasse</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-hide-field" value="snowmobile"> Kjøretøy</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-hide-field" value="club"> Klubb</label>
+                <label class="sl-check-label"><input type="checkbox" class="sl-hide-field" value="bid"> BID</label>
+                <div class="sl-settings-sep"></div>
+                <label class="sl-settings-label">Oppsett:</label>
+                <label class="sl-check-label"><input type="checkbox" id="slCombineHeats"> Kombiner heats per løp på én side</label>
+            </div>
+        </div>
+        <div id="startlistsContainer">
+            <div style="text-align:center;padding:40px;color:#aaa;">Klikk Oppdater for å laste inn løpslisten.</div>
+        </div>
+    </div>
+    <div id="tab-resultlists" class="tab-pane">
+        <div class="sl-toolbar">
+            <input type="text" id="rlFilter" class="sl-filter-input" placeholder="Filtrer resultat (f.eks. Pro, Kvali)..." oninput="renderResultlistFromCache()">
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleRlSettings()">&#9881; Innstillinger</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="printResultlists()" id="rlPrintBtn">&#128438; Skriv ut</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportResultlists()" id="rlExportBtn">&#8595; Eksporter ZIP</button>
+        </div>
+        <div class="sl-settings-panel" id="rlSettingsPanel" style="display:none;">
+            <div class="sl-settings-row">
+                <label class="sl-settings-label">Tekststørrelse:</label>
+                <input type="number" id="rlFontSize" value="9" min="7" max="14" style="width:52px;padding:2px 5px;border:1px solid #dee2e6;border-radius:3px;">
+                <span style="color:#7f8c8d;font-size:0.8rem;">pt</span>
+                <div class="sl-settings-sep"></div>
+                <label class="sl-settings-label">Skjul felter (sammenlagt):</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-hide-field" value="cid" onchange="renderResultlistFromCache()"> CID</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-hide-field" value="runs" onchange="renderResultlistFromCache()"> Løpstider</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-hide-field" value="points" onchange="renderResultlistFromCache()"> Poeng</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-hide-field" value="besttime" onchange="renderResultlistFromCache()"> Beste tid</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-hide-field" value="combined" onchange="renderResultlistFromCache()"> Sammenlagt Tid</label>
+            </div>
+            <div class="sl-settings-row" style="margin-top:6px;padding-top:6px;border-top:1px solid #dee2e6;">
+                <label class="sl-settings-label">Visning:</label>
+                <label class="sl-check-label"><input type="checkbox" id="rlSingleHeat" onchange="renderResultlistFromCache()"> Vis bare ett heat (enkelt heat-visning)</label>
+            </div>
+            <div class="sl-settings-row" style="margin-top:6px;padding-top:6px;border-top:1px solid #dee2e6;">
+                <label class="sl-settings-label">Vis felter (enkelt heat):</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="totaltime" onchange="renderResultlistFromCache()"> Total Tid</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="best_time" onchange="renderResultlistFromCache()"> Beste Tid</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="last_lap_time" onchange="renderResultlistFromCache()"> Siste Runde</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="laps" onchange="renderResultlistFromCache()"> Runder</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="gap" onchange="renderResultlistFromCache()"> Gap</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="penalty" onchange="renderResultlistFromCache()"> Straff</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="snowmobile" onchange="renderResultlistFromCache()"> Kjøretøy</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="club" onchange="renderResultlistFromCache()"> Klubb</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="class" onchange="renderResultlistFromCache()"> Klasse</label>
+                <label class="sl-check-label"><input type="checkbox" class="rl-sh-field" value="points" onchange="renderResultlistFromCache()"> Poeng</label>
+            </div>
+        </div>
+        <div id="resultlistsContainer">
+            <div style="text-align:center;padding:40px;color:#aaa;">Klikk Oppdater for å laste inn resultatlisten.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+let cachedResultMap = {};
+let globalTitle1 = '';
+let rlSingleHeatCache = {};
+
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+function fmt(val) {
+    if (!val || val === '0.000' || val === '0' || val === 0) return '<span style="color:#ccc;">—</span>';
+    return val;
+}
+
+function getRKeys(results) {
+    const keys = new Set();
+    results.forEach(r => Object.keys(r).forEach(k => { if (/^R\d+$/.test(k)) keys.add(k); }));
+    return Array.from(keys).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+}
+
+function buildTable(results, meta, heats) {
+    if (!results || results.length === 0) return '<div class="no-data">Ingen resultater ennå</div>';
+
+    const rKeys         = getRKeys(results);
+    const multiClass    = meta.has_multiple_classes && !meta.mix_classes;
+    const scoringMethod = meta.scoring_method || 'lowest_finishtime';
+    const isBestLap     = scoringMethod === 'best_lap';
+
+    // Which summary columns to show
+    // best_lap mode: primary sort is best_lap_time → show it prominently; also show combined
+    // lowest_finishtime mode: show lowest + combined
+    const colCount = 3 + rKeys.length + (multiClass ? 1 : 0) + (isBestLap ? 2 : 2);
+
+    // Header
+    let html = '<table class="results-table"><thead><tr>';
+    html += '<th>#</th><th class="name-col">Navn</th><th>CID</th>';
+    if (multiClass) html += '<th>Klasse</th>';
+    rKeys.forEach(k => { html += `<th>${k}</th>`; });
+    html += '<th>Poeng</th>';
+    if (isBestLap) {
+        html += '<th>Beste Runde</th><th>Sammenlagt Tid</th>';
+    } else {
+        html += '<th>Beste Løpstid</th><th>Sammenlagt Tid</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    if (multiClass) {
+        const groups = {}, order = [];
+        results.forEach(r => {
+            const cls = r.class || 'Ukjent';
+            if (!groups[cls]) { groups[cls] = []; order.push(cls); }
+            groups[cls].push(r);
+        });
+        order.forEach(cls => {
+            html += `<tr><td colspan="${colCount}" class="class-separator">${cls}</td></tr>`;
+            groups[cls].forEach((r, i) => { html += buildRow(r, i + 1, rKeys, isBestLap); });
+        });
+    } else {
+        results.forEach((r, i) => { html += buildRow(r, i + 1, rKeys, isBestLap); });
+    }
+
+    html += '</tbody></table>';
+    return html;
+}
+
+function buildRow(r, pos, rKeys, isBestLap) {
+    const name = (r.first_name || '') + ' ' + (r.last_name || '');
+    let html = `<tr>
+        <td class="pos-col">${pos}</td>
+        <td class="name-col">${name.trim()}</td>
+        <td class="cid-col">${r.cid || '—'}</td>`;
+    rKeys.forEach(k => {
+        const t = r[k];
+        const isEmpty = !t || t === '0.000';
+        html += `<td class="time-col${isEmpty ? ' dnf' : ''}">${isEmpty ? '—' : t}</td>`;
+    });
+    html += `<td class="pts-col">${r.combined_points || 0}</td>`;
+    if (isBestLap) {
+        html += `<td class="time-col best">${fmt(r.best_lap_time)}</td>`;
+        html += `<td class="time-col">${fmt(r.combined_finishtime)}</td>`;
+    } else {
+        html += `<td class="time-col best">${fmt(r.lowest_finishtime)}</td>`;
+        html += `<td class="time-col">${fmt(r.combined_finishtime)}</td>`;
+    }
+    html += '</tr>';
+    return html;
+}
+
+function heatBadges(heats) {
+    return heats.map(h => {
+        let cls = 'heat-pill';
+        let label = `H${h.run}`;
+        if (h.active)     { cls += ' active';   label += ' ●'; }
+        else if (h.finished) { cls += ' finished'; }
+        return `<span class="${cls}">${label}</span>`;
+    }).join('');
+}
+
+// ── Resultatliste ────────────────────────────────────────────────────────────
+
+let resultlistActiveKey  = null;
+let cachedResultlistData = { groupKeys: [], resultMap: {}, grouped: {} };
+
+function toggleRlSettings() {
+    const p = document.getElementById('rlSettingsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function getRlSettings() {
+    return {
+        fontSize:      parseInt(document.getElementById('rlFontSize').value) || 9,
+        hideFields:    [...document.querySelectorAll('.rl-hide-field:checked')].map(el => el.value),
+        singleHeat:    document.getElementById('rlSingleHeat')?.checked || false,
+        shExtraFields: [...document.querySelectorAll('.rl-sh-field:checked')].map(el => el.value),
+    };
+}
+
+function buildResultRow(r, pos, rKeys, isBestLap, hide, showClass) {
+    const name = `${r.first_name||''} ${r.last_name||''}`.trim();
+    const fmtT = v => (!v || v === '0.000') ? '—' : v;
+    let html = `<tr><td class="c">${pos}</td><td>${name}</td>`;
+    if (!hide.has('cid'))  html += `<td class="c">${r.cid||'—'}</td>`;
+    if (showClass)         html += `<td>${r.class||'—'}</td>`;
+    if (!hide.has('runs')) rKeys.forEach(k => {
+        const t = r[k], empty = !t || t === '0.000';
+        html += `<td class="c${empty?' dnf':''}">${empty?'—':t}</td>`;
+    });
+    if (!hide.has('points'))   html += `<td class="c">${r.combined_points||0}</td>`;
+    if (!hide.has('besttime')) html += `<td class="c best">${fmtT(isBestLap ? r.best_lap_time : r.lowest_finishtime)}</td>`;
+    if (!hide.has('combined')) html += `<td class="c">${fmtT(r.combined_finishtime)}</td>`;
+    return html + '</tr>';
+}
+
+function buildResultPageHTML(eventName, data, settings, isFirst) {
+    if (!data?.results?.length) return '';
+    const hide      = new Set(settings.hideFields || []);
+    const today     = new Date().toLocaleDateString('no-NO', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const logoUrl   = window.location.origin + '/static/assets/logo.png';
+    const { results, meta } = data;
+    const rKeys     = getRKeys(results);
+    const multiCls  = meta.has_multiple_classes && !meta.mix_classes;
+    const isBestLap = (meta.scoring_method || '') === 'best_lap';
+
+    const colCount = 2
+        + (hide.has('cid')      ? 0 : 1)
+        + (multiCls             ? 1 : 0)
+        + (hide.has('runs')     ? 0 : rKeys.length)
+        + (hide.has('points')   ? 0 : 1)
+        + (hide.has('besttime') ? 0 : 1)
+        + (hide.has('combined') ? 0 : 1);
+
+    let hdrs = `<th class="c" style="width:30px;">#</th><th>Navn</th>`;
+    if (!hide.has('cid'))      hdrs += `<th class="c" style="width:52px;">CID</th>`;
+    if (multiCls)              hdrs += `<th>Klasse</th>`;
+    if (!hide.has('runs'))     rKeys.forEach(k => hdrs += `<th class="c">${k}</th>`);
+    if (!hide.has('points'))   hdrs += `<th class="c">Poeng</th>`;
+    if (!hide.has('besttime')) hdrs += `<th class="c">${isBestLap ? 'Beste Runde' : 'Beste Løpstid'}</th>`;
+    if (!hide.has('combined')) hdrs += `<th class="c">Sammenlagt Tid</th>`;
+
+    let rows = '';
+    if (multiCls) {
+        const groups = {}, order = [];
+        results.forEach(r => {
+            const cls = r.class || 'Ukjent';
+            if (!groups[cls]) { groups[cls] = []; order.push(cls); }
+            groups[cls].push(r);
+        });
+        order.forEach(cls => {
+            rows += `<tr><td colspan="${colCount}" class="class-sep">${cls}</td></tr>`;
+            groups[cls].forEach((r, i) => rows += buildResultRow(r, i+1, rKeys, isBestLap, hide, true));
+        });
+    } else {
+        results.forEach((r, i) => rows += buildResultRow(r, i+1, rKeys, isBestLap, hide, false));
+    }
+
+    const title1Line = globalTitle1 ? `<div class="event-sub">${globalTitle1}</div>` : '';
+    return `<div class="page${isFirst?'':' page-break'}">
+        <div class="page-header">
+            <img src="${logoUrl}" class="logo" alt="" onerror="this.style.display='none'">
+            <div class="page-title">
+                <div class="page-label">Resultatliste</div>
+                <div class="event-name">${eventName}</div>
+                ${title1Line}
+            </div>
+            <div class="page-meta">
+                <div class="page-date">${today}</div>
+            </div>
+        </div>
+        <table>
+            <thead><tr>${hdrs}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        <div class="page-footer">Resultatliste generert ${today} &nbsp;·&nbsp; ${globalTitle1 ? globalTitle1 + ' — ' : ''}${eventName}</div>
+    </div>`;
+}
+
+function buildResultDetail(eventName, data) {
+    const settings = getRlSettings();
+    if (settings.singleHeat) {
+        const heatData = rlSingleHeatCache[resultlistActiveKey];
+        if (!heatData) return '<div style="padding:8px;color:#aaa;">Laster...</div>';
+        return buildSingleHeatDetail(heatData, settings);
+    }
+    if (!data?.results?.length) return '<div style="color:#aaa;padding:8px;">Ingen resultater tilgjengelig</div>';
+    const heats = (cachedResultlistData.grouped[eventName] || []).sort((a,b) => a.run - b.run);
+    return buildTable(data.results, data.meta, heats);
+}
+
+const SH_FIELDS = [
+    { key: 'totaltime',     label: 'Total Tid' },
+    { key: 'best_time',     label: 'Beste Tid' },
+    { key: 'last_lap_time', label: 'Siste Runde' },
+    { key: 'laps',          label: 'Runder' },
+    { key: 'gap',           label: 'Gap' },
+    { key: 'penalty',       label: 'Straff' },
+    { key: 'snowmobile',    label: 'Kjøretøy' },
+    { key: 'club',          label: 'Klubb' },
+    { key: 'class',         label: 'Klasse' },
+    { key: 'points',        label: 'Poeng' },
+];
+
+function shIsPenalty(d) {
+    const p = String(d.penalty || '').toUpperCase();
+    return p === 'DNS' || p === 'DNF' || p === 'DSQ';
+}
+
+function shSortDrivers(drivers) {
+    return [...drivers].sort((a, b) => {
+        const aPen = shIsPenalty(a), bPen = shIsPenalty(b);
+        if (aPen && !bPen) return 1;
+        if (!aPen && bPen) return -1;
+        return (a.internal_standing || 999) - (b.internal_standing || 999);
+    });
+}
+
+function fmtShVal(v) {
+    return (v === null || v === undefined || v === 0 || v === '0' || v === '') ? '—' : v;
+}
+
+function buildSingleHeatResultPageHTML(eventName, heat, heatData, settings, isFirst) {
+    if (!heatData?.time_info?.length) return '';
+    const today   = new Date().toLocaleDateString('no-NO', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const logoUrl = window.location.origin + '/static/assets/logo.png';
+    const extra   = new Set(settings.shExtraFields || []);
+    const hide    = new Set(settings.hideFields || []);
+    const showFields = SH_FIELDS.filter(f => extra.has(f.key) && f.key !== 'totaltime');
+    const drivers = shSortDrivers(heatData.time_info);
+
+    let hdrs = `<th class="c" style="width:30px;">#</th><th>Navn</th>`;
+    if (!hide.has('cid')) hdrs += `<th class="c" style="width:52px;">CID</th>`;
+    hdrs += `<th class="c">Total Tid</th>`;
+    showFields.forEach(f => { hdrs += `<th class="c">${f.label}</th>`; });
+
+    let rows = drivers.map((d, i) => {
+        const name = `${d.first_name||''} ${d.last_name||''}`.trim();
+        const pos  = shIsPenalty(d) ? (d.penalty || '—') : (i + 1);
+        const xCells = showFields.map(f => `<td class="c">${fmtShVal(d[f.key])}</td>`).join('');
+        return `<tr>
+            <td class="c">${pos}</td>
+            <td>${name}</td>
+            ${!hide.has('cid') ? `<td class="c">${d.cid||'—'}</td>` : ''}
+            <td class="c best">${fmtShVal(d.totaltime)}</td>
+            ${xCells}
+        </tr>`;
+    }).join('');
+
+    const title1Line = globalTitle1 ? `<div class="event-sub">${globalTitle1}</div>` : '';
+    return `<div class="page${isFirst?'':' page-break'}">
+        <div class="page-header">
+            <img src="${logoUrl}" class="logo" alt="" onerror="this.style.display='none'">
+            <div class="page-title">
+                <div class="page-label">Resultatliste</div>
+                <div class="event-name">${eventName}</div>
+                ${title1Line}
+            </div>
+            <div class="page-meta">
+                <div class="heat-badge">Heat ${heat}</div>
+                <div class="page-date">${today}</div>
+            </div>
+        </div>
+        <table>
+            <thead><tr>${hdrs}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        <div class="page-footer">Resultatliste generert ${today} &nbsp;·&nbsp; ${globalTitle1 ? globalTitle1 + ' — ' : ''}${eventName} — Heat ${heat}</div>
+    </div>`;
+}
+
+function buildSingleHeatDetail(heatData, settings) {
+    if (!heatData?.time_info?.length) return '<div style="color:#aaa;padding:8px;">Ingen data tilgjengelig</div>';
+    const extra   = new Set(settings.shExtraFields || []);
+    const hide    = new Set(settings.hideFields || []);
+    const showFields = SH_FIELDS.filter(f => extra.has(f.key) && f.key !== 'totaltime');
+    const drivers = shSortDrivers(heatData.time_info);
+
+    let html = `<table class="results-table" style="border-top:1px solid #dee2e6;"><thead><tr>
+        <th>#</th><th class="name-col">Navn</th>
+        ${!hide.has('cid') ? '<th>CID</th>' : ''}
+        <th>Total Tid</th>
+        ${showFields.map(f => `<th>${f.label}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+    drivers.forEach((d, i) => {
+        const name = `${d.first_name||''} ${d.last_name||''}`.trim();
+        const pos  = shIsPenalty(d) ? (d.penalty || '—') : (i + 1);
+        const xCells = showFields.map(f => `<td style="text-align:center">${fmtShVal(d[f.key])}</td>`).join('');
+        html += `<tr>
+            <td class="pos-col">${pos}</td>
+            <td class="name-col">${name}</td>
+            ${!hide.has('cid') ? `<td class="cid-col">${d.cid||'—'}</td>` : ''}
+            <td class="time-col best">${fmtShVal(d.totaltime)}</td>
+            ${xCells}
+        </tr>`;
+    });
+    return html + '</tbody></table>';
+}
+
+function renderResultlistFromCache() {
+    const { groupKeys, resultMap, grouped } = cachedResultlistData;
+    const filter   = (document.getElementById('rlFilter')?.value || '').trim().toLowerCase();
+    const settings = getRlSettings();
+    const container = document.getElementById('resultlistsContainer');
+
+    if (settings.singleHeat) {
+        const keys = [];
+        groupKeys.forEach(name => {
+            if (filter && !name.toLowerCase().includes(filter)) return;
+            (grouped[name] || []).sort((a,b) => a.run - b.run).forEach(h => keys.push({ name, run: h.run }));
+        });
+        if (!keys.length) { container.innerHTML = '<div class="no-data">Ingen resultater matcher filteret</div>'; return; }
+        let html = '<div class="sl-event-list">';
+        keys.forEach(({ name, run }) => {
+            const key      = `${name}||${run}`;
+            const isActive = key === resultlistActiveKey;
+            const escaped  = name.replace(/'/g, "\\'");
+            html += `<div class="sl-event-row${isActive?' active':''}" onclick="loadResultlistItem('${escaped}', ${run})">
+                <span class="sl-name">${name}</span>
+                <span class="sl-heat">Heat ${run}</span>
+                <span class="sl-arrow">${isActive?'▼':'▶'}</span>
+                <span class="sl-actions" onclick="event.stopPropagation()">
+                    <button class="sl-action-btn" title="Skriv ut" onclick="printSingleResult('${escaped}', ${run})">&#128438;</button>
+                    <button class="sl-action-btn" title="Eksporter PDF" onclick="exportSingleResult('${escaped}', ${run})">&#8595;</button>
+                </span>
+            </div>`;
+            if (isActive) {
+                const hd = rlSingleHeatCache[key];
+                html += `<div class="sl-detail" id="rl-detail-inline">${hd ? buildSingleHeatDetail(hd, settings) : '<div style="padding:8px;color:#aaa;">Laster...</div>'}</div>`;
+            }
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        return;
+    }
+
+    const keys = groupKeys.filter(name => {
+        if (filter && !name.toLowerCase().includes(filter)) return false;
+        return resultMap[name]?.results?.length > 0;
+    });
+    if (!keys.length) { container.innerHTML = '<div class="no-data">Ingen resultater matcher filteret</div>'; return; }
+    let html = '<div class="sl-event-list">';
+    keys.forEach(name => {
+        const isActive = name === resultlistActiveKey;
+        const escaped  = name.replace(/'/g, "\\'");
+        html += `<div class="sl-event-row${isActive?' active':''}" onclick="loadResultlistItem('${escaped}')">
+            <span class="sl-name">${name}</span>
+            <span class="sl-arrow">${isActive?'▼':'▶'}</span>
+            <span class="sl-actions" onclick="event.stopPropagation()">
+                <button class="sl-action-btn" title="Skriv ut" onclick="printSingleResult('${escaped}')">&#128438;</button>
+                <button class="sl-action-btn" title="Eksporter PDF" onclick="exportSingleResult('${escaped}')">&#8595;</button>
+            </span>
+        </div>`;
+        if (isActive) html += `<div class="sl-detail" id="rl-detail-inline">${buildResultDetail(name, resultMap[name])}</div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+async function loadResultlistItem(eventName, heat) {
+    const settings = getRlSettings();
+    const key = (heat != null) ? `${eventName}||${heat}` : eventName;
+    resultlistActiveKey = resultlistActiveKey === key ? null : key;
+    if (resultlistActiveKey && settings.singleHeat && heat != null && !rlSingleHeatCache[key]) {
+        renderResultlistFromCache();
+        try {
+            const r = await fetch(`/api/get_event_data?event=${encodeURIComponent(eventName)}&heat=${heat}`);
+            rlSingleHeatCache[key] = await r.json();
+        } catch(e) { rlSingleHeatCache[key] = null; }
+    }
+    renderResultlistFromCache();
+}
+
+function updateResultlistTab(groupKeys, resultMap, grouped) {
+    cachedResultlistData = { groupKeys, resultMap, grouped };
+    renderResultlistFromCache();
+}
+
+function getFilteredRlKeys() {
+    const { groupKeys, resultMap, grouped } = cachedResultlistData;
+    const filter   = (document.getElementById('rlFilter')?.value || '').trim().toLowerCase();
+    const settings = getRlSettings();
+    if (settings.singleHeat) {
+        const keys = [];
+        groupKeys.forEach(name => {
+            if (filter && !name.toLowerCase().includes(filter)) return;
+            (grouped[name] || []).sort((a,b) => a.run - b.run).forEach(h => keys.push({ name, run: h.run }));
+        });
+        return keys;
+    }
+    return groupKeys.filter(name => {
+        if (filter && !name.toLowerCase().includes(filter)) return false;
+        return resultMap[name]?.results?.length > 0;
+    });
+}
+
+async function _fetchSingleHeatData(name, run) {
+    const key = `${name}||${run}`;
+    if (!rlSingleHeatCache[key]) {
+        try {
+            const r = await fetch(`/api/get_event_data?event=${encodeURIComponent(name)}&heat=${run}`);
+            rlSingleHeatCache[key] = await r.json();
+        } catch(e) { rlSingleHeatCache[key] = null; }
+    }
+    return rlSingleHeatCache[key];
+}
+
+async function printResultlists() {
+    const btn = document.getElementById('rlPrintBtn');
+    btn.disabled = true; btn.textContent = 'Laster...';
+    const settings = getRlSettings();
+    const keys     = getFilteredRlKeys();
+    if (!keys.length) { btn.disabled=false; btn.innerHTML='&#128438; Skriv ut'; return; }
+
+    let body = ''; let first = true;
+    if (settings.singleHeat) {
+        for (const { name, run } of keys) {
+            const hd = await _fetchSingleHeatData(name, run);
+            if (!hd?.time_info?.length) continue;
+            body += buildSingleHeatResultPageHTML(name, run, hd, settings, first);
+            first = false;
+        }
+    } else {
+        keys.forEach(name => {
+            const data = cachedResultlistData.resultMap[name];
+            if (!data?.results?.length) return;
+            body += buildResultPageHTML(name, data, settings, first);
+            first = false;
+        });
+    }
+    if (!body) { btn.disabled=false; btn.innerHTML='&#128438; Skriv ut'; return; }
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resultatlister</title>
+        <style>${printPageCSS(settings.fontSize)}</style></head><body>${body}</body></html>`);
+    win.document.close(); win.focus();
+    setTimeout(() => { win.print(); }, 400);
+    btn.disabled=false; btn.innerHTML='&#128438; Skriv ut';
+}
+
+async function exportResultlists() {
+    const btn = document.getElementById('rlExportBtn');
+    btn.disabled = true; btn.textContent = 'Genererer PDF...';
+    const settings = getRlSettings();
+    const keys     = getFilteredRlKeys();
+    if (!keys.length) { btn.disabled=false; btn.innerHTML='&#8595; Eksporter ZIP'; return; }
+
+    const css = printPageCSS(settings.fontSize);
+    const zip = new window.JSZip();
+    if (settings.singleHeat) {
+        for (const { name, run } of keys) {
+            const hd = await _fetchSingleHeatData(name, run);
+            if (!hd?.time_info?.length) continue;
+            btn.textContent = `Genererer: ${name} H${run}...`;
+            const html  = buildSingleHeatResultPageHTML(name, run, hd, settings, true);
+            const blob  = await htmlToPdfBlob(html, css);
+            zip.file(`${name} Heat ${run}`.replace(/[\\/:*?"<>|]/g, '') + '.pdf', blob);
+        }
+    } else {
+        for (const name of keys) {
+            const data = cachedResultlistData.resultMap[name];
+            if (!data?.results?.length) continue;
+            btn.textContent = `Genererer: ${name}...`;
+            const html  = buildResultPageHTML(name, data, settings, true);
+            const blob  = await htmlToPdfBlob(html, css);
+            zip.file(name.replace(/[\\/:*?"<>|]/g, '') + '.pdf', blob);
+        }
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(zipBlob);
+    a.download = 'Resultatlister.zip'; a.click();
+    btn.disabled=false; btn.innerHTML='&#8595; Eksporter ZIP';
+}
+
+async function printSingleResult(eventName, heat) {
+    const settings = getRlSettings();
+    let body;
+    if (settings.singleHeat && heat != null) {
+        const hd = await _fetchSingleHeatData(eventName, heat);
+        if (!hd?.time_info?.length) return;
+        body = buildSingleHeatResultPageHTML(eventName, heat, hd, settings, true);
+    } else {
+        const data = cachedResultlistData.resultMap[eventName];
+        if (!data?.results?.length) return;
+        body = buildResultPageHTML(eventName, data, settings, true);
+    }
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${eventName}</title>
+        <style>${printPageCSS(settings.fontSize)}</style></head><body>${body}</body></html>`);
+    win.document.close(); win.focus();
+    setTimeout(() => { win.print(); }, 400);
+}
+
+async function exportSingleResult(eventName, heat) {
+    const settings = getRlSettings();
+    let pageHtml, title;
+    if (settings.singleHeat && heat != null) {
+        const hd = await _fetchSingleHeatData(eventName, heat);
+        if (!hd?.time_info?.length) return;
+        pageHtml = buildSingleHeatResultPageHTML(eventName, heat, hd, settings, true);
+        title = `${eventName} Heat ${heat}`.replace(/[\\/:*?"<>|]/g, '');
+    } else {
+        const data = cachedResultlistData.resultMap[eventName];
+        if (!data?.results?.length) return;
+        pageHtml = buildResultPageHTML(eventName, data, settings, true);
+        title = eventName.replace(/[\\/:*?"<>|]/g, '');
+    }
+    const blob = await htmlToPdfBlob(pageHtml, printPageCSS(settings.fontSize));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = title + '.pdf'; a.click();
+}
+
+async function loadAll() {
+    try {
+        const eventsResp = await fetch('/api/get_active_events');
+        const events     = await eventsResp.json();
+
+        // Group by unique event_name
+        const grouped = {};
+        events.forEach(e => {
+            if (!grouped[e.event_name]) grouped[e.event_name] = [];
+            grouped[e.event_name].push(e);
+        });
+
+        // Sort groups by lowest sort_order
+        const groupKeys = Object.keys(grouped).sort((a, b) => {
+            return Math.min(...grouped[a].map(e => e.sort_order)) -
+                   Math.min(...grouped[b].map(e => e.sort_order));
+        });
+
+        // Fetch TITLE_1 (competition/series name) from first available heat
+        if (groupKeys.length > 0) {
+            try {
+                const firstName = groupKeys[0];
+                const firstHeat = (grouped[firstName]?.[0]?.run) || 1;
+                const metaResp  = await fetch(`/api/get_event_data?event=${encodeURIComponent(firstName)}&heat=${firstHeat}`);
+                const metaData  = await metaResp.json();
+                globalTitle1 = metaData.TITLE_1 || (metaData.time_info?.[0]?.event_name) || '';
+            } catch(e) {}
+        }
+
+        // Fetch kvali results for relevant events
+        const fetchPromises = groupKeys.map(async name => {
+            if ('kvali'.toLowerCase() && name.toLowerCase().includes('kvali')) {
+                try {
+                    const r = await fetch(`/api/get_kvali_results?event_prefix=${encodeURIComponent(name)}`);
+                    return { name, data: await r.json() };
+                } catch (e) { return { name, data: null }; }
+            }
+            return { name, data: null };
+        });
+
+        const fetched = await Promise.all(fetchPromises);
+        const resultMap = {};
+        fetched.forEach(f => { resultMap[f.name] = f.data; });
+        cachedResultMap = resultMap;
+
+        // Update startlist and resultlist tabs
+        updateStartlistTab(groupKeys, grouped);
+        updateResultlistTab(groupKeys, resultMap, grouped);
+
+        // Render results tab
+        let html = '';
+        groupKeys.forEach(name => {
+            const heats   = grouped[name].sort((a, b) => a.run - b.run);
+            const allDone = heats.every(h => h.finished);
+            const anyActive = heats.some(h => h.active);
+            const statusBadge = anyActive
+                ? '<span class="badge-active">Aktiv</span>'
+                : allDone
+                    ? '<span class="badge-finished">Ferdig</span>'
+                    : '<span class="badge-pending">Venter</span>';
+
+            html += `<div class="event-block">
+                <div class="event-header">
+                    <div>
+                        <h5>${name}</h5>
+                        <div class="heat-pills">${heatBadges(heats)}</div>
+                    </div>
+                    ${statusBadge}
+                </div>`;
+
+            const kvaliData = resultMap[name];
+            if (kvaliData && kvaliData.results) {
+                html += buildTable(kvaliData.results, kvaliData.meta, heats);
+            } else if (name.toLowerCase().includes('kvali')) {
+                html += '<div class="no-data">Ingen resultater ennå</div>';
+            } else {
+                html += '<div class="no-data">Startliste kommer...</div>';
+            }
+
+            html += '</div>';
+        });
+
+        document.getElementById('resultsContainer').innerHTML = html || '<div class="no-data">Ingen aktive løp</div>';
+
+        // Render finaler tab
+        renderFinaler(groupKeys, resultMap);
+    } catch (err) {
+        document.getElementById('resultsContainer').innerHTML = '<div class="no-data">Feil ved lasting av data</div>';
+        console.error(err);
+    }
+
+}
+
+// ── Finale bracket ─────────────────────────────────────────────────────────
+
+function buildFinaleForEvent(kvaliName, results) {
+    // Sort by internal_standing (ascending)
+    const sorted = [...results].sort((a, b) => (a.internal_standing || 999) - (b.internal_standing || 999));
+
+    // Max 12 drivers across both C-finales (top 12 by internal_standing)
+    const cPool = sorted.filter(r => r.internal_standing <= 12);
+
+    // Split by odd/even internal_standing
+    const c1drivers = cPool.filter(r => r.internal_standing % 2 === 1);  // 1,3,5,7,9,11
+    const c2drivers = cPool.filter(r => r.internal_standing % 2 === 0);  // 2,4,6,8,10,12
+
+    // B-finale: positions 3-5 from C1 (index 2,3,4) and C2 (index 2,3,4)
+    const bFromC1 = c1drivers.slice(2, 5);
+    const bFromC2 = c2drivers.slice(2, 5);
+    const bDrivers = [...bFromC1, ...bFromC2];
+
+    // A-finale: positions 1,2 from C1 (index 0,1), C2 (index 0,1), and B-finale (top 2)
+    const aFromC1 = c1drivers.slice(0, 2);
+    const aFromC2 = c2drivers.slice(0, 2);
+    // B-finale top 2 slots are conceptual — shown as placeholders until B runs
+    const aDrivers = [...aFromC1, ...aFromC2];
+
+    function driverRow(r, idx) {
+        const name = ((r.first_name || '') + ' ' + (r.last_name || '')).trim();
+        const cid  = r.cid || '—';
+        const pts  = r.combined_points != null ? r.combined_points : '—';
+        const best = r.lowest_finishtime || r.best_lap_time || '—';
+        const isPlaceholder = r.internal_standing === '?';
+        return `<tr>
+            <td>${r.internal_standing}</td>
+            <td>${name}</td>
+            <td style="color:#7f8c8d;font-size:0.78rem;">${cid}</td>
+            ${isPlaceholder ? '<td colspan="2" style="color:#bbb;font-style:italic;font-size:0.78rem;"></td>' : `<td style="color:#2980b9;font-weight:700;">${pts}</td><td style="color:#27ae60;font-size:0.78rem;">${best}</td>`}
+        </tr>`;
+    }
+
+    function finaleCard(title, cls, drivers, promotesText) {
+        if (drivers.length === 0) return '';
+        let rows = drivers.map((r, i) => driverRow(r, i)).join('');
+        let promotes = promotesText ? `<div class="promotes-to">${promotesText}</div>` : '';
+        return `<div class="finale-card">
+            <div class="finale-card-header ${cls}">${title}</div>
+            <table>
+                <thead><tr style="background:#f8f9fa;font-size:0.72rem;color:#7f8c8d;">
+                    <th style="padding:3px 10px;text-align:center;">#</th>
+                    <th style="padding:3px 10px;text-align:left;">Navn</th>
+                    <th style="padding:3px 10px;text-align:center;">CID</th>
+                    <th style="padding:3px 10px;text-align:center;">Poeng</th>
+                    <th style="padding:3px 10px;text-align:center;">Beste tid</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            ${promotes}
+        </div>`;
+    }
+
+    let html = `<div class="finale-section">
+        <div class="event-header" style="border-radius:4px;margin-bottom:12px;">
+            <div><h5>${kvaliName}</h5></div>
+        </div>`;
+
+    // C-finaler
+    if (c1drivers.length > 0 || c2drivers.length > 0) {
+        html += `<div style="margin-bottom:6px;font-size:0.78rem;font-weight:700;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.6px;">C-Finaler</div>`;
+        html += `<div class="finale-grid">`;
+        html += finaleCard('C-Finale 1 &nbsp;<span class="promotes-badge">Plass 1-2 → A</span>', 'c-finale', c1drivers,
+            'Plass 3-5 → B-Finale');
+        html += finaleCard('C-Finale 2 &nbsp;<span class="promotes-badge">Plass 1-2 → A</span>', 'c-finale', c2drivers,
+            'Plass 3-5 → B-Finale');
+        html += `</div>`;
+    }
+
+    // B-finale
+    if (bDrivers.length > 0) {
+        html += `<div style="margin-bottom:6px;font-size:0.78rem;font-weight:700;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.6px;">B-Finale</div>`;
+        html += `<div class="finale-grid single">`;
+        html += finaleCard('B-Finale &nbsp;<span class="promotes-badge">Plass 1-2 → A-Finale</span>', 'b-finale', bDrivers,
+            'Topp 2 avanserer til A-Finale');
+        html += `</div>`;
+    }
+
+    // A-finale
+    if (aDrivers.length > 0) {
+        html += `<div style="margin-bottom:6px;font-size:0.78rem;font-weight:700;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.6px;">A-Finale (forventet)</div>`;
+        html += `<div class="finale-grid single">`;
+        const aWithPlaceholders = [
+            ...aDrivers,
+            { first_name: '(B-Finale', last_name: 'Plass 1)', club: '', internal_standing: '?' },
+            { first_name: '(B-Finale', last_name: 'Plass 2)', club: '', internal_standing: '?' },
+        ];
+        html += finaleCard('A-Finale', 'a-finale', aWithPlaceholders, null);
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    return html;
+}
+
+function renderFinaler(groupKeys, resultMap) {
+    let html = '';
+    groupKeys.forEach(name => {
+        if (!name.toLowerCase().includes('kvali')) return;
+        const kvaliData = resultMap[name];
+        if (!kvaliData || !kvaliData.results || kvaliData.results.length === 0) return;
+        html += buildFinaleForEvent(name, kvaliData.results);
+    });
+    document.getElementById('finalerContainer').innerHTML =
+        html || '<div class="no-data">Ingen kvali-resultater å generere finaler fra</div>';
+}
+
+// ── Startlists ──────────────────────────────────────────────────────────────
+
+let startlistActiveKey    = null;
+let cachedStartlistGroups = { groupKeys: [], grouped: {} };
+
+const SL_EXTRA_FIELDS = [
+    { key: 'reaction',   label: 'Reaksjonstid' },
+    { key: 'finishtime', label: 'Tid' },
+    { key: 'points',     label: 'Poeng' },
+    { key: 'penalty',    label: 'Straff' },
+    { key: 'laps',       label: 'Runder' },
+];
+
+function toggleSlSettings() {
+    const p = document.getElementById('slSettingsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function getSlSettings() {
+    return {
+        fontSize:      parseInt(document.getElementById('slFontSize').value) || 10,
+        extraFields:   [...document.querySelectorAll('.sl-extra-field:checked')].map(el => el.value),
+        hideFields:    [...document.querySelectorAll('.sl-hide-field:checked')].map(el => el.value),
+        combineHeats:  document.getElementById('slCombineHeats').checked,
+    };
+}
+
+function getSlFilter() {
+    const el = document.getElementById('slFilter');
+    return el ? el.value.trim().toLowerCase() : '';
+}
+
+function getFilteredSlKeys() {
+    const { groupKeys, grouped } = cachedStartlistGroups;
+    const filter = getSlFilter();
+    const keys = [];
+    groupKeys.forEach(name => {
+        (grouped[name] || []).forEach(h => {
+            if (!filter || name.toLowerCase().includes(filter))
+                keys.push({ name, run: h.run });
+        });
+    });
+    return keys;
+}
+
+async function fetchEventExtra(eventName, heat) {
+    try {
+        const r = await fetch(`/api/get_event_data?event=${encodeURIComponent(eventName)}&heat=${heat}`);
+        const d = await r.json();
+        const map = {};
+        (d.time_info || []).forEach(t => { map[String(t.cid)] = t; });
+        return map;
+    } catch(e) { return {}; }
+}
+
+function sortedEntries(data) {
+    const isBfk = data.track_placement === 'best_from_kvali';
+    return {
+        entries: [...data.entries].sort((a, b) =>
+            isBfk ? (a.qualifying_standing||999)-(b.qualifying_standing||999)
+                   : (a.num||0)-(b.num||0)),
+        isBfk,
+    };
+}
+
+function printPageCSS(fontSize) {
+    const fs = fontSize, sm = Math.round(fs*0.82), xs = Math.round(fs*0.75), lg = Math.round(fs*1.5);
+    return `*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:${fs}pt;color:#222}
+.page{padding:14mm 13mm 10mm}
+.page-break{page-break-before:always}
+.page-header{display:flex;align-items:stretch;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #2c3e50;gap:14px}
+.logo{height:90px;width:auto;object-fit:contain;align-self:center}
+.page-title{flex:1;display:flex;flex-direction:column;justify-content:center}
+.page-label{font-size:${lg}pt;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#2c3e50;line-height:1}
+.event-name{font-size:${Math.round(fs*1.1)}pt;font-weight:700;color:#2c3e50;margin-top:3px}
+.event-sub{font-size:${sm}pt;color:#7f8c8d;margin-top:2px}
+.page-meta{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px}
+.heat-badge{font-size:${lg}pt;font-weight:900;color:#2c3e50;line-height:1}
+.page-date{font-size:${sm}pt;color:#7f8c8d;white-space:nowrap}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+thead th{background:#2c3e50;color:#fff;padding:5px 7px;text-align:left;font-size:${sm}pt;font-weight:700}
+thead th.c{text-align:center}
+tbody tr:nth-child(even){background:#f5f7fa}
+tbody td{padding:5px 7px;font-size:${fs}pt;border-bottom:1px solid #e0e0e0}
+tbody td.c{text-align:center}
+.page-footer{margin-top:12px;font-size:${xs}pt;color:#aaa;text-align:center;border-top:1px solid #e0e0e0;padding-top:4px}
+.class-sep{background:#e8ecf0;font-weight:700;padding:4px 7px;font-size:${sm}pt;color:#2c3e50}
+.best{font-weight:700;color:#27ae60}
+.dnf{color:#bbb}
+.heat-block{break-inside:avoid;padding:10mm 13mm 8mm}
+.heat-block+.heat-block{border-top:1px solid #e0e0e0}
+@media print{@page{size:A4 portrait;margin:0}.page{padding:10mm 12mm 8mm}.heat-block{padding:10mm 12mm 8mm}.page-break{page-break-before:always}}`;
+}
+
+function buildPageHTML(data, extraMap, settings, isFirst) {
+    const { entries, isBfk } = sortedEntries(data);
+    const extra    = settings.extraFields;
+    const hide     = new Set(settings.hideFields || []);
+    const today    = new Date().toLocaleDateString('no-NO', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const logoUrl  = window.location.origin + '/static/assets/logo.png';
+    const modeLabel= isBfk
+        ? 'Kjørerne velger bane i rekkefølge etter plassering i kvalifisering (best velger først)'
+        : 'Banene er tildelt tilfeldig';
+
+    let extraHdrs = extra.map(f => {
+        const lbl = (SL_EXTRA_FIELDS.find(x=>x.key===f)||{}).label || f;
+        return `<th class="c">${lbl}</th>`;
+    }).join('');
+
+    let rows = entries.map((e, i) => {
+        const nm  = `${e.first_name||''} ${e.last_name||''}`.trim();
+        const xd  = (extraMap||{})[String(e.cid)] || {};
+        let xCells = extra.map(f => {
+            let v = xd[f]; if (v===null||v===undefined||v==='') v='—';
+            return `<td class="c">${v}</td>`;
+        }).join('');
+        return `<tr>
+            <td class="c">${isBfk ? (i+1) : e.num}</td>
+            ${hide.has('bid')        ? '' : `<td class="c">${e.cid||'—'}</td>`}
+            <td>${nm}</td>
+            ${hide.has('klasse')     ? '' : `<td>${e.klasse||'—'}</td>`}
+            ${hide.has('snowmobile') ? '' : `<td>${e.snowmobile||'—'}</td>`}
+            ${hide.has('club')       ? '' : `<td>${e.club||'—'}</td>`}
+            ${isBfk ? `<td class="c">${e.qualifying_standing||'—'}</td>` : ''}
+            ${xCells}
+        </tr>`;
+    }).join('');
+
+    const slTitle1Line = globalTitle1 ? `<div class="event-sub">${globalTitle1}</div>` : '';
+    return `<div class="page${isFirst?'':' page-break'}">
+        <div class="page-header">
+            <img src="${logoUrl}" class="logo" alt="" onerror="this.style.display='none'">
+            <div class="page-title">
+                <div class="page-label">Startliste</div>
+                <div class="event-name">${data.event}</div>
+                ${slTitle1Line}
+                <div class="event-sub">${modeLabel}</div>
+            </div>
+            <div class="page-meta">
+                <div class="heat-badge">Heat ${data.heat}</div>
+                <div class="page-date">${today}</div>
+            </div>
+        </div>
+        <table>
+            <thead><tr>
+                <th class="c" style="width:44px;">${isBfk?'Velger':'Bane'}</th>
+                ${hide.has('bid')        ? '' : '<th class="c" style="width:56px;">BID</th>'}
+                <th>Navn</th>
+                ${hide.has('klasse')     ? '' : '<th>Klasse</th>'}
+                ${hide.has('snowmobile') ? '' : '<th>Kjøretøy</th>'}
+                ${hide.has('club')       ? '' : '<th>Klubb</th>'}
+                ${isBfk ? '<th class="c" style="width:130px;">Pl. etter Kvalifisering</th>' : ''}
+                ${extraHdrs}
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        <div class="page-footer">Startliste generert ${today} &nbsp;·&nbsp; ${globalTitle1 ? globalTitle1 + ' — ' : ''}${data.event} — Heat ${data.heat}</div>
+    </div>`;
+}
+
+function buildHeatTable(data, extraMap, settings) {
+    const { entries, isBfk } = sortedEntries(data);
+    const extra = settings.extraFields;
+    const hide  = new Set(settings.hideFields || []);
+    let extraHdrs = extra.map(f => {
+        const lbl = (SL_EXTRA_FIELDS.find(x=>x.key===f)||{}).label || f;
+        return `<th class="c">${lbl}</th>`;
+    }).join('');
+    let rows = entries.map((e, i) => {
+        const nm = `${e.first_name||''} ${e.last_name||''}`.trim();
+        const xd = (extraMap||{})[String(e.cid)] || {};
+        let xCells = extra.map(f => {
+            let v = xd[f]; if (v===null||v===undefined||v==='') v='—';
+            return `<td class="c">${v}</td>`;
+        }).join('');
+        return `<tr>
+            <td class="c">${isBfk ? (i+1) : e.num}</td>
+            ${hide.has('bid')        ? '' : `<td class="c">${e.cid||'—'}</td>`}
+            <td>${nm}</td>
+            ${hide.has('klasse')     ? '' : `<td>${e.klasse||'—'}</td>`}
+            ${hide.has('snowmobile') ? '' : `<td>${e.snowmobile||'—'}</td>`}
+            ${hide.has('club')       ? '' : `<td>${e.club||'—'}</td>`}
+            ${isBfk ? `<td class="c">${e.qualifying_standing||'—'}</td>` : ''}
+            ${xCells}
+        </tr>`;
+    }).join('');
+    return `<table>
+        <thead><tr>
+            <th class="c" style="width:44px;">${isBfk?'Velger':'Bane'}</th>
+            ${hide.has('bid')        ? '' : '<th class="c" style="width:56px;">BID</th>'}
+            <th>Navn</th>
+            ${hide.has('klasse')     ? '' : '<th>Klasse</th>'}
+            ${hide.has('snowmobile') ? '' : '<th>Kjøretøy</th>'}
+            ${hide.has('club')       ? '' : '<th>Klubb</th>'}
+            ${isBfk ? '<th class="c" style="width:130px;">Pl. etter Kvalifisering</th>' : ''}
+            ${extraHdrs}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function buildCombinedPageHTML(eventName, heatsArr, settings, isFirst) {
+    const today   = new Date().toLocaleDateString('no-NO', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const logoUrl = window.location.origin + '/static/assets/logo.png';
+
+    const blocks = heatsArr.map(({ data, extraMap }, idx) => {
+        if (!data?.entries) return '';
+        const isBfk    = data.track_placement === 'best_from_kvali';
+        const modeLabel= isBfk
+            ? 'Kjørerne velger bane i rekkefølge etter plassering i kvalifisering (best velger først)'
+            : 'Banene er tildelt tilfeldig';
+        const combTitle1Line = globalTitle1 ? `<div class="event-sub">${globalTitle1}</div>` : '';
+        return `<div class="heat-block">
+            <div class="page-header">
+                <img src="${logoUrl}" class="logo" alt="" onerror="this.style.display='none'">
+                <div class="page-title">
+                    <div class="page-label">Startliste</div>
+                    <div class="event-name">${eventName}</div>
+                    ${combTitle1Line}
+                    <div class="event-sub">${modeLabel}</div>
+                </div>
+                <div class="page-meta">
+                    <div class="heat-badge">Heat ${data.heat}</div>
+                    <div class="page-date">${today}</div>
+                </div>
+            </div>
+            ${buildHeatTable(data, extraMap, settings)}
+            <div class="page-footer">Startliste generert ${today} &nbsp;·&nbsp; ${globalTitle1 ? globalTitle1 + ' — ' : ''}${eventName} — Heat ${data.heat}</div>
+        </div>`;
+    }).join('');
+
+    return `<div${isFirst?'':' class="page-break"'}>${blocks}</div>`;
+}
+
+async function htmlToPdfBlob(htmlContent, css) {
+    return html2pdf().set({
+        margin: 0,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+    }).from(`<style>${css}</style>${htmlContent}`, 'string').outputPdf('blob');
+}
+
+function groupResultsByEvent(results) {
+    const order = [], map = {};
+    results.forEach(item => {
+        if (!item.data?.entries) return;
+        const name = item.data.event;
+        if (!map[name]) { map[name] = []; order.push(name); }
+        map[name].push(item);
+    });
+    return { order, map };
+}
+
+async function _fetchAll() {
+    const filtered  = getFilteredSlKeys();
+    const settings  = getSlSettings();
+    if (!filtered.length) return null;
+    const results = await Promise.all(filtered.map(async ({ name, run }) => {
+        const [slData, extraMap] = await Promise.all([
+            fetch(`/api/get_startlist?event_name=${encodeURIComponent(name)}&heat=${run}`)
+                .then(r=>r.json()).catch(()=>null),
+            settings.extraFields.length
+                ? fetchEventExtra(name, run)
+                : Promise.resolve({}),
+        ]);
+        return { data: slData, extraMap };
+    }));
+    return { results, settings };
+}
+
+async function printStartlists() {
+    const btn = document.getElementById('slPrintBtn');
+    btn.disabled = true; btn.textContent = 'Laster...';
+    const fetched = await _fetchAll();
+    if (!fetched) { btn.disabled=false; btn.innerHTML='&#128438; Skriv ut'; return; }
+
+    const { results, settings } = fetched;
+    let body = ''; let first = true;
+    if (settings.combineHeats) {
+        const { order, map } = groupResultsByEvent(results);
+        order.forEach(name => {
+            body += buildCombinedPageHTML(name, map[name], settings, first);
+            first = false;
+        });
+    } else {
+        results.forEach(({ data, extraMap }) => {
+            if (!data?.entries) return;
+            body += buildPageHTML(data, extraMap, settings, first);
+            first = false;
+        });
+    }
+
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Startlister</title>
+        <style>${printPageCSS(settings.fontSize)}</style></head><body>${body}</body></html>`);
+    win.document.close(); win.focus();
+    setTimeout(() => { win.print(); }, 400);
+    btn.disabled=false; btn.innerHTML='&#128438; Skriv ut';
+}
+
+async function exportStartlists() {
+    const btn = document.getElementById('slExportBtn');
+    btn.disabled = true; btn.textContent = 'Genererer PDF...';
+    const fetched = await _fetchAll();
+    if (!fetched) { btn.disabled=false; btn.innerHTML='&#8595; Eksporter ZIP'; return; }
+
+    const { results, settings } = fetched;
+    const css = printPageCSS(settings.fontSize);
+    const jobs = [];
+
+    if (settings.combineHeats) {
+        const { order, map } = groupResultsByEvent(results);
+        order.forEach(name => {
+            const html  = buildCombinedPageHTML(name, map[name], settings, true);
+            const title = name.replace(/[\\/:*?"<>|]/g, '');
+            jobs.push({ html, title });
+        });
+    } else {
+        results.forEach(({ data, extraMap }) => {
+            if (!data?.entries) return;
+            const html  = buildPageHTML(data, extraMap, settings, true);
+            const title = `${data.event} Heat ${data.heat}`.replace(/[\\/:*?"<>|]/g, '');
+            jobs.push({ html, title });
+        });
+    }
+
+    const zip = new window.JSZip();
+    for (const { html, title } of jobs) {
+        btn.textContent = `Genererer: ${title}...`;
+        const blob = await htmlToPdfBlob(html, css);
+        zip.file(title + '.pdf', blob);
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(zipBlob);
+    a.download = 'Startlister.zip'; a.click();
+    btn.disabled=false; btn.innerHTML='&#8595; Eksporter ZIP';
+}
+
+// ── Inline preview ───────────────────────────────────────────────────────────
+
+function buildStartlistDetail(data, extraMap) {
+    if (!data?.entries?.length) return '<div style="color:#aaa;padding:8px;">Ingen startliste tilgjengelig</div>';
+    const settings   = getSlSettings();
+    const { entries, isBfk } = sortedEntries(data);
+    const extra      = settings.extraFields;
+    const badgeCls   = isBfk ? 'best' : 'random';
+    const badgeLabel = isBfk ? 'Best velger bane' : 'Tilfeldig';
+
+    const hide     = new Set(settings.hideFields || []);
+    const modeDesc = isBfk
+        ? 'Kjørerne velger bane i rekkefølge etter plassering i kvalifisering (best velger først)'
+        : 'Banene er tildelt tilfeldig';
+    let html = `<div class="sl-detail-title">${data.event} — Heat ${data.heat}
+        <span class="sl-badge ${badgeCls}">${badgeLabel}</span>
+        <span style="font-size:0.72rem;font-weight:400;color:#999;margin-left:8px;">${modeDesc}</span></div>
+    <table class="results-table" style="border-top:1px solid #dee2e6;"><thead><tr>
+        <th>${isBfk?'Velger':'Bane'}</th>
+        ${hide.has('bid')        ? '' : '<th>BID</th>'}
+        <th class="name-col">Navn</th>
+        ${hide.has('klasse')     ? '' : '<th>Klasse</th>'}
+        ${hide.has('snowmobile') ? '' : '<th>Kjøretøy</th>'}
+        ${hide.has('club')       ? '' : '<th>Klubb</th>'}
+        ${isBfk ? '<th>Pl. etter Kvalifisering</th>' : ''}
+        ${extra.map(f => `<th>${(SL_EXTRA_FIELDS.find(x=>x.key===f)||{}).label||f}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+    entries.forEach((e, i) => {
+        const nm  = `${e.first_name||''} ${e.last_name||''}`.trim();
+        const xd  = (extraMap||{})[String(e.cid)] || {};
+        html += `<tr>
+            <td class="pos-col">${isBfk?(i+1):e.num}</td>
+            ${hide.has('bid')        ? '' : `<td class="cid-col">${e.cid||'—'}</td>`}
+            <td class="name-col">${nm}</td>
+            ${hide.has('klasse')     ? '' : `<td>${e.klasse||'—'}</td>`}
+            ${hide.has('snowmobile') ? '' : `<td>${e.snowmobile||'—'}</td>`}
+            ${hide.has('club')       ? '' : `<td>${e.club||'—'}</td>`}
+            ${isBfk?`<td class="pts-col">${e.qualifying_standing||'—'}</td>`:''}
+            ${extra.map(f=>{let v=xd[f];if(v===null||v===undefined||v==='')v='—';return`<td style="text-align:center">${v}</td>`;}).join('')}
+        </tr>`;
+    });
+    return html + '</tbody></table>';
+}
+
+async function _fetchSingle(eventName, heat) {
+    const settings = getSlSettings();
+    if (settings.combineHeats) {
+        const allHeats = (cachedStartlistGroups.grouped[eventName] || []).map(h => h.run);
+        const heatsToFetch = allHeats.length ? allHeats : [heat];
+        const heatsArr = await Promise.all(heatsToFetch.map(async run => {
+            const [slData, extraMap] = await Promise.all([
+                fetch(`/api/get_startlist?event_name=${encodeURIComponent(eventName)}&heat=${run}`)
+                    .then(r => r.json()).catch(() => null),
+                settings.extraFields.length ? fetchEventExtra(eventName, run) : Promise.resolve({}),
+            ]);
+            return { data: slData, extraMap };
+        }));
+        return { combined: true, eventName, heatsArr, settings };
+    } else {
+        const [slData, extraMap] = await Promise.all([
+            fetch(`/api/get_startlist?event_name=${encodeURIComponent(eventName)}&heat=${heat}`)
+                .then(r => r.json()).catch(() => null),
+            settings.extraFields.length ? fetchEventExtra(eventName, heat) : Promise.resolve({}),
+        ]);
+        return { combined: false, data: slData, extraMap, settings };
+    }
+}
+
+async function printSingleStartlist(eventName, heat) {
+    const fetched = await _fetchSingle(eventName, heat);
+    const { settings } = fetched;
+    let body;
+    if (fetched.combined) {
+        if (!fetched.heatsArr.some(h => h.data?.entries)) return;
+        body = buildCombinedPageHTML(fetched.eventName, fetched.heatsArr, settings, true);
+    } else {
+        if (!fetched.data?.entries) return;
+        body = buildPageHTML(fetched.data, fetched.extraMap, settings, true);
+    }
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${eventName}</title>
+        <style>${printPageCSS(settings.fontSize)}</style></head><body>${body}</body></html>`);
+    win.document.close(); win.focus();
+    setTimeout(() => { win.print(); }, 400);
+}
+
+async function exportSingleStartlist(eventName, heat) {
+    const fetched = await _fetchSingle(eventName, heat);
+    const { settings } = fetched;
+    let pageHtml, title;
+    if (fetched.combined) {
+        if (!fetched.heatsArr.some(h => h.data?.entries)) return;
+        pageHtml = buildCombinedPageHTML(fetched.eventName, fetched.heatsArr, settings, true);
+        title = eventName.replace(/[\\/:*?"<>|]/g, '');
+    } else {
+        if (!fetched.data?.entries) return;
+        pageHtml = buildPageHTML(fetched.data, fetched.extraMap, settings, true);
+        title = `${eventName} Heat ${heat}`.replace(/[\\/:*?"<>|]/g, '');
+    }
+    const blob = await htmlToPdfBlob(pageHtml, printPageCSS(settings.fontSize));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = title + '.pdf'; a.click();
+}
+
+async function loadStartlist(eventName, heat) {
+    const key = `${eventName}||${heat}`;
+    startlistActiveKey = startlistActiveKey === key ? null : key;
+    renderStartlistFromCache();
+    if (!startlistActiveKey) return;
+
+    const detailEl = document.getElementById('sl-detail-inline');
+    if (!detailEl) return;
+    detailEl.innerHTML = '<div style="text-align:center;padding:12px;color:#aaa;"><span class="loading-spinner"></span> Laster...</div>';
+
+    const settings = getSlSettings();
+    const [slData, extraMap] = await Promise.all([
+        fetch(`/api/get_startlist?event_name=${encodeURIComponent(eventName)}&heat=${heat}`)
+            .then(r=>r.json()).catch(()=>null),
+        settings.extraFields.length ? fetchEventExtra(eventName, heat) : Promise.resolve({}),
+    ]);
+    detailEl.innerHTML = slData
+        ? buildStartlistDetail(slData, extraMap)
+        : '<div style="color:#c00;padding:8px;">Feil ved lasting</div>';
+}
+
+function renderStartlistFromCache() {
+    const filtered = getFilteredSlKeys();
+    if (!filtered.length) {
+        document.getElementById('startlistsContainer').innerHTML =
+            '<div class="no-data">Ingen løp matcher filteret</div>';
+        return;
+    }
+    let html = '<div class="sl-event-list">';
+    filtered.forEach(({ name, run }) => {
+        const key = `${name}||${run}`;
+        const isActive = key === startlistActiveKey;
+        const escapedName = name.replace(/'/g, "\\'");
+        html += `<div class="sl-event-row${isActive?' active':''}" onclick="loadStartlist('${escapedName}', ${run})">
+            <span class="sl-name">${name}</span>
+            <span class="sl-heat">Heat ${run}</span>
+            <span class="sl-arrow">${isActive?'▼':'▶'}</span>
+            <span class="sl-actions" onclick="event.stopPropagation()">
+                <button class="sl-action-btn" title="Skriv ut" onclick="printSingleStartlist('${escapedName}', ${run})">&#128438;</button>
+                <button class="sl-action-btn" title="Eksporter HTML" onclick="exportSingleStartlist('${escapedName}', ${run})">&#8595;</button>
+            </span>
+        </div>`;
+        if (isActive) html += `<div class="sl-detail" id="sl-detail-inline"></div>`;
+    });
+    html += '</div>';
+    document.getElementById('startlistsContainer').innerHTML = html;
+}
+
+function updateStartlistTab(groupKeys, grouped) {
+    cachedStartlistGroups = { groupKeys, grouped };
+    renderStartlistFromCache();
+}
+
+loadAll();
+</script>
+{% endblock %}

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bakkecross Standings Overlay</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ── Outer wrapper — position via URL params ── */
+        #widget {
+            position: absolute;
+            top: 60px;
+            left: 60px;
+            display: flex;
+            flex-direction: column;
+            min-width: 220px;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+        #widget.visible { opacity: 1; transform: translateY(0); }
+
+        /* ── Driver rows ── */
+        #driver-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .driver-row {
+            display: flex;
+            align-items: stretch;
+            height: 32px;
+            opacity: 0;
+            transform: translateX(-12px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .driver-row.show { opacity: 1; transform: translateX(0); }
+
+        .bib {
+            width: 32px;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.28);
+            background: rgba(14,14,20,0.88);
+            font-variant-numeric: tabular-nums;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.80);
+            background: rgba(16,16,22,0.88);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        /* Time cell slides open from the right when finished */
+        .time-cell {
+            max-width: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            background: rgba(22,22,30,0.92);
+            transition: max-width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .driver-row.finished .time-cell {
+            max-width: 90px;
+        }
+
+        .time-val {
+            padding: 0 11px;
+            width: 90px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: rgba(255,255,255,0.95);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.38s;
+        }
+        .driver-row.finished .time-val {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="widget">
+    <div id="driver-list"></div>
+</div>
+
+<script>
+(function () {
+    // ── URL params ────────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const widget = document.getElementById('widget');
+    const wsHost = params.get('host') || location.hostname;
+    const wsPort = params.get('wsport') || '4444';
+
+    (function applyLayout() {
+        const side   = params.get('side') || 'left';   // 'left' | 'right'
+        const top    = params.get('top')  || '60';
+        const w      = params.get('w');
+        const scale  = params.get('scale');
+
+        widget.style.top = top + 'px';
+
+        if (side === 'right') {
+            widget.style.left  = 'auto';
+            widget.style.right = '60px';
+        }
+        if (w) widget.style.minWidth = w + 'px';
+
+        if (scale) {
+            const origin = side === 'right' ? 'top right' : 'top left';
+            document.body.style.transformOrigin = origin;
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── State ─────────────────────────────────────────────────────
+    const rowCache   = {};   // bib -> { el, prevFinished, prevTime, prevPos }
+    let   isFirst    = true;
+    let   prevBibs   = [];
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function formatTime(raw) {
+        // Input: "00:00:09.439" or "0:09.439" — output: "9.439" or "1:09.439"
+        if (!raw || raw === '00:00:00.000' || raw === '0') return '';
+        // Strip leading "00:" groups
+        let s = raw.replace(/^(00:)+/, '');
+        // If result starts with a single digit colon (e.g. "9.439" after stripping), fine
+        // Remove leading zero from minutes: "01:09.439" -> "1:09.439"
+        s = s.replace(/^0(\d)/, '$1');
+        return s;
+    }
+
+    function formatName(name, firstname, lastname) {
+        const f = (firstname || '').trim();
+        const l = (lastname  || '').trim();
+        if (f && l) return f.charAt(0) + '. ' + l;
+        if (l) return l;
+        if (f) return f;
+        // fallback: split the combined name field
+        const parts = (name || '').trim().split(/\s+/);
+        if (parts.length >= 2) return parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
+        return parts[0] || '?';
+    }
+
+    // ── Row builder ───────────────────────────────────────────────
+    function getOrCreateRow(bib, animIdx) {
+        if (rowCache[bib]) return rowCache[bib];
+
+        const row = document.createElement('div');
+        row.className = 'driver-row';
+        row.dataset.bib = bib;
+        row.innerHTML = `
+            <div class="bib"></div>
+            <div class="name"></div>
+            <div class="time-cell"><span class="time-val"></span></div>
+        `;
+
+        const delay = isFirst ? animIdx * 45 : 0;
+        setTimeout(() => row.classList.add('show'), delay);
+
+        rowCache[bib] = { el: row, prevFinished: false, prevTime: '', prevPos: null };
+        return rowCache[bib];
+    }
+
+    function updateRow(entry, animIdx) {
+        const { pos, bib, finished, time } = entry;
+        const name = formatName(entry.name, entry.firstname, entry.lastname);
+        const cached = getOrCreateRow(bib, animIdx);
+        const row    = cached.el;
+
+        row.querySelector('.bib').textContent  = bib;
+        row.querySelector('.name').textContent = name;
+
+        const timeVal   = row.querySelector('.time-val');
+        const formatted = formatTime(time);
+
+        if (finished && !cached.prevFinished) {
+            // Set text first, then add .finished — CSS slides the cell open
+            timeVal.textContent = formatted;
+            row.classList.add('finished');
+        } else if (!finished) {
+            row.classList.remove('finished');
+            timeVal.textContent = '';
+        } else if (finished && formatted !== cached.prevTime && formatted) {
+            timeVal.textContent = formatted;
+        }
+
+        cached.prevFinished = finished;
+        cached.prevTime     = formatted;
+        cached.prevPos      = pos;
+    }
+
+    // ── Main render ───────────────────────────────────────────────
+    function render(data) {
+        const standings = data.standings || [];
+        const status    = (data.status || '').trim();
+
+        // Rebuild list in position order
+        const list   = document.getElementById('driver-list');
+        const curBibs = standings.map(e => e.bib);
+
+        standings.forEach((entry, idx) => updateRow(entry, idx));
+
+        // Re-order DOM to match standings order
+        standings.forEach(entry => {
+            const cached = rowCache[entry.bib];
+            if (cached) list.appendChild(cached.el);
+        });
+
+        // Remove drivers no longer in standings
+        prevBibs.forEach(bib => {
+            if (!curBibs.includes(bib) && rowCache[bib]) {
+                rowCache[bib].el.remove();
+                delete rowCache[bib];
+            }
+        });
+        prevBibs = curBibs;
+
+        isFirst = false;
+        widget.classList.add('visible');
+    }
+
+    // ── WebSocket connection ──────────────────────────────────────
+    function connect() {
+        const ws = new WebSocket('ws://' + wsHost + ':' + wsPort);
+
+        ws.onmessage = function (evt) {
+            try { render(JSON.parse(evt.data)); }
+            catch (e) { console.error('[standings_overlay] parse error:', e); }
+        };
+
+        ws.onclose = function () { setTimeout(connect, 3000); };
+        ws.onerror = function () { ws.close(); };
+    }
+
+    connect();
+})();
+</script>
+</body>
+</html>

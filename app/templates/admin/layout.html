@@ -64,6 +64,9 @@
                 <li class="nav-item">
                     <a class="nav-link {% if active_tab == 'stream_overlay' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='stream_overlay') }}">Stream Overlay</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'race_results' %}active{% endif %}" href="{{ url_for('admin.admin', tab_name='race_results') }}">Resultater</a>
+                </li>
             </ul>
 
             <div class="tab-content">

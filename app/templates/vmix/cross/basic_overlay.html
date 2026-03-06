@@ -258,6 +258,8 @@ $(document).ready(function() {
             data = dataString;
         }
 
+        if (!data) return;
+
         // start_state room sends the flag dict directly
         if (data.man_ready !== undefined) {
             updateFlagLine(data);

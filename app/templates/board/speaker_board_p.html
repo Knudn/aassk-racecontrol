@@ -487,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (tabLink) {
                     tabLink.textContent = tabTitle;
                 }
-                let time_data = (event.finishtime / 1000).toFixed(3) + " sec";
+                let time_data = milliseconds_to_sec(event.finishtime);
                 table_entry_count += 1
 
                 const row = document.createElement('tr');
@@ -792,7 +792,11 @@ function get_retry_entries(title_name) {
 
 
 function milliseconds_to_sec(ms) {
-    return (ms / 1000).toFixed(3)
+    const total = ms / 1000;
+    if (total < 60) return total.toFixed(3);
+    const mins = Math.floor(total / 60);
+    const secs = (total % 60).toFixed(3).padStart(6, '0');
+    return `${mins}:${secs}`;
 }
 
 function insert_alert(msg) {
@@ -842,10 +846,10 @@ function display_get_top_driver_header(data) {
             return '<p>No active driver</p>';
         }
         var finishTime = (driver.time_info && driver.time_info.FINISHTIME > 0)
-                            ? (driver.time_info.FINISHTIME / 1000).toFixed(2) + ' seconds'
+                            ? milliseconds_to_sec(driver.time_info.FINISHTIME)
                             : 'N/A';
 
-        let finish_time_sec= (driver.time_info.FINISHTIME / 1000).toFixed(3) + " Sec";
+        let finish_time_sec = milliseconds_to_sec(driver.time_info.FINISHTIME);
         var table_color = ""
         if (driver.status == "0") {
             var status = "Ikke Fullført"
@@ -974,7 +978,7 @@ function display_startlist(data) {
       const driver1 = race.drivers[0];
       const driver2 = race.drivers[1];
 
-      if (driver1.active == true || driver2.active == true) {
+      if (driver1?.active == true || driver2?.active == true) {
            active_class = "badge bg-danger"
       } else {
            active_class = "badge bg-secondary"
@@ -991,21 +995,19 @@ function display_startlist(data) {
                   <div class="text-truncate" style="font-size: 0.95rem;">
                       ${driver1.first_name} ${driver1.last_name}
                   </div>
-                  <div class="text-muted" style="font-size: 0.75rem;">${driver1.vehicle}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${driver1.vehicle} &nbsp;<span class="badge bg-secondary" style="font-size:0.65rem;">${driver1.id}</span></div>
               </td>
               <td class="text-center px-0" style="width: 5%">
                   <span class="${active_class}" style="font-size: 0.8rem background-color: red;">${race.race_id}</span>
               </td>
               <td class="text-start ps-3" style="width: 37%">
                   <div class="text-truncate" style="font-size: 0.95rem;">
-                      ${driver2.first_name} ${driver2.last_name}
+                      ${driver2 ? driver2.first_name + ' ' + driver2.last_name : '—'}
                   </div>
-                  <div class="text-muted" style="font-size: 0.75rem;">${driver2.vehicle}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">${driver2 ? `<span class="badge bg-secondary" style="font-size:0.65rem;">${driver2.id}</span>&nbsp;${driver2.vehicle}` : ''}</div>
               </td>
               <td style="width: 5%">
-                  <button class="btn btn-warning btn-sm" onclick="addRetry(${driver2.id})" style="font-size: 0.7rem;">
-                      FLYTT
-                  </button>
+                  ${driver2 ? `<button class="btn btn-warning btn-sm" onclick="addRetry(${driver2.id})" style="font-size: 0.7rem;">FLYTT</button>` : ''}
               </td>
           </tr>`;
   }
@@ -1099,6 +1101,15 @@ function display_results(data) {
     newDiv.className = 'left-results-class';
     newDiv.style = "width: 90%;";
 
+    function fmtMs(ms) {
+        const total = parseFloat(ms) / 1000;
+        if (!ms || isNaN(total) || total <= 0) return '-';
+        if (total < 60) return total.toFixed(3);
+        const mins = Math.floor(total / 60);
+        const secs = (total % 60).toFixed(3).padStart(6, '0');
+        return `${mins}:${secs}`;
+    }
+
     const isQualification = data[0]?.race_config?.TITLE_2?.includes('Kvalifisering');
     const eventTitle = data[0]?.race_config?.TITLE_2;
     const eventTitle_full = data[0]?.race_config?.TITLE_1 + " " + data[0]?.race_config?.TITLE_2
@@ -1134,96 +1145,84 @@ function display_results(data) {
             .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
     );
 
-    async function handleToggle(event) {
-        try {
-            console.log(encodeURIComponent(eventTitle))
-            if (event.target.checked) {
-                const response = await fetch(`/api/get_current_startlist_w_data?event_comb=${encodeURIComponent(eventTitle_full)}`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const combinedData = await response.json();
+    let usePoints = false;
 
-                const driverBestTimes = new Map();
-
-                combinedData.forEach(eventData => {
-                    console.log(eventData)
-                    eventData.slice(1).flatMap(race => race.drivers)
-                        .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
-                        .forEach(driver => {
-                            const totalTime = driver.time_info.FINISHTIME +
-                                            (driver.time_info.PENELTY > 3 ? driver.time_info.PENELTY : 0);
-                            const driverId = driver.id;
-                            const isPenaltyState123 = driver.time_info.PENELTY >= 1 && driver.time_info.PENELTY <= 3;
-                            
-                            // Only update if:
-                            // 1. We haven't seen this driver before, OR
-                            // 2. This time is better than previous best AND
-                            //    either this entry is not a penalty state 1-3 OR we don't already have a valid finish time
-                            if (!driverBestTimes.has(driverId) || 
-                                (totalTime < driverBestTimes.get(driverId).time_info.FINISHTIME +
-                                (driverBestTimes.get(driverId).time_info.PENELTY > 3 ? 
-                                driverBestTimes.get(driverId).time_info.PENELTY : 0) && 
-                                (!isPenaltyState123 || driverBestTimes.get(driverId).time_info.PENELTY >= 1))) {
-                                driverBestTimes.set(driverId, driver);
-                            }
-                        });
-                });
-
-                currentDrivers = sortDrivers(Array.from(driverBestTimes.values()));
-            } else {
-                // Restore to original data
-                currentDrivers = sortDrivers(
-                    data.slice(1).flatMap(race => race.drivers)
-                        .filter(driver => driver.time_info.FINISHTIME > 0 || driver.time_info.PENELTY !== 0)
-                );
-            }
-
-            // Update the display
-            newDiv.innerHTML = createContent(currentDrivers, event.target.checked);
-
-            // Reattach event listener
-            const newToggle = document.getElementById('seeCombinedToggle');
-            if (newToggle) {
-                newToggle.checked = event.target.checked;
-                newToggle.addEventListener('change', handleToggle);
-            }
-
-        } catch (error) {
-            console.error('Error fetching combined data:', error);
-            alert('Error loading combined results');
-            newDiv.innerHTML = createContent(currentDrivers, false);
-
-            const newToggle = document.getElementById('seeCombinedToggle');
-            if (newToggle) {
-                newToggle.checked = false;
-                newToggle.addEventListener('change', handleToggle);
-            }
-        }
+    function getRKeys(results) {
+        let keys = new Set();
+        results.forEach(r => Object.keys(r).forEach(k => { if (/^R\d+$/.test(k)) keys.add(k); }));
+        return Array.from(keys).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
     }
 
-    function createContent(drivers, isChecked = false) {
-        let html = '';
-        kvaliCriteria.forEach(criteria => {
-            if (criteria.event == eventTitle) {
-                    kvali_nr = criteria.kvalinr
-                }
-        })
-        if (isQualification) {
-            html += `
-            <div class="d-flex justify-content-end mb-2">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="seeCombinedToggle" ${isChecked ? 'checked' : ''}>
-                    <label class="form-check-label" for="seeCombinedToggle">Bestetid fra Kvalifisering</label>
-                </div>
-            </div>`;
+    function createKvaliTable(data) {
+        if (!data || !data.results || data.results.length === 0) {
+            return '<div class="text-muted text-center p-2">Ingen data tilgjengelig</div>';
         }
 
+        const results = data.results;
+        const rKeys = getRKeys(results);
+        const colspanTotal = 3 + rKeys.length + (usePoints ? 1 : 0);
 
-        html += `
-            <table class="table table-sm mb-0">
+        let kvali_nr = null;
+        kvaliCriteria.forEach(c => { if (c.event == eventTitle) kvali_nr = c.kvalinr; });
+
+        let html = `<table class="table table-sm mb-0" style="font-size:0.8rem;">
+            <thead>
+                <tr class="text-muted">
+                    <th class="text-center" style="width:6%">#</th>
+                    <th>Fører</th>
+                    ${rKeys.map(k => `<th class="text-end">${k}</th>`).join('')}
+                    <th class="text-end">Beste</th>
+                    ${usePoints ? '<th class="text-end">Poeng</th>' : ''}
+                </tr>
+            </thead>
+            <tbody>`;
+
+        results.forEach((driver, index) => {
+            const pos = driver.internal_standing;
+            const name = `${driver.first_name} ${driver.last_name}`;
+            const bestTime = driver.lowest_finishtime && driver.lowest_finishtime !== '0.000' ? fmtMs(driver.lowest_finishtime) : '-';
+
+            const rCols = rKeys.map(k => {
+                const t = driver[k];
+                const pen = driver[k + '_penalty'];
+                let display = (t && t !== '0.000') ? fmtMs(t) : '-';
+                if (pen == 1) display = 'DNS';
+                else if (pen == 2) display = 'DNF';
+                else if (pen == 3) display = 'DSQ';
+                const pts = driver[k + '_POINTS'];
+                const ptsHtml = (usePoints && pts > 0) ? ` <span style="color:#888;font-size:0.75em">(${pts}p)</span>` : '';
+                return `<td class="text-end">${display}${ptsHtml}</td>`;
+            }).join('');
+
+            html += `<tr class="align-middle">
+                <td class="text-center">${pos}</td>
+                <td class="text-truncate" style="max-width:120px">${name}</td>
+                ${rCols}
+                <td class="text-end fw-bold">${bestTime}</td>
+                ${usePoints ? `<td class="text-end">${driver.combined_points || 0}</td>` : ''}
+            </tr>`;
+
+            if (kvali_nr !== null && index + 1 == kvali_nr) {
+                html += `<tr><td colspan="${colspanTotal}" class="qualify-line">
+                    <span class="qualify-text">Kvalifisering til Stige/Finale</span>
+                </td></tr>`;
+            }
+        });
+
+        html += `</tbody></table>`;
+        return html;
+    }
+
+    function createContent(drivers) {
+        let kvali_nr = null;
+        kvaliCriteria.forEach(c => { if (c.event == eventTitle) kvali_nr = c.kvalinr; });
+
+        let html = `<table class="table table-sm mb-0">
                 <thead>
                     <tr class="text-muted" style="font-size: 0.8rem;">
                         <th class="text-center" style="width: 10%">#</th>
-                        <th style="width: 45%">Fører</th>
+                        <th style="width: 10%">CID</th>
+                        <th style="width: 35%">Fører</th>
                         <th class="text-end" style="width: 15%">Tid</th>
                     </tr>
                 </thead>
@@ -1231,62 +1230,47 @@ function display_results(data) {
 
         drivers.forEach((driver, index) => {
             const penalty = driver.time_info.PENELTY;
-            if (penalty == 1) {
-                driver.status = "DNS";
-            } else if (penalty == 2) {
-                driver.status = "DNF";
-            } else if (penalty == 3) {
-                driver.status = "DSQ";
-            } else {
-                const finishTime = driver.time_info.FINISHTIME;
-                const totalTime = finishTime + (penalty > 3 ? penalty : 0);
-                driver.status = totalTime > 0 ? (totalTime / 1000).toFixed(3) : '-';
+            let status;
+            if (penalty == 1) status = 'DNS';
+            else if (penalty == 2) status = 'DNF';
+            else if (penalty == 3) status = 'DSQ';
+            else {
+                const totalTime = driver.time_info.FINISHTIME + (penalty > 3 ? penalty : 0);
+                status = totalTime > 0 ? fmtMs(totalTime) : '-';
             }
 
-
-            html += `
-                <tr class="align-middle">
+            html += `<tr class="align-middle">
                     <td class="text-center" style="font-size: 0.9rem;">${index + 1}</td>
-                    <td>
-                        <div class="text-truncate" style="font-size: 0.95rem;">
-                            ${driver.first_name} ${driver.last_name}
-                        </div>
-                    </td>
-                    <td class="text-end fw-bold" style="font-size: 0.9rem;">
-                        ${driver.status}
-                    </td>
+                    <td><span class="badge bg-secondary" style="font-size:0.7rem;">${driver.id}</span></td>
+                    <td><div class="text-truncate" style="font-size: 0.95rem;">${driver.first_name} ${driver.last_name}</div></td>
+                    <td class="text-end fw-bold" style="font-size: 0.9rem;">${status}</td>
                 </tr>`;
-            if (isQualification) {
-            if (index +1 == kvali_nr && isChecked) {
-            html += `<tr>
-                <td colspan="3" class="qualify-line">
-                    <span class="qualify-text">Kvalifisering til Stige/Finale</span>
-                </td>
-            </tr>
-            `
-            }
-        }
         });
 
-
-        html += `
-                </tbody>
-            </table>`;
+        html += `</tbody></table>`;
         return html;
     }
 
-    // Initial render
-    newDiv.innerHTML = createContent(currentDrivers);
-    const parentDiv = document.getElementById('left-driver');
-    parentDiv.appendChild(newDiv);
-
-    // Attach initial event listener
-    if (isQualification) {
-        const toggle = document.getElementById('seeCombinedToggle');
-        if (toggle) {
-            toggle.addEventListener('change', handleToggle);
+    async function initialRender() {
+        if (isQualification) {
+            try {
+                const [cfgRes, kvaliRes] = await Promise.all([
+                    fetch('/api/get_standing_config').then(r => r.json()),
+                    fetch(`/api/get_kvali_results?event_prefix=${encodeURIComponent(eventTitle)}`).then(r => r.json())
+                ]);
+                usePoints = cfgRes.use_points;
+                newDiv.innerHTML = createKvaliTable(kvaliRes);
+            } catch (e) {
+                console.error('Error loading kvali table:', e);
+                newDiv.innerHTML = createContent(currentDrivers);
+            }
+        } else {
+            newDiv.innerHTML = createContent(currentDrivers);
         }
+        document.getElementById('left-driver').appendChild(newDiv);
     }
+
+    initialRender();
 }
 
 function retry_entry_table(data) {

@@ -11,8 +11,37 @@ from threading import Thread
 from flask import current_app
 import json
 
+def get_event_meta():
+    from app.models import ActiveDrivers, Session_Race_Records, ActiveEvents
 
+    active_drivers = ActiveDrivers.query.first()
+    event_id = active_drivers.Event_id
 
+    active_event_row = ActiveEvents.query.filter(ActiveEvents.event_checksum == event_id).first()
+    heat = active_event_row.run if active_event_row else active_drivers.Heat
+
+    event_data = Session_Race_Records.query.filter(Session_Race_Records.event_id == event_id).first()
+
+    if event_data is None:
+        return {"TITLE_1": "", "TITLE_2": "", "HEAT": heat, "HEATS": 1, "EVENT_TYPE": ""}
+
+    title_1 = event_data.title_1
+    title_2 = event_data.title_2
+    heats = event_data.data.get("heats", 1) if event_data.data else 1
+
+    if "Kvali".lower() in title_2.lower():
+        event_type = "Kvalifisering"
+        title_2 = title_2.removesuffix(" - Kvalifisering")
+    elif "Finale".lower() in title_2.lower():
+        event_type = "Finale"
+        title_2 = title_2.removesuffix(" - Finale")
+    elif "Stige".lower() in title_2.lower():
+        title_2 = title_2.removesuffix(" - Stige")
+        event_type = "Stige"
+    else:
+        event_type = ""
+    
+    return {"TITLE_1":title_1, "TITLE_2":title_2, "HEAT":heat, "HEATS":heats, "EVENT_TYPE":event_type}
 
 def extract_class(name: str) -> str:
     import re
@@ -211,8 +240,134 @@ def combine_qualifying_results(
         'results': combined
     }
 
+def calculate_standing_msport(records):
+    """
+    Calculate standings from msport Session_Race_Records data (data JSON blobs).
+
+    records: list of dicts (each is a Session_Race_Records.data JSON blob).
+
+    Ranking rules (module "2" = kvalifisering):
+      - Primary: best clean finishtime across all heats (ascending, lower = better)
+      - Penalized with no clean time → placed after all clean finishes
+      - No finishtime at all → placed last
+      - Drivers with cid 11111 (FILLER) are excluded
+
+    Returns dict:
+      {
+        'meta': { 'title_2': str, 'total_heats': int, 'tiebreaker': 'lowest_finishtime' },
+        'results': [
+          {
+            'cid', 'first_name', 'last_name', 'club', 'snowmobile',
+            'R{n}', 'R{n}_penalty',   # per heat: finishtime (ms) or 0
+            'lowest_finishtime',       # best clean time in ms, 0 if none
+            'combined_finishtime',     # sum of all clean times in ms
+            'internal_standing',       # 1-based position (ties share same position)
+            'points',                  # from StandingConfig.driver_scores
+          }, ...
+        ]
+      }
+    """
+    from app.models import StandingConfig
+
+    standing_config = StandingConfig.query.first()
+    use_points      = standing_config.use_points if standing_config else False
+    driver_scores   = standing_config.driver_scores if standing_config else {}
+    dns_point       = standing_config.dns_point if standing_config else 0
+
+    FILLER_CID = 11111
+
+    # Group records by cid
+    drivers = {}
+    total_heats = 0
+    title_2 = ""
+
+    for entry in records:
+        cid = entry.get("cid")
+        if cid is None or cid == FILLER_CID:
+            continue
+
+        heat_num = int(entry.get("heat", 1))
+        total_heats = max(total_heats, heat_num)
+        title_2 = entry.get("title_2", title_2)
+
+        if cid not in drivers:
+            drivers[cid] = {
+                "cid":        cid,
+                "first_name": entry.get("first_name", ""),
+                "last_name":  entry.get("last_name", ""),
+                "club":       entry.get("club", ""),
+                "snowmobile": entry.get("snowmobile", ""),
+                "heats":      {},
+            }
+
+        drivers[cid]["heats"][heat_num] = {
+            "finishtime": entry.get("finishtime", 0),
+            "penalty":    entry.get("penalty", 0),
+        }
+
+    # Build result rows
+    rows = []
+    for cid, driver in drivers.items():
+        row = {
+            "cid":        cid,
+            "first_name": driver["first_name"],
+            "last_name":  driver["last_name"],
+            "club":       driver["club"],
+            "snowmobile": driver["snowmobile"],
+        }
+
+        clean_times = []
+        for h in range(1, total_heats + 1):
+            heat = driver["heats"].get(h, {"finishtime": 0, "penalty": 0})
+            ft  = heat["finishtime"]
+            pen = heat["penalty"]
+            row[f"R{h}"]         = ft
+            row[f"R{h}_penalty"] = pen
+            if ft and ft > 0 and pen == 0:
+                clean_times.append(ft)
+
+        row["lowest_finishtime"]   = min(clean_times) if clean_times else 0
+        row["combined_finishtime"] = sum(clean_times) if clean_times else 0
+        row["_sort_lowest"]        = row["lowest_finishtime"] if clean_times else float("inf")
+
+        rows.append(row)
+
+    # Sort: fastest lowest_finishtime first; drivers with no clean time last
+    rows.sort(key=lambda r: r["_sort_lowest"])
+
+    # Assign positions and points (ties share the same position)
+    pos = 0
+    prev_sort = None
+    for i, row in enumerate(rows):
+        sort_val = row["_sort_lowest"]
+        if sort_val != prev_sort:
+            pos = i + 1
+            prev_sort = sort_val
+
+        row["internal_standing"] = pos
+        del row["_sort_lowest"]
+
+        if use_points:
+            if sort_val == float("inf"):
+                row["points"] = dns_point
+            else:
+                row["points"] = driver_scores.get(str(pos), 0)
+        else:
+            row["points"] = 0
+
+    return {
+        "meta": {
+            "title_2":     title_2,
+            "total_heats": total_heats,
+            "tiebreaker":  "lowest_finishtime",
+        },
+        "results": rows,
+    }
+
+
 def get_combined_results(event_prefix, kvali=False):
     from app.models import Session_Race_Records
+    from app.models import StandingConfig
     
     if kvali:
         data = Session_Race_Records.query.filter(
@@ -223,8 +378,15 @@ def get_combined_results(event_prefix, kvali=False):
     
     for a in data:
         data_list.append(a.data)
+    config_tie = StandingConfig.query.first()
+    print(config_tie.scoring_method)
+    if config_tie.scoring_method == "best_lap":
+        tie_b = ["lowest_finishtime"]
+    else:
+        tie_b = ["lowest_finishtime"]
 
-    data = combine_qualifying_results(data_list, tiebreakers=["laps", "combined_finishtime"])
+    data = combine_qualifying_results(data_list, tiebreakers=tie_b)
+    data["meta"]["scoring_method"] = config_tie.scoring_method
 
     return data
 
@@ -299,7 +461,32 @@ def get_event_results(data_type=None, event_name=None, event_id=None, format=Non
                     points = a.data["points"]
                     data_set += f"{cid},{name},{snowmobile},{best_time},{laps},{totaltime},{points}\n" if standing_config.use_points == True else f"{cid},{name},{snowmobile},{best_time},{laps},{totaltime}\n"
                         
+        elif race_type == 3:
+            active_event = ActiveDrivers.query.first()
+            event_id = active_event.Event_id
+            results = Session_Race_Records.query.filter(Session_Race_Records.event_id == event_id).order_by(cast(Session_Race_Records.data['internal_standing'], String)).all()
+            standing_config = StandingConfig.query.first()
 
+            if len(results) == 0:
+                return "NO EVENTS FOUND"
+            
+            if "kvali" in results[0].title_2.lower() or "quali" in results[0].title_2.lower():
+                
+                if standing_config.use_points == True:
+                    data_set = "ID,Navn,Kjøretøy,Beste Rundetid,Runder,Tid,Poeng\n"
+                else:
+                    data_set = "ID,Navn,Kjøretøy,Beste Rundetid,Runder,Tid\n"
+
+                for a in results:
+                    name = a.data["first_name"] + a.data["last_name"]
+                    snowmobile = a.data["snowmobile"] if a.data["snowmobile"] != "" else "-"
+                    cid = a.cid
+                    best_time = a.data["best_time"]
+                    totaltime = a.data["totaltime"]
+                    laps = a.data["laps"]
+                    points = a.data["points"]
+                    data_set += f"{cid},{name},{snowmobile},{best_time},{laps},{totaltime},{points}\n" if standing_config.use_points == True else f"{cid},{name},{snowmobile},{best_time},{laps},{totaltime}\n"
+                        
     return data_set
 
 
@@ -417,7 +604,7 @@ def calculate_standing(entries):
             heat_position += 1
             post = heat_position
             if calculate_points:
-                point = points[str(post)]
+                point = points.get(str(post), 0)
             else:
                 point = 0
             
@@ -439,7 +626,7 @@ def calculate_standing(entries):
     
         
 def insert_event_data(event_id=None, full_sync=None, active=None):
-    from app.lib.db_func import insert_orbits_data
+    from app.lib.db_func import insert_orbits_data, insert_msports_data
  
     g_config = GetEnv()
 
@@ -450,6 +637,13 @@ def insert_event_data(event_id=None, full_sync=None, active=None):
             insert_orbits_data(full_sync=True)
         elif active != None:
             insert_orbits_data(active_only=True)
+    else:
+        if event_id != None:
+            insert_msports_data(event_id=event_id)
+        elif full_sync != None:
+            insert_msports_data(full_sync=True)
+        elif active != None:
+            insert_msports_data(active=True, lookup_active=True)
             
 
 def get_upcoming_drivers(return_driver_context=False):
@@ -465,205 +659,76 @@ def get_upcoming_drivers(return_driver_context=False):
         D1 = active_driver[0][0]
         D2 = active_driver[0][1]
 
-    if current_app.config["event_content"] == "":
-        current_event_data = json.loads(get_active_startlist())
-    else:
-        current_event_data = json.loads(current_app.config["event_content"])
+    current_event_data = get_active_startlist_w_timedate()
 
     next_event = False
     next_drivers = False
 
-    title = current_event_data[0]["race_config"]["TITLE_2"]
     race_config = current_event_data[0]["race_config"]
-    if race_config["HEATS"] == race_config["HEAT"] and "stige" in title.lower():
-        ladder_finale = True
-    else:
-        ladder_finale = False
+    mode = race_config.get("MODE", 0)
+    # mode 2 = kvalifisering (two drivers side-by-side, lane order by best kvali time)
+    # mode 1 = finale/single (one driver per race slot)
+    is_kvali = (mode == 2)
+
+    def _build_driver_data(race_entry, event_config, use_kvali):
+        drivers = race_entry["drivers"]
+        D1_id = drivers[0]["id"]
+        D2_id = drivers[1]["id"] if len(drivers) > 1 else 0
+
+        if use_kvali:
+            best_time = get_best_kvali_time({"D1": D1_id, "D2": D2_id}, event_config["TITLE_2"])
+            if best_time.index(D1_id) == 0:
+                result = {"D1": [D1_id, "green"], "D2": [D2_id, "white"]}
+            else:
+                result = {"D1": [D1_id, "white"], "D2": [D2_id, "green"]}
+        else:
+            result = {"D1": [D1_id, "white"], "D2": [D2_id, "white"]}
+
+        if return_driver_context:
+            result["D1"].append(drivers[0]["first_name"] + " " + drivers[0]["last_name"])
+            result["D2"].append(drivers[1]["first_name"] + " " + drivers[1]["last_name"] if len(drivers) > 1 else "")
+            result["EVENT_NAME"] = event_config["TITLE_2"]
+
+        return result
 
     for k, a in enumerate(current_event_data):
         if next_drivers:
-            if "stige" in title.lower():
-                kval_title = title.replace("Stige", "Kvalifisering")
-                D1 = a["drivers"][0]["id"]
-                D2 = a["drivers"][1]["id"]
-
-                best_time = get_best_kvali_time({"D1": D1, "D2": D2}, kval_title)
-
-                if best_time.index(a["drivers"][0]["id"]) == 0:
-                    data = {"D1": [D1, "green"], "D2": [D2, "white"]}
-                else:
-                    data = {"D1": [D1, "white"], "D2": [D2, "green"]}
-
-                if return_driver_context:
-                    D1_NAME = (
-                        a["drivers"][0]["first_name"]
-                        + " "
-                        + a["drivers"][0]["last_name"]
-                    )
-                    D2_NAME = (
-                        a["drivers"][1]["first_name"]
-                        + " "
-                        + a["drivers"][1]["last_name"]
-                    )
-                    EVENT_NAME = current_event_data[0]["race_config"]["TITLE_2"]
-
-                    data["EVENT_NAME"] = EVENT_NAME
-                    data["D1"].append(D1_NAME)
-                    data["D2"].append(D2_NAME)
-
-                break
-            else:
-                D1 = a["drivers"][0]["id"]
-                D2 = a["drivers"][1]["id"]
-
-                data = {"D1": [D1, "white"], "D2": [D2, "white"]}
-
-                if return_driver_context:
-                    D1_NAME = (
-                        a["drivers"][0]["first_name"]
-                        + " "
-                        + a["drivers"][0]["last_name"]
-                    )
-                    D2_NAME = (
-                        a["drivers"][1]["first_name"]
-                        + " "
-                        + a["drivers"][1]["last_name"]
-                    )
-                    EVENT_NAME = current_event_data[0]["race_config"]["TITLE_2"]
-
-                    data["EVENT_NAME"] = EVENT_NAME
-                    data["D1"].append(D1_NAME)
-                    data["D2"].append(D2_NAME)
-
-                break
+            data = _build_driver_data(a, race_config, is_kvali)
+            break
 
         if "race_config" in a:
             continue
 
-        if a["drivers"][0]["id"] == D1 or a["drivers"][0]["id"] == D2:
+        driver_ids = [d["id"] for d in a["drivers"]]
+        if D1 in driver_ids or D2 in driver_ids:
             if len(current_event_data) == k + 1:
-                if ladder_finale:
-                    kval_title = title.replace("Stige", "Kvalifisering")
-                    D1 = current_event_data[1]["drivers"][0]["id"]
-                    D2 = current_event_data[1]["drivers"][1]["id"]
-
-                    best_time = get_best_kvali_time({"D1": D1, "D2": D2}, kval_title)
-
-                    if best_time.index(D1) == 0:
-                        data = {"D1": [D1, "green"], "D2": [D2, "white"]}
-                    else:
-                        data = {"D1": [D1, "white"], "D2": [D2, "green"]}
-
-                    if return_driver_context:
-                        D1_NAME = (
-                            current_event_data[1]["drivers"][0]["first_name"]
-                            + " "
-                            + current_event_data[1]["drivers"][0]["last_name"]
-                        )
-                        D2_NAME = (
-                            current_event_data[1]["drivers"][1]["first_name"]
-                            + " "
-                            + current_event_data[1]["drivers"][1]["last_name"]
-                        )
-                        EVENT_NAME = current_event_data[0]["race_config"]["TITLE_2"]
-
-                        data["D1"].append(D1_NAME)
-                        data["D2"].append(D2_NAME)
-                        data["EVENT_NAME"] = EVENT_NAME
-
-                    break
-                else:
-                    next_event = True
-                    next_drivers = False
-
-                break
+                next_event = True
             else:
-                if ladder_finale:
-                    next_event = True
-                    next_drivers = False
-                else:
-                    next_event = False
-                    next_drivers = True
+                next_drivers = True
 
     if next_event:
         nxt_event = get_active_startlist_w_timedate(upcoming=True)
-        title = nxt_event[0]["race_config"]["TITLE_2"]
 
-        if len(nxt_event) == 1:
+        if len(nxt_event) <= 1:
             return {"D1": ["X", "green"], "D2": ["X", "green"]}
 
-        if (
-            nxt_event[0]["race_config"]["HEATS"] == nxt_event[0]["race_config"]["HEAT"]
-            and "stige" in title.lower()
-        ):
-            D1 = nxt_event[2]["drivers"][0]["id"]
-            D2 = nxt_event[2]["drivers"][1]["id"]
-            if return_driver_context:
-                D1_NAME = (
-                    nxt_event[2]["drivers"][0]["first_name"]
-                    + " "
-                    + nxt_event[2]["drivers"][0]["last_name"]
-                )
-                D2_NAME = (
-                    nxt_event[2]["drivers"][1]["first_name"]
-                    + " "
-                    + nxt_event[2]["drivers"][1]["last_name"]
-                )
-                EVENT_NAME = nxt_event[0]["race_config"]["TITLE_2"]
+        nxt_config = nxt_event[0]["race_config"]
+        nxt_mode = nxt_config.get("MODE", 0)
+        nxt_is_kvali = (nxt_mode == 2)
 
-        else:
-            D1 = nxt_event[1]["drivers"][0]["id"]
-            D2 = nxt_event[1]["drivers"][1]["id"]
-            if return_driver_context:
-                D1_NAME = (
-                    nxt_event[1]["drivers"][0]["first_name"]
-                    + " "
-                    + nxt_event[1]["drivers"][0]["last_name"]
-                )
-                D2_NAME = (
-                    nxt_event[1]["drivers"][1]["first_name"]
-                    + " "
-                    + nxt_event[1]["drivers"][1]["last_name"]
-                )
-                EVENT_NAME = nxt_event[0]["race_config"]["TITLE_2"]
-
-        if "stige" in title.lower():
-            kval_title = title.replace("Stige", "Kvalifisering")
-            best_time = get_best_kvali_time({"D1": D1, "D2": D2}, kval_title)
-            if best_time.index(D1) == 0:
-                data = {"D1": [D1, "green"], "D2": [D2, "white"]}
-            else:
-                data = {"D1": [D1, "white"], "D2": [D2, "green"]}
-            if return_driver_context:
-                data["D1"].append(D1_NAME)
-                data["D2"].append(D2_NAME)
-                data["EVENT_NAME"] = EVENT_NAME
-        else:
-            data = {"D1": [D1, "white"], "D2": [D2, "white"]}
-            if return_driver_context:
-                data["D1"].append(D1_NAME)
-                data["D2"].append(D2_NAME)
-                data["EVENT_NAME"] = EVENT_NAME
-
-    print(next_event)
+        data = _build_driver_data(nxt_event[1], nxt_config, nxt_is_kvali)
 
     return data
 
 
 def get_best_kvali_time(drivers, event):
-    from app import db
     from app.models import Session_Race_Records
     from sqlalchemy import or_
 
-    data = (
-        db.session.query(
-            Session_Race_Records.cid,
-            Session_Race_Records.finishtime,
-            Session_Race_Records.penalty,
-        )
+    records = (
+        Session_Race_Records.query
         .filter(
             Session_Race_Records.title_2 == event,
-            Session_Race_Records.finishtime != 0,
             or_(
                 Session_Race_Records.cid == drivers["D1"],
                 Session_Race_Records.cid == drivers["D2"],
@@ -674,17 +739,16 @@ def get_best_kvali_time(drivers, event):
 
     driver_best_time = {drivers["D1"]: 999999999999, drivers["D2"]: 999999999999}
 
-    for a in data:
-        if a.cid == drivers["D1"]:
-            if driver_best_time[drivers["D1"]] == 999999999999 and a.penalty == 0:
-                driver_best_time[drivers["D1"]] = a.finishtime
-            elif a.finishtime < driver_best_time[drivers["D1"]] and a.penalty == 0:
-                driver_best_time[drivers["D1"]] = a.finishtime
-        elif a.cid == drivers["D2"]:
-            if driver_best_time[drivers["D2"]] == 999999999999 and a.penalty == 0:
-                driver_best_time[drivers["D2"]] = a.finishtime
-            elif a.finishtime < driver_best_time[drivers["D2"]] and a.penalty == 0:
-                driver_best_time[drivers["D2"]] = a.finishtime
+    for rec in records:
+        d = rec.data or {}
+        finishtime = d.get("finishtime", 0)
+        penalty = d.get("penalty", 0)
+        if not finishtime:
+            continue
+        cid = rec.cid
+        if cid in driver_best_time:
+            if penalty == 0 and finishtime < driver_best_time[cid]:
+                driver_best_time[cid] = finishtime
 
     if driver_best_time[drivers["D1"]] >= driver_best_time[drivers["D2"]]:
         return [
@@ -755,7 +819,7 @@ def Set_active_driver(cid_1=False, cod_2=False):
 
 def export_events(event_file=None):
     from app.models import ActiveEvents
-
+    from app.lib.db_operation import get_active_startlist_w_timedate
     g_config = GetEnv()
 
     events = ActiveEvents.query.order_by(ActiveEvents.sort_order).all()
@@ -776,7 +840,9 @@ def export_events(event_file=None):
                 "SPESIFIC_HEAT": a.run,
             }
         ]
-        data.append(format_startlist(event, True))
+
+        data.append(get_active_startlist_w_timedate(event=a.event_name, heat=a.run))
+        #data.append(format_startlist(event, True))
 
     return data
 
@@ -1147,25 +1213,38 @@ def get_event_data(event=None, all_events=False, heat=None):
     race_type = int(GetEnv()["race_type"])
     
     def generate_meta(entry_meta):
-        event_name = entry_meta.data["event_name"]
+
+        d = entry_meta.data or {}
+        event_name = d.get("event_name") or d.get("title_1", "")
         run_name = entry_meta.title_2
         heat = int(entry_meta.heat)
 
         event_meta = ActiveEvents.query.filter(ActiveEvents.event_name == run_name, ActiveEvents.run == heat).first()
 
+        # MSport: derive display type from module field.
+        # module "0" = drag (non-parallel); module "2"/"3" = parallel.
+        module = d.get("module")
+        if module is not None:
+            effective_race_type = 3 if module in ("2", "3") else 0
+        else:
+            effective_race_type = race_type
+
+        total_heats = db.session.query(db.func.count(db.func.distinct(Session_Race_Records.heat))).filter(
+            Session_Race_Records.title_2 == run_name
+        ).scalar() or 1
+
         event_meta_dict = {
-            "RACE_TYPE":race_type,
-            "EVENT_CHECKSUM": event_meta.event_checksum,
-            "FINISH_CRITERIA": event_meta.finish_criteria,
-            "FINISH_LAPS": event_meta.finish_laps,
-            "FINISH_TIME": event_meta.finish_time, 
-            "HEATS":2,
+            "RACE_TYPE": effective_race_type,
+            "EVENT_CHECKSUM": event_meta.event_checksum if event_meta else entry_meta.event_id,
+            "FINISH_CRITERIA": event_meta.finish_criteria if event_meta else None,
+            "FINISH_LAPS": event_meta.finish_laps if event_meta else None,
+            "FINISH_TIME": event_meta.finish_time if event_meta else None,
+            "HEATS": total_heats,
             "HEAT": heat,
             "TITLE_1": event_name,
             "TITLE_2": run_name,
-            #MUST BE FIXED IN THE FUTURE!
-            "MULTI_CLASS": entry_meta.data["multi_class"],
-            "FINISHED": entry_meta.data["finished"],
+            "MULTI_CLASS": d.get("multi_class", False),
+            "FINISHED": d.get("finished", False),
             "ACTIVE_EVENT": bool(entry_meta.active_event),
             "time_info": [],
         }
@@ -1190,13 +1269,19 @@ def get_event_data(event=None, all_events=False, heat=None):
             data = generate_meta(entry_meta)
             
             driver_entries = Session_Race_Records.query.filter(Session_Race_Records.title_2 == event, Session_Race_Records.heat == heat).all()
-            
+
             if len(driver_entries) == 0:
                 return {"ERROR":"NO DATA"}
 
+            _OLD_FIELDS = {"cid", "first_name", "last_name", "title_1", "title_2",
+                           "heat", "finishtime", "snowmobile", "penalty",
+                           "reaction", "points", "laps"}
+            driver_entries.sort(key=lambda r: (r.data.get("start_pos") or 0))
             for a in driver_entries:
-                a.data["internal_position"] = a.data["position"]
-                data["time_info"].append(a.data) 
+                d = a.data
+                entry = {k: d.get(k) for k in _OLD_FIELDS}
+                entry["internal_position"] = d.get("position")
+                data["time_info"].append(entry)
             
             return data
         else:
@@ -1507,13 +1592,15 @@ def reorder_list_based_on_dict(original_list, correct_order_dict):
     return new_list
 
 
-def get_active_driver_name(db_path, cid):
-    query = "SELECT FIRST_NAME, LAST_NAME FROM drivers WHERE CID={0};".format(cid)
-
-    with sqlite3.connect(db_path) as con:
-        cur = con.cursor()
-        driver_name = cur.execute(query).fetchall()
-    return driver_name[0][0] + " " + driver_name[0][1]
+def get_active_driver_name(event_id, cid):
+    from app.models import Session_Race_Records
+    
+    #query = "SELECT FIRST_NAME, LAST_NAME FROM drivers WHERE CID={0};".format(cid)
+    print(event_id, cid)
+    data = Session_Race_Records.query.filter(Session_Race_Records.cid==cid).first().data
+    first_name = data["first_name"]
+    last_name = data["last_name"]
+    return first_name + " " + last_name
 
 
 def fifo_monitor(app, fifo_path="/tmp/file_monitor_fifo", callback=None, g_config=None):

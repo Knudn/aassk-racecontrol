@@ -6,3 +6,10 @@
 [2026-02-26 01:36:18,330] INFO in intermediate_list: Monitoring /mnt/test
 [2026-02-26 01:36:18,342] INFO in intermediate_list: Schedule: 9 events loaded
 [2026-02-26 01:36:18,342] INFO in intermediate_list: Schedule updated
+[2026-03-01 21:37:24,290] INFO in intermediate_list: Indexed 0 event database(s)
+[2026-03-01 21:37:24,290] INFO in intermediate_list: Monitoring /mnt/test
+[2026-03-01 21:37:24,302] INFO in intermediate_list: Schedule: 9 events loaded
+[2026-03-01 21:37:24,302] INFO in intermediate_list: Schedule updated
+[2026-03-01 21:37:24,811] INFO in intermediate_list: Current: Kombinert Kvalifisering - 2 | Kvalifisering - 2 (heat 1) (6 drivers in heat)
+[2026-03-01 21:37:24,811] INFO in intermediate_list:   +6 new driver(s) to event
+[2026-03-01 21:37:24,852] INFO in intermediate_list: Timing: heat 1, 6 driver(s) updated

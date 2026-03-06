@@ -37,7 +37,14 @@ def register_overlay_routes(api_bp):
     @api_bp.route('/api/overlay/groups/<int:gid>/views', methods=['GET', 'POST'])
     def overlay_views(gid):
         if request.method == 'GET':
-            return jsonify(list_views(gid))
+            views_data = list_views(gid)
+            for b in views_data:
+                entries = []
+                for t in b["widgets"]:
+                    t["file_path"] = "http://192.168.1.50:7777/vmix/raw/" + t["file"]
+                    entries.append(t)
+                b["widgets"] = entries
+            return jsonify(views_data)
         data = request.get_json()
         v = create_view(gid, data.get('name', 'New View'))
         return jsonify(v) if v else (jsonify({'error': 'Group not found'}), 404)

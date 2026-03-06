@@ -15,6 +15,7 @@ SOCKET_ROOMS = {
     'prestage_lights': 'prestage_lights',
     'start_state': 'start_state',
     'overlay': 'overlay',
+    'event_meta':'event_meta',
 }
 
 SOCKET_EVENTS = {
@@ -150,6 +151,7 @@ def register_socket_events(socketio):
                          {'action': 'join', 'session': session_info}, 
                          room=SOCKET_ROOMS['admin'])
         if room == "start_state":
+            
             from flask import current_app
             state = current_app.config.get('start_state', {})
             emit(SOCKET_EVENTS['standard_response'], json.dumps(state))
@@ -157,8 +159,14 @@ def register_socket_events(socketio):
             from app.lib.utils import get_dash_data
             payload = get_dash_data()
             emit(SOCKET_EVENTS["standard_response"], json.dumps(payload))
-        elif room == 'results':
-            pass
+        elif room == 'event_meta':
+            from app.lib.utils import get_event_meta
+            payload = get_event_meta()
+            emit(SOCKET_EVENTS["standard_response"], json.dumps(payload))
+        elif room == 'default':
+            from app.lib.db_operation import get_active_startlist_w_timedate
+            payload = get_active_startlist_w_timedate()
+            emit(SOCKET_EVENTS["standard_response"], json.dumps(payload))
     
     @socketio.on('message')
     def handle_message(data):

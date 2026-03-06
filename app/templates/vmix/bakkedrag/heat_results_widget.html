@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heat Results</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #widget {
+            position: absolute;
+            top: 0; left: 0;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        #widget.visible { opacity: 1; transform: translateX(0); }
+
+        #panel {
+            background: rgba(8, 10, 20, 0.92);
+            border-right: 2px solid #4d79ff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px 5px 10px;
+            gap: 8px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            opacity: 0;
+            transform: translateX(5px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+        .result-row:first-child { border-top: none; }
+        .result-row.show { opacity: 1; transform: translateX(0); }
+
+        .val-pos {
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.20);
+            font-variant-numeric: tabular-nums;
+            width: 12px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .result-row.pos-1 .val-pos { color: #4d79ff; }
+
+        .val-name {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.80);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .result-row.pos-1 .val-name { color: #fff; font-weight: 700; }
+        .result-row.is-active .val-name { color: rgba(255,255,255,0.30); }
+
+        .val-time {
+            font-size: 12px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: -0.3px;
+            flex-shrink: 0;
+        }
+        .result-row.pos-1 .val-time { color: #4d79ff; }
+        .result-row.is-active .val-time { color: rgba(255,255,255,0.15); font-weight: 400; }
+    </style>
+</head>
+<body>
+<div id="widget">
+    <div id="panel"></div>
+</div>
+
+<script>
+    const params  = new URLSearchParams(window.location.search);
+    const wsHost  = params.get('host') || '192.168.1.50';
+    const wsPort  = params.get('port') || '7777';
+    const maxRows = parseInt(params.get('top') || '5');
+    const widget  = document.getElementById('widget');
+
+    (function applyParams() {
+        const w     = params.get('w');
+        const h     = params.get('h');
+        const scale = params.get('scale');
+        const align = params.get('align') || 'right'; // 'left' or 'right'
+
+        if (w) widget.style.width  = w + 'px';
+        if (h) widget.style.height = h + 'px';
+
+        if (align === 'left') {
+            widget.style.left  = '0';
+            widget.style.right = 'auto';
+        } else {
+            widget.style.left  = 'auto';
+            widget.style.right = '0';
+        }
+
+        if (scale) {
+            document.body.style.transformOrigin = align === 'left' ? 'top left' : 'top right';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    function shortName(first, last) {
+        const f = (first || '').trim();
+        const l = (last  || '').trim();
+        return (f ? f[0] + '. ' : '') + l;
+    }
+
+    function msToSec(ms) {
+        const total = ms / 1000;
+        if (total < 60) return total.toFixed(3);
+        const mins = Math.floor(total / 60);
+        const secs = (total % 60).toFixed(3).padStart(6, '0');
+        return `${mins}:${secs}`;
+    }
+
+    function render(data) {
+        if (!Array.isArray(data) || !data[0]?.race_config) return;
+
+        const races = data.slice(1);
+        const candidates = [];
+
+        races.forEach(race => {
+            (race.drivers || []).forEach(d => {
+                const ti      = d.time_info || {};
+                const penalty = ti.PENELTY  || 0;
+                const ft      = ti.FINISHTIME || 0;
+
+                if (d.active) {
+                    candidates.push({ name: shortName(d.first_name, d.last_name), time: null, active: true, sort: Infinity });
+                } else if (penalty === 0 && ft > 0) {
+                    candidates.push({ name: shortName(d.first_name, d.last_name), time: ft, active: false, sort: ft });
+                }
+            });
+        });
+
+        candidates.sort((a, b) => a.sort - b.sort);
+        const rows = candidates.slice(0, maxRows);
+
+        const panel = document.getElementById('panel');
+        const firstTime = panel.children.length === 0;
+        panel.innerHTML = '';
+
+        rows.forEach((entry, i) => {
+            const row = document.createElement('div');
+            row.className = 'result-row'
+                + (i === 0 && !entry.active ? ' pos-1' : '')
+                + (entry.active ? ' is-active' : '');
+
+            const pos = document.createElement('div');
+            pos.className = 'val-pos';
+            pos.textContent = i + 1;
+
+            const name = document.createElement('div');
+            name.className = 'val-name';
+            name.textContent = entry.name;
+
+            const time = document.createElement('div');
+            time.className = 'val-time';
+            time.textContent = entry.active ? '—' : msToSec(entry.time);
+
+            row.appendChild(pos);
+            row.appendChild(name);
+            row.appendChild(time);
+            panel.appendChild(row);
+        });
+
+        if (firstTime) {
+            document.querySelectorAll('.result-row').forEach((el, i) =>
+                setTimeout(() => el.classList.add('show'), 60 + i * 50)
+            );
+        } else {
+            document.querySelectorAll('.result-row').forEach(el => el.classList.add('show'));
+        }
+
+        widget.classList.add('visible');
+    }
+
+    const socket = io('http://' + wsHost + ':' + wsPort, { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', function () {
+        socket.emit('join', { username: 'overlay', room: 'default' });
+    });
+
+    socket.on('response', function (dataString) {
+        try {
+            const data = typeof dataString === 'string' ? JSON.parse(dataString) : dataString;
+            render(data);
+        } catch (e) { console.error('[heat_results] parse error:', e); }
+    });
+
+    socket.on('connect_error', function (e) {
+        console.error('[heat_results] connection error:', e);
+    });
+</script>
+</body>
+</html>

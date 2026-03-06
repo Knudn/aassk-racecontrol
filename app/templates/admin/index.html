@@ -574,14 +574,15 @@ $(document).ready(function() {
             var driversTable = $('#driversTable');
             driversTable.empty(); // Clear existing entries
 
-            if (!response || !Array.isArray(response.time_info)) {
+            if (!response || !Array.isArray(response) || response.length === 0 || !response[0].race_config) {
                 console.error('Expected response with time_info array, received:', response);
                 return;
             }
 
-            var drivers = response.time_info;
-            var raceType = response.RACE_TYPE;
+            var raceConfig = response[0].race_config;
+            var raceType = raceConfig.MODE;
             var isParallel = (raceType == 2 || raceType == 3);
+            var drivers = response.slice(1).flatMap(function(r) { return r.drivers || []; });
 
             if (isParallel) {
                 // Pair drivers two at a time for parallel race formats
@@ -598,12 +599,12 @@ $(document).ready(function() {
                     if (d2) {
                         var driver_1 = d1.first_name + " " + d1.last_name;
                         var driver_2 = d2.first_name + " " + d2.last_name;
-                        row.data('driverIds', [d1.cid, d2.cid]);
-                        var name_combined = "[" + d1.cid + "] " + driver_1 + "    ➖    " + driver_2 + " [" + d2.cid + "]";
+                        row.data('driverIds', [d1.id, d2.id]);
+                        var name_combined = "[" + d1.id + "] " + driver_1 + "    ➖    " + driver_2 + " [" + d2.id + "]";
                         row.append($('<td></td>').text(name_combined));
                     } else {
                         var driver_1 = d1.first_name + " " + d1.last_name;
-                        row.data('driverIds', [d1.cid, 0]);
+                        row.data('driverIds', [d1.id, 0]);
                         row.append($('<td></td>').text(driver_1));
                     }
 
@@ -618,8 +619,8 @@ $(document).ready(function() {
                         $(this).addClass('table-active');
                     });
 
-                    row.data('driverIds', [driver.cid, 0]);
-                    var name_combined = "[" + driver.cid + "] " + driver.first_name + " " + driver.last_name;
+                    row.data('driverIds', [driver.id, 0]);
+                    var name_combined = "[" + driver.id + "] " + driver.first_name + " " + driver.last_name;
                     row.append($('<td></td>').text(name_combined));
                     driversTable.append(row);
                 });

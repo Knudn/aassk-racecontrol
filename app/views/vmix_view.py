@@ -81,8 +81,14 @@ def active_driver_stats():
 
 @vmix_bp.route('/vmix/active_driver_stats_single', methods=['GET'])
 def active_driver_stats_single():
-    
+
     return render_template('vmix/active_driver_dash_single.html')
+
+@vmix_bp.route('/vmix/bakkedrag/active_driver_dash', methods=['GET'])
+def bakkedrag_active_driver_dash():
+    from flask import current_app
+    list_address = current_app.config['listen_address']
+    return render_template('vmix/bakkedrag/active_driver_dash.html', ip=list_address)
 
 @vmix_bp.route('/vmix/active_event_json', methods=['GET'])
 def active_event_json():

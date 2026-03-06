@@ -12,7 +12,17 @@
             $(".name").text(standardizedData.NAME || "TBA");
             $(".vehicle").text(standardizedData.SNOWMOBILE || "TBA");
             
-            if (standardizedData.FINISHTIME > 0) {
+            const penalty = standardizedData.PENELTY;
+            if (penalty == 1) {
+                $(".time").text("DNS");
+                $(".time").addClass("finished");
+            } else if (penalty == 2) {
+                $(".time").text("DNF");
+                $(".time").addClass("finished");
+            } else if (penalty == 3) {
+                $(".time").text("DSQ");
+                $(".time").addClass("finished");
+            } else if (standardizedData.FINISHTIME > 0) {
                 $(".time").text(formatMilliseconds(standardizedData.FINISHTIME));
                 $(".time").addClass("finished");
             } else {
@@ -41,7 +51,8 @@
                 return {
                     NAME: `${driver.first_name} ${driver.last_name}`,
                     SNOWMOBILE: driver.vehicle,
-                    FINISHTIME: driver.time_info.FINISHTIME / 1000 // Convert to seconds
+                    FINISHTIME: driver.time_info.FINISHTIME / 1000, // Convert to seconds
+                    PENELTY: driver.time_info.PENELTY
                 };
             }
         }

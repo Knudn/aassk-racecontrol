@@ -17,18 +17,55 @@ def register_timedata_routes(api_bp):
     @api_bp.route('/api/get_timedata/', methods=['GET'])
     def get_timedata():
         def format_db_rsp(a):
+            d = a.data or {}
             return {
-                "first_name": a.first_name,
-                "last_name": a.last_name,
-                "title_1": a.title_1,
-                "title_2": a.title_2,
+                "first_name": d.get("first_name"),
+                "last_name": d.get("last_name"),
+                "title_1": d.get("title_1") or d.get("event_name"),
+                "title_2": d.get("title_2") or a.title_2,
                 "heat": a.heat,
-                "finishtime": a.finishtime,
-                "snowmobile": a.snowmobile,
-                "penalty": a.penalty
+                "finishtime": d.get("finishtime", 0),
+                "snowmobile": d.get("snowmobile"),
+                "penalty": d.get("penalty", 0)
             }
 
-        events = request.args.get('events', default='False', type=str)
+        def build_query(f_title_1=None, f_title_2=None, f_heat=None):
+            # title_2 column = combined "title_1 title_2" for MSport, run_name for Orbits
+            q = Session_Race_Records.query
+            if f_title_1:
+                q = q.filter(Session_Race_Records.title_1==f_title_1)
+            if f_title_2:
+                q = q.filter(Session_Race_Records.title_2==f_title_2)
+            if f_heat:
+                q = q.filter(Session_Race_Records.heat == f_heat)
+            return q
+
+        def post_filter_and_sort(records, skip_penalty=True):
+            result = []
+            for r in records:
+                d = r.data or {}
+                if skip_penalty:
+                    if d.get("finishtime", 0) == 0:
+                        continue
+                    if d.get("penalty", 0) != 0:
+                        continue
+
+                result.append(r)
+            
+            result.sort(key=lambda r: (r.data or {}).get("finishtime", float('inf')))
+            return result
+
+        def deduplicate_by_name(records):
+            seen = set()
+            result = []
+            for r in records:
+                d = r.data or {}
+                name_key = (d.get("first_name"), d.get("last_name"))
+                if name_key not in seen:
+                    seen.add(name_key)
+                    result.append(r)
+            return result
+
         heat = request.args.get('heat', default=None, type=str)
         title_1 = request.args.get('title_1', default=None, type=str)
         title_2 = request.args.get('title_2', default=None, type=str)
@@ -37,100 +74,36 @@ def register_timedata_routes(api_bp):
         unique_names = request.args.get('unique_names', default='false', type=str).lower() == 'true'
         ignore_penalty = request.args.get('ignore_penalty', default='false', type=str).lower() == 'true'
 
-        if heat and heat.isdigit():
+        if heat and str(heat).isdigit():
             heat = int(heat)
 
         event_data = {}
+        skip_penalty = not ignore_penalty
 
         if single_all != 'false':
             filter_combinations = [
-                ('title_1', title_1),
-                ('title_2', title_2),
-                ('heat', heat),
-                ('title_1+title_2', (title_1, title_2)),
-                ('title_1+title_2+heat', (title_1, title_2, heat))
+                ('title_1',            title_1, None,    None),
+                ('title_2',            None,    title_2, None),
+                ('heat',               None,    None,    heat),
+                ('title_1+title_2',    title_1, title_2, None),
+                ('title_1+title_2+heat', title_1, title_2, heat),
             ]
 
-            for combo_name, filters in filter_combinations:
-                query = Session_Race_Records.query
-
-                if isinstance(filters, tuple):
-                    if 'title_1' in combo_name and title_1:
-                        query = query.filter(Session_Race_Records.title_1 == title_1)
-                    if 'title_2' in combo_name and title_2:
-                        query = query.filter(Session_Race_Records.title_2 == title_2)
-                    if 'heat' in combo_name and heat:
-                        query = query.filter(Session_Race_Records.heat == heat)
-                else:
-                    if combo_name == 'title_1' and title_1:
-                        query = query.filter(Session_Race_Records.title_1 == title_1)
-                    elif combo_name == 'title_2' and title_2:
-                        query = query.filter(Session_Race_Records.title_2 == title_2)
-                    elif combo_name == 'heat' and heat:
-                        query = query.filter(Session_Race_Records.heat == heat)
-
-                query = query.filter(Session_Race_Records.finishtime != 0)
-                query = query.filter(Session_Race_Records.penalty == 0)
-
+            for combo_name, f_t1, f_t2, f_heat in filter_combinations:
+                records = build_query(f_t1, f_t2, f_heat).all()
+                records = post_filter_and_sort(records, skip_penalty)
                 if unique_names:
-                    subquery = query.with_entities(
-                        Session_Race_Records.first_name,
-                        Session_Race_Records.last_name,
-                        func.min(Session_Race_Records.finishtime).label('min_finishtime')
-                    ).group_by(
-                        Session_Race_Records.first_name, 
-                        Session_Race_Records.last_name
-                    ).subquery()
-
-                    query = Session_Race_Records.query.join(
-                        subquery,
-                        (Session_Race_Records.first_name == subquery.c.first_name) &
-                        (Session_Race_Records.last_name == subquery.c.last_name) &
-                        (Session_Race_Records.finishtime == subquery.c.min_finishtime)
-                    )
-
-                query = query.order_by(Session_Race_Records.finishtime.asc())
-                query = query.limit(entries_per_filter)
-
-                records = query.all()
+                    records = deduplicate_by_name(records)
+                records = records[:entries_per_filter]
                 for i, record in enumerate(records):
                     event_data[f"{combo_name}_{i}"] = format_db_rsp(record)
-
         else:
-            query = Session_Race_Records.query
-
-            if heat:
-                query = query.filter(Session_Race_Records.heat == heat)
-            if title_1:
-                query = query.filter(Session_Race_Records.title_1 == title_1)
-            if title_2:
-                query = query.filter(Session_Race_Records.title_2 == title_2)
-
-            query = query.filter(Session_Race_Records.finishtime != 0)
-
+            records = build_query(title_1, title_2, heat).all()
+            records = post_filter_and_sort(records, skip_penalty)
             if unique_names:
-                subquery = query.with_entities(
-                    Session_Race_Records.first_name,
-                    Session_Race_Records.last_name,
-                    func.min(Session_Race_Records.finishtime).label('min_finishtime')
-                ).group_by(
-                    Session_Race_Records.first_name, 
-                    Session_Race_Records.last_name
-                )
-
-                query = Session_Race_Records.query.join(
-                    subquery.subquery(),
-                    (Session_Race_Records.first_name == subquery.c.first_name) &
-                    (Session_Race_Records.last_name == subquery.c.last_name) &
-                    (Session_Race_Records.finishtime == subquery.c.min_finishtime)
-                )
-
-            query = query.order_by(Session_Race_Records.finishtime.asc())
-            query = query.limit(entries_per_filter)
-
-            event_order = query.all()
-
-            for k, a in enumerate(event_order):
+                records = deduplicate_by_name(records)
+            records = records[:entries_per_filter]
+            for k, a in enumerate(records):
                 event_data[k] = format_db_rsp(a)
 
         return event_data
@@ -138,15 +111,14 @@ def register_timedata_routes(api_bp):
     @api_bp.route('/api/get_timedata_cross/', methods=['GET'])
     def get_timedata_cross():
         query = Session_Race_Records.query
-        query = query.order_by(Session_Race_Records.points.desc(), Session_Race_Records.finishtime.asc())
 
         title_combo = request.args.get('combined_title')
         if title_combo:
-            query = query.filter((Session_Race_Records.title_1 + " " + Session_Race_Records.title_2).ilike(f"%{title_combo}%"))
+            query = query.filter(Session_Race_Records.title_2.ilike(f"%{title_combo}%"))
 
         title_1 = request.args.get('title_1')
         if title_1:
-            query = query.filter(Session_Race_Records.title_1.ilike(f"%{title_1}%"))
+            query = query.filter(Session_Race_Records.title_2.ilike(f"%{title_1}%"))
 
         title_2 = request.args.get('title_2')
         if title_2:
@@ -156,143 +128,98 @@ def register_timedata_routes(api_bp):
         if heat:
             query = query.filter(Session_Race_Records.heat == heat)
 
-        name = request.args.get('name')
-        if name:
-            query = query.filter(db.or_(
-                db.and_(Session_Race_Records.first_name + " " + Session_Race_Records.last_name).ilike(f"%{name}%"),
-                db.and_(Session_Race_Records.last_name + " " + Session_Race_Records.first_name).ilike(f"%{name}%")
-            ))
-
-        limit = request.args.get('limit', type=int)
-        if limit:
-            query = query.limit(limit)
-
         records = query.all()
-        results = [
-            {
+
+        name = request.args.get('name')
+        limit = request.args.get('limit', type=int)
+
+        results = []
+        for record in records:
+            d = record.data or {}
+            first = d.get("first_name", "")
+            last = d.get("last_name", "")
+            if name:
+                n = name.lower()
+                if n not in (first + " " + last).lower() and n not in (last + " " + first).lower():
+                    continue
+            results.append({
                 "id": record.id,
                 "cid": record.cid,
-                "first_name": record.first_name,
-                "last_name": record.last_name,
-                "title_1": record.title_1,
-                "title_2": record.title_2,
+                "first_name": first,
+                "last_name": last,
+                "title_1": d.get("title_1") or d.get("event_name"),
+                "title_2": d.get("title_2") or record.title_2,
                 "heat": record.heat,
-                "finishtime": record.finishtime,  # Convert to seconds
-                "snowmobile": record.snowmobile,
-                "penalty": record.penalty,
-                "points": record.points,
-                "laps": record.laps,
-                "reaction": record.reaction
-            } for record in records
-        ]
+                "finishtime": d.get("finishtime", 0),
+                "snowmobile": d.get("snowmobile"),
+                "penalty": d.get("penalty", 0),
+                "points": d.get("points", 0),
+                "laps": d.get("laps", 0),
+                "reaction": d.get("reaction", 0)
+            })
+
+        results.sort(key=lambda x: (-x["points"], x["finishtime"] if x["finishtime"] > 0 else float('inf')))
+
+        if limit:
+            results = results[:limit]
 
         return results
     
     @api_bp.route('/api/driver-points', methods=['GET'])
     def get_driver_points():
-        global_config = GetEnv()
-        if not global_config["msport_tm"]:
-            query = db.session.query(
-                Session_Race_Records.cid,
-                Session_Race_Records.first_name,
-                Session_Race_Records.last_name,
-                Session_Race_Records.reaction,
-                Session_Race_Records.points)
-
-        else:
-            query = db.session.query(
-                Session_Race_Records.first_name,
-                Session_Race_Records.last_name,
-                func.sum(Session_Race_Records.points).label('total_points'),
-                func.min(
-                    db.case(
-                        (Session_Race_Records.finishtime == 0, None),
-                        (Session_Race_Records.penalty != 0, None),
-                        else_=Session_Race_Records.finishtime
-                    )
-                ).label('lowest_finishtime')
-            ).group_by(
-                Session_Race_Records.first_name,
-                Session_Race_Records.last_name
-            ).order_by(
-                func.sum(Session_Race_Records.points).desc(),
-                db.case(
-                    (func.min(
-                        db.case(
-                            (Session_Race_Records.finishtime == 0, None),
-                            (Session_Race_Records.penalty != 0, None),
-                            else_=Session_Race_Records.finishtime
-                        )
-                    ) == None, 1),
-                    else_=0
-                ),
-                func.min(
-                    db.case(
-                        (Session_Race_Records.finishtime == 0, None),
-                        (Session_Race_Records.penalty != 0, None),
-                        else_=Session_Race_Records.finishtime
-                    )
-                )
-            )
-
         combined_title = request.args.get('combined_title')
-        if combined_title:
-            query = query.filter(
-                (Session_Race_Records.title_1 + ' ' + Session_Race_Records.title_2) == combined_title
-            )
-        else:
-            title_1 = request.args.get('title_1')
-            if title_1:
-                query = query.filter(Session_Race_Records.title_1.ilike(f"%{title_1}%"))
+        title_1 = request.args.get('title_1')
+        title_2 = request.args.get('title_2')
+        heat = request.args.get('heat')
+        name = request.args.get('name')
 
-            title_2 = request.args.get('title_2')
+        query = Session_Race_Records.query
+        if combined_title:
+            query = query.filter(Session_Race_Records.title_2.ilike(f"%{combined_title}%"))
+        else:
+            if title_1:
+                query = query.filter(Session_Race_Records.title_2.ilike(f"%{title_1}%"))
             if title_2:
                 query = query.filter(Session_Race_Records.title_2.ilike(f"%{title_2}%"))
-
-        heat = request.args.get('heat')
         if heat:
-            query = query.filter(Session_Race_Records.heat == heat)
+            query = query.filter(Session_Race_Records.heat == int(heat))
 
-        name = request.args.get('name')
-        if name:
-            query = query.filter(db.or_(
-                (Session_Race_Records.first_name + " " + Session_Race_Records.last_name).ilike(f"%{name}%"),
-                (Session_Race_Records.last_name + " " + Session_Race_Records.first_name).ilike(f"%{name}%")
-            ))
+        records = query.all()
 
-        results = query.all()
-        if global_config["msport_tm"]:
-            output = [
-                {
-                    "first_name": result.first_name,
-                    "last_name": result.last_name,
-                    "total_points": result.total_points,
-                    "lowest_finishtime": result.lowest_finishtime / 1000 if result.lowest_finishtime else None 
-                } for result in results
-            ]
-        else:
-            
-            entries = {}
-            for a in results:
-                if a[0] not in entries:
-                    entries[a[0]] = {"points":0, "lowest_finishtime":0,"first_name":a[1], "last_name":a[2]}
-                if a[3] != '':
-                    if entries[a[0]]["lowest_finishtime"] > a[3] or entries[a[0]]["lowest_finishtime"] == 0:
-                        entries[a[0]]["lowest_finishtime"] = a[3]
-                    
-                entries[a[0]]["points"] += a[4]
-            
-            entries = dict(sorted(entries.items(), key=lambda item: (item[1]['points'], -item[1]['lowest_finishtime']), reverse=True))
-            
-            output = [
-                {
-                    "first_name": entries[cid]["first_name"],
-                    "last_name": entries[cid]["last_name"],
-                    "total_points": entries[cid]["points"],
-                    "lowest_finishtime": entries[cid]["lowest_finishtime"] if entries[cid]["lowest_finishtime"] else None 
-                } for cid in entries
-            ]
+        entries = {}
+        for rec in records:
+            d = rec.data or {}
+            first = d.get("first_name", "")
+            last = d.get("last_name", "")
+            if name:
+                n = name.lower()
+                if n not in (first + " " + last).lower() and n not in (last + " " + first).lower():
+                    continue
+            cid = rec.cid
+            pts = d.get("points", 0) or 0
+            ft = d.get("finishtime", 0) or 0
+            penalty = d.get("penalty", 0) or 0
+            valid_ft = ft if (ft > 0 and penalty == 0) else 0
+            if cid not in entries:
+                entries[cid] = {"first_name": first, "last_name": last, "points": 0, "lowest_finishtime": 0}
+            entries[cid]["points"] += pts
+            if valid_ft > 0 and (entries[cid]["lowest_finishtime"] == 0 or valid_ft < entries[cid]["lowest_finishtime"]):
+                entries[cid]["lowest_finishtime"] = valid_ft
 
+        sorted_entries = sorted(
+            entries.values(),
+            key=lambda e: (-e["points"], e["lowest_finishtime"] if e["lowest_finishtime"] > 0 else float('inf'))
+        )
+
+        output = [
+            {
+                "first_name": e["first_name"],
+                "last_name": e["last_name"],
+                "total_points": e["points"],
+                "lowest_finishtime": e["lowest_finishtime"] / 1000 if e["lowest_finishtime"] else None
+            }
+            for e in sorted_entries
+        ]
 
         return output
     

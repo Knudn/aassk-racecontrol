@@ -1,8 +1,6 @@
 {% extends "admin/layout.html" %}
 {% block content %}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
-<script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.min.js"></script>
 
 <style>
 .oe-wrap { display:flex; gap:12px; margin-top:12px; min-height:600px; }
@@ -24,8 +22,8 @@ li.active .oe-del { color:#ffb3b3; }
 .oe-pill.live { border-color:#198754; background:#d1e7dd; }
 .oe-pill .oe-del { font-size:12px; margin-left:2px; }
 
-.oe-canvas-wrap { border-radius:6px; overflow:hidden; position:relative; }
-.oe-canvas { width:100%; aspect-ratio:16/9; position:relative; overflow:hidden; } /* aspect-ratio overridden inline */
+.oe-canvas-wrap { border-radius:6px; position:relative; }
+.oe-canvas { width:100%; aspect-ratio:16/9; position:relative; } /* aspect-ratio overridden inline */
 .oe-grid-overlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
     pointer-events:none; z-index:10; display:none;
@@ -35,19 +33,21 @@ li.active .oe-del { color:#ffb3b3; }
     background-image:
         linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px);
-    background-size: calc(100% / 12) calc(100% / 18); /* coarse 12x18 guide */
+    background-size: calc(100% / 12) calc(100% / 18);
 }
 .oe-grid-toggle {
     position:absolute; top:6px; right:6px; z-index:11;
     font-size:10px; padding:2px 8px; opacity:0.7;
 }
 .oe-grid-toggle:hover { opacity:1; }
-.oe-canvas .grid-stack { height:100% !important; }
-.oe-canvas .grid-stack-item-content {
-    overflow:hidden; cursor:move; position:relative; padding:0;
-    border:none; background:transparent; border-radius:2px;
+
+/* Free-form frames */
+.oe-frame { position:absolute; cursor:move; user-select:none; }
+.oe-frame-inner {
+    width:100%; height:100%; position:relative; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08); border-radius:2px;
 }
-.oe-canvas .grid-stack-item-content:hover { outline:2px solid #0d6efd; outline-offset:-1px; }
+.oe-frame-inner:hover { outline:2px solid #0d6efd; outline-offset:-1px; }
 .oe-widget-iframe {
     position:absolute; top:0; left:0; border:none;
     transform-origin:0 0; pointer-events:none; background:transparent;
@@ -59,7 +59,7 @@ li.active .oe-del { color:#ffb3b3; }
     background:rgba(0,0,0,0.45); z-index:2; pointer-events:auto;
     opacity:0; transition:opacity 0.15s;
 }
-.oe-canvas .grid-stack-item-content:hover .oe-widget-label { opacity:1; }
+.oe-frame-inner:hover .oe-widget-label { opacity:1; }
 .oe-widget-label .oe-label-btns { display:flex; gap:4px; align-items:center; }
 .oe-widget-label .oe-fs-btn {
     cursor:pointer; font-size:10px; padding:0 3px; border-radius:2px;
@@ -68,6 +68,11 @@ li.active .oe-del { color:#ffb3b3; }
 .oe-widget-label .oe-fs-btn:hover { background:rgba(255,255,255,0.4); }
 .oe-widget-label .oe-fs-btn.active { background:#0d6efd; }
 .gs-item-del { cursor:pointer; color:#ff6b6b; font-weight:bold; font-size:12px; line-height:1; }
+.oe-resize-handle {
+    position:absolute; bottom:0; right:0; width:14px; height:14px;
+    cursor:se-resize; background:rgba(13,110,253,0.6); z-index:5;
+    border-radius:2px 0 0 0;
+}
 
 .oe-row { display:flex; gap:4px; margin-bottom:4px; }
 .oe-row input, .oe-row select { font-size:12px; }
@@ -90,7 +95,6 @@ li.active .oe-del { color:#ffb3b3; }
         widgets: [],
         vmixFiles: []
     };
-    var _grid = null;
     var root = document.getElementById('app');
 
     function api(method, url, body) {
@@ -217,7 +221,7 @@ li.active .oe-del { color:#ffb3b3; }
                 var ar = res.w + '/' + res.h;
                 h += '<div class="oe-canvas-wrap" style="' + canvasStyle + '">';
                 h += '<button class="btn btn-outline-light btn-sm oe-grid-toggle" onclick="OE.toggleGrid()">Grid</button>';
-                h += '<div class="oe-canvas" style="aspect-ratio:' + ar + ';"><div id="gridEl" class="grid-stack"></div><div id="gridOverlay" class="oe-grid-overlay"></div></div></div>';
+                h += '<div class="oe-canvas" style="aspect-ratio:' + ar + ';"><div id="gridOverlay" class="oe-grid-overlay"></div></div></div>';
 
                 // Widget list
                 if (state.widgets.length) {
@@ -232,8 +236,8 @@ li.active .oe-del { color:#ffb3b3; }
                         h += '<td>' + (i+1) + '</td>';
                         h += '<td>' + esc(label) + fs + '</td>';
                         h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;min-width:120px;" value="' + esc(params) + '" placeholder="key=val, ..." onchange="OE.saveParams(' + w.id + ',this.value)"></td>';
-                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:70px;" value="' + (w.gs_x||0) + ',' + (w.gs_y||0) + '" onchange="OE.updatePosSize(' + w.id + ',\'pos\',this.value)"></td>';
-                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:70px;" value="' + (w.gs_w||6) + 'x' + (w.gs_h||6) + '" onchange="OE.updatePosSize(' + w.id + ',\'size\',this.value)"></td>';
+                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:80px;" value="' + (+w.gs_x||0).toFixed(1) + ',' + (+w.gs_y||0).toFixed(1) + '" onchange="OE.updatePosSize(' + w.id + ',\'pos\',this.value)"></td>';
+                        h += '<td><input type="text" class="form-control form-control-sm" style="font-size:11px;width:80px;" value="' + (+w.gs_w||25).toFixed(1) + 'x' + (+w.gs_h||25).toFixed(1) + '" onchange="OE.updatePosSize(' + w.id + ',\'size\',this.value)"></td>';
                         h += '<td style="text-align:center;"><span class="oe-del" onclick="OE.delWidget(' + w.id + ')" style="cursor:pointer;">&times;</span></td>';
                         h += '</tr>';
                     });
@@ -255,7 +259,7 @@ li.active .oe-del { color:#ffb3b3; }
         }
 
         if (state.selView) {
-            initGrid();
+            initCanvas();
         }
     }
 
@@ -265,21 +269,19 @@ li.active .oe-del { color:#ffb3b3; }
         return d.innerHTML;
     }
 
-    // --- Grid ---
+    // --- Canvas (free-form) ---
     var _resizeObserver = null;
+    var _dragState = null;
 
     function updateAllScales() {
         var res = grpRes();
-        var items = document.querySelectorAll('.grid-stack-item');
-        items.forEach(function(item) {
-            var content = item.querySelector('.grid-stack-item-content');
-            var iframe = item.querySelector('.oe-widget-iframe');
-            if (!iframe || !content) return;
+        document.querySelectorAll('.oe-frame').forEach(function(frame) {
+            var inner = frame.querySelector('.oe-frame-inner');
+            var iframe = frame.querySelector('.oe-widget-iframe');
+            if (!inner || !iframe) return;
             iframe.style.width = res.w + 'px';
             iframe.style.height = res.h + 'px';
-            var sW = content.offsetWidth / res.w;
-            var sH = content.offsetHeight / res.h;
-            var s = Math.min(sW, sH);
+            var s = Math.min(inner.offsetWidth / res.w, inner.offsetHeight / res.h);
             iframe.style.transform = 'scale(' + s + ')';
         });
     }
@@ -320,99 +322,130 @@ li.active .oe-del { color:#ffb3b3; }
                '</span></div>';
     }
 
-    // Generate CSS for N columns (Gridstack only auto-generates for <=12)
-    function ensureGridCSS(cols) {
-        var id = 'gs-css-' + cols;
-        if (document.getElementById(id)) return;
-        var css = '';
-        for (var i = 1; i <= cols; i++) {
-            var w = (i / cols * 100).toFixed(6);
-            css += '.grid-stack > .grid-stack-item[gs-w="' + i + '"] { width:' + w + '% }\n';
-            if (i < cols) {
-                var x = (i / cols * 100).toFixed(6);
-                css += '.grid-stack > .grid-stack-item[gs-x="' + i + '"] { left:' + x + '% }\n';
-            }
-        }
-        var style = document.createElement('style');
-        style.id = id;
-        style.textContent = css;
-        document.head.appendChild(style);
-    }
-
-    function initGrid() {
-        var el = document.getElementById('gridEl');
-        if (!el) return;
-        if (_grid) { _grid.destroy(false); _grid = null; }
+    function initCanvas() {
         if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; }
+        var canvas = document.querySelector('.oe-canvas');
+        if (!canvas) return;
 
-        // Allow overlapping widgets by disabling collision detection
-        var GSEngine = GridStack.Engine || GridStack.engineClass;
-        if (GSEngine) {
-            GSEngine.prototype.collide = function() { return null; };
-            GSEngine.prototype.collideAll = function() { return []; };
-        }
-
-        ensureGridCSS(48);
-        _grid = GridStack.init({
-            column: 48,
-            cellHeight: (100/36).toFixed(4) + '%',
-            margin: 2,
-            float: true,
-            animate: false,
-            disableOneColumnMode: true
-        }, el);
+        // Remove old frames
+        canvas.querySelectorAll('.oe-frame').forEach(function(el) { el.remove(); });
 
         state.widgets.forEach(function(w) {
-            var opts = {
-                id: String(w.id),
-                x: w.gs_x || 0,
-                y: w.gs_y || 0,
-                w: w.fullscreen ? 48 : (w.gs_w || 24),
-                h: w.fullscreen ? 36 : (w.gs_h || 12),
-                content: widgetContent(w)
+            canvas.appendChild(createFrame(w));
+        });
+
+        requestAnimationFrame(updateAllScales);
+
+        _resizeObserver = new ResizeObserver(function() { updateAllScales(); });
+        _resizeObserver.observe(canvas);
+    }
+
+    function createFrame(w) {
+        var frame = document.createElement('div');
+        frame.className = 'oe-frame';
+        frame.dataset.wid = String(w.id);
+        frame.style.left   = (w.gs_x || 0) + '%';
+        frame.style.top    = (w.gs_y || 0) + '%';
+        frame.style.width  = (w.fullscreen ? 100 : (w.gs_w || 25)) + '%';
+        frame.style.height = (w.fullscreen ? 100 : (w.gs_h || 25)) + '%';
+
+        var inner = document.createElement('div');
+        inner.className = 'oe-frame-inner';
+        inner.innerHTML = widgetContent(w);
+
+        // Drag — only on inner area (not resize handle, not label buttons)
+        inner.addEventListener('mousedown', function(e) {
+            if (e.button !== 0) return;
+            if (e.target.closest && (e.target.closest('.oe-resize-handle') || e.target.closest('.oe-widget-label'))) return;
+            if (w.fullscreen) return;
+            e.preventDefault();
+            var canvas = document.querySelector('.oe-canvas');
+            var rect = canvas.getBoundingClientRect();
+            _dragState = {
+                type: 'move', wid: w.id,
+                startMX: e.clientX, startMY: e.clientY,
+                startX: w.gs_x || 0, startY: w.gs_y || 0,
+                canvasW: rect.width, canvasH: rect.height
             };
-            if (w.fullscreen) {
-                opts.noResize = true;
-                opts.noMove = true;
-            }
-            _grid.addWidget(opts);
         });
 
-        requestAnimationFrame(function() { updateAllScales(); });
-
-        _grid.on('change', function(event, items) {
-            if (!items) return;
-            items.forEach(function(item) {
-                var wid = parseInt(item.id);
-                api('PUT', bp() + '/views/' + state.selView + '/widgets/' + wid, {
-                    gs_x: item.x, gs_y: item.y, gs_w: item.w, gs_h: item.h
-                });
-                var w = state.widgets.find(function(x){return x.id===wid;});
-                if (w) {
-                    w.gs_x=item.x; w.gs_y=item.y; w.gs_w=item.w; w.gs_h=item.h;
-                    // Sync table inputs
-                    var idx = state.widgets.indexOf(w);
-                    var rows = document.querySelectorAll('.oe-main table tbody tr');
-                    if (rows[idx]) {
-                        var inputs = rows[idx].querySelectorAll('input');
-                        if (inputs[1]) inputs[1].value = item.x + ',' + item.y;
-                        if (inputs[2]) inputs[2].value = item.w + 'x' + item.h;
-                    }
-                }
+        // Resize handle
+        if (!w.fullscreen) {
+            var handle = document.createElement('div');
+            handle.className = 'oe-resize-handle';
+            handle.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var canvas = document.querySelector('.oe-canvas');
+                var rect = canvas.getBoundingClientRect();
+                _dragState = {
+                    type: 'resize', wid: w.id,
+                    startMX: e.clientX, startMY: e.clientY,
+                    startW: w.gs_w || 25, startH: w.gs_h || 25,
+                    canvasW: rect.width, canvasH: rect.height
+                };
             });
-            requestAnimationFrame(function() { updateAllScales(); });
-        });
+            inner.appendChild(handle);
+        }
 
-        _grid.on('resizestop', function() {
-            requestAnimationFrame(function() { updateAllScales(); });
-        });
+        frame.appendChild(inner);
+        return frame;
+    }
 
-        var canvas = document.querySelector('.oe-canvas');
-        if (canvas) {
-            _resizeObserver = new ResizeObserver(function() { updateAllScales(); });
-            _resizeObserver.observe(canvas);
+    // Document-level drag/resize handlers (attached once at bottom)
+    function _onMouseMove(e) {
+        if (!_dragState) return;
+        var ds = _dragState;
+        var dx = (e.clientX - ds.startMX) / ds.canvasW * 100;
+        var dy = (e.clientY - ds.startMY) / ds.canvasH * 100;
+        var frame = document.querySelector('.oe-frame[data-wid="' + ds.wid + '"]');
+        if (!frame) return;
+
+        if (ds.type === 'move') {
+            ds._px = ds.startX + dx;
+            ds._py = ds.startY + dy;
+            frame.style.left = ds._px + '%';
+            frame.style.top  = ds._py + '%';
+        } else {
+            ds._pw = Math.max(2, ds.startW + dx);
+            ds._ph = Math.max(2, ds.startH + dy);
+            frame.style.width  = ds._pw + '%';
+            frame.style.height = ds._ph + '%';
+            updateAllScales();
         }
     }
+
+    function _onMouseUp() {
+        if (!_dragState) return;
+        var ds = _dragState;
+        _dragState = null;
+        var w = state.widgets.find(function(x) { return x.id === ds.wid; });
+        if (!w) return;
+
+        var data = {};
+        if (ds.type === 'move') {
+            if (ds._px !== undefined) { w.gs_x = Math.round(ds._px * 100) / 100; }
+            if (ds._py !== undefined) { w.gs_y = Math.round(ds._py * 100) / 100; }
+            data.gs_x = w.gs_x; data.gs_y = w.gs_y;
+        } else {
+            if (ds._pw !== undefined) { w.gs_w = Math.round(ds._pw * 100) / 100; }
+            if (ds._ph !== undefined) { w.gs_h = Math.round(ds._ph * 100) / 100; }
+            data.gs_w = w.gs_w; data.gs_h = w.gs_h;
+        }
+        // Sync table row inputs
+        var idx = state.widgets.indexOf(w);
+        var rows = document.querySelectorAll('.oe-main table tbody tr');
+        if (rows[idx]) {
+            var inputs = rows[idx].querySelectorAll('input');
+            if (inputs[1]) inputs[1].value = w.gs_x.toFixed(1) + ',' + w.gs_y.toFixed(1);
+            if (inputs[2]) inputs[2].value = w.gs_w.toFixed(1) + 'x' + w.gs_h.toFixed(1);
+        }
+        api('PUT', bp() + '/views/' + state.selView + '/widgets/' + w.id, data);
+    }
+
+    document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mouseup', _onMouseUp);
 
     // --- Actions ---
     function loadGroups(cb) {
@@ -431,7 +464,6 @@ li.active .oe-del { color:#ffb3b3; }
     window.OE = {
         selGroup: function(id) {
             state.selGroup = id; state.selView = null; state.widgets = [];
-            if(_grid){_grid.destroy(false);_grid=null;}
             loadViews();
         },
         addGroup: function() {
@@ -515,20 +547,25 @@ li.active .oe-del { color:#ffb3b3; }
             var w = state.widgets.find(function(x){return x.id===id;});
             if (!w) return;
             var data = {};
+            var frame = document.querySelector('.oe-frame[data-wid="' + id + '"]');
             if (type === 'pos') {
                 var parts = val.split(',');
                 if (parts.length !== 2) return;
-                var x = parseInt(parts[0]); var y = parseInt(parts[1]);
+                var x = parseFloat(parts[0]); var y = parseFloat(parts[1]);
                 if (isNaN(x) || isNaN(y)) return;
+                w.gs_x = x; w.gs_y = y;
                 data.gs_x = x; data.gs_y = y;
+                if (frame) { frame.style.left = x + '%'; frame.style.top = y + '%'; }
             } else {
                 var parts = val.split('x');
                 if (parts.length !== 2) return;
-                var nw = parseInt(parts[0]); var nh = parseInt(parts[1]);
+                var nw = parseFloat(parts[0]); var nh = parseFloat(parts[1]);
                 if (isNaN(nw) || isNaN(nh) || nw < 1 || nh < 1) return;
+                w.gs_w = nw; w.gs_h = nh;
                 data.gs_w = nw; data.gs_h = nh;
+                if (frame) { frame.style.width = nw + '%'; frame.style.height = nh + '%'; updateAllScales(); }
             }
-            api('PUT', bp()+'/views/'+state.selView+'/widgets/'+id, data).then(function(){loadWidgets();});
+            api('PUT', bp()+'/views/'+state.selView+'/widgets/'+id, data);
         },
         clearBgColor: function() {
             document.getElementById('bgColor').value = '#000000';

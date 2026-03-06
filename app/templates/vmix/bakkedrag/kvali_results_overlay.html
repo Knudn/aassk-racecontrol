@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kvali Resultater</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ── Header ── */
+        #page-header {
+            flex-shrink: 0;
+            align-self: center;
+            width: fit-content;
+            min-width: 240px;
+            padding: 8px 28px;
+            text-align: center;
+            background: rgba(14, 16, 28, 0.98);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #page-header.show { opacity: 1; transform: translateY(0); }
+
+        #title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        #result-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .sep {
+            font-size: 13px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.35);
+            line-height: 1;
+        }
+
+        #title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        /* ── Main card ── */
+        #table-wrap {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px 14px;
+            gap: 2px;
+            background: rgba(10, 12, 20, 0.97);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Column header row ── */
+        #col-headers {
+            display: flex;
+            align-items: center;
+            padding: 10px 0 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease 0.15s;
+        }
+        #col-headers.show { opacity: 1; }
+
+        .ch {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            flex-shrink: 0;
+            padding: 0 14px;
+            border-right: 1px solid rgba(255,255,255,0.12);
+            text-align: center;
+        }
+        .ch.c-name { padding: 0 8px; text-align: left; }
+        .ch:last-child { border-right: none; }
+
+        /* ── Class separator ── */
+        .class-slice {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            height: 24px;
+            padding: 0 10px;
+            background: rgba(30, 30, 42, 0.95);
+            border-left: 2px solid rgba(255,255,255,0.12);
+            opacity: 0;
+            transform: translateX(-16px);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+        .class-slice.show { opacity: 1; transform: translateX(0); }
+        .class-slice-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        /* ── Data rows ── */
+        .row-slice {
+            display: flex;
+            align-items: center;
+            height: 34px;
+            background: transparent;
+            border-left: 2px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .row-slice.show { opacity: 1; transform: translateX(0); }
+
+        .row-slice.rank-1 { border-left-color: #e8b840; }
+        .row-slice.rank-2 { border-left-color: rgba(200,200,215,0.30); }
+        .row-slice.rank-3 { border-left-color: #c07030; }
+
+        /* ── Fixed column widths ── */
+        .c-pos    { width: 48px;  min-width: 48px;  flex-shrink: 0; }
+        .c-cid    { width: 42px;  min-width: 42px;  flex-shrink: 0; }
+        .c-name   { flex: 1;      min-width: 120px; }
+        .c-class  { width: 80px;  min-width: 60px;  flex-shrink: 0; }
+        .c-r      { width: 100px; min-width: 100px; flex-shrink: 0; }
+        .c-club   { width: 210px; min-width: 140px; flex-shrink: 0; }
+        .c-vehicle{ width: 180px; min-width: 120px; flex-shrink: 0; }
+        .c-lowest { width: 96px;  min-width: 96px;  flex-shrink: 0; }
+        .c-pts    { width: 64px;  min-width: 64px;  flex-shrink: 0; }
+
+        /* ── Cell content ── */
+        .cell {
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 1px solid rgba(255,255,255,0.10);
+        }
+        .cell:last-child { border-right: none; }
+        .cell.c-name { padding: 0 8px; justify-content: flex-start; }
+
+        /* Position badge */
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.28);
+            background: rgba(255,255,255,0.04);
+        }
+        .rank-1 .pos-badge { color: #e8b840; background: rgba(232,184,64,0.10); }
+        .rank-2 .pos-badge { color: rgba(210,210,225,0.75); background: rgba(210,210,225,0.07); }
+        .rank-3 .pos-badge { color: #c07030; background: rgba(192,112,48,0.10); }
+
+        /* Values */
+        .val-cid {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.60);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .val-class {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .val-club, .val-vehicle {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.60);
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* Heat result cell */
+        .val-r {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            font-variant-numeric: tabular-nums;
+            overflow: hidden;
+        }
+        .val-r-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .val-r-time.empty   { color: rgba(255,255,255,0.22); }
+        .val-r-time.penalty { color: rgba(255,100,100,0.90); }
+        .val-r-pts {
+            font-size: 9px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.35);
+            line-height: 1;
+        }
+        .val-r-pen-badge {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: rgba(255,80,80,0.90);
+            background: rgba(255,60,60,0.12);
+            border: 1px solid rgba(255,80,80,0.25);
+            border-radius: 2px;
+            padding: 0 3px;
+            line-height: 1.5;
+        }
+        .row-slice.has-penalty { border-left-color: rgba(255,80,80,0.45); }
+
+        .val-lowest {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-pts {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Tiebreaker highlight */
+        .tb-highlight { color: #e8c840 !important; }
+
+        /* ── Finale cutoff divider ── */
+        .cutoff-divider {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 10px;
+            opacity: 0;
+            transform: translateX(-16px);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+        .cutoff-divider.show { opacity: 1; transform: translateX(0); }
+        .cutoff-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(232, 184, 64, 0.35);
+        }
+        .cutoff-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(232, 184, 64, 0.70);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div id="page-header">
+        <div id="title-row">
+            <span id="result-label">Kvali</span>
+            <span class="sep">·</span>
+            <span id="title">—</span>
+        </div>
+    </div>
+
+    <div id="table-wrap">
+        <div id="col-headers"></div>
+        <div id="rows"></div>
+    </div>
+
+</div>
+<script>
+    // ── URL params ────────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+
+    (function applyParams() {
+        const app    = document.getElementById('app');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+        const w      = params.get('w');
+        const h      = params.get('h');
+        if (w) app.style.width  = w + 'px';
+        if (h) app.style.height = h + 'px';
+
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const alpha = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.getElementById('table-wrap').style.background = `rgba(10, 12, 20, ${alpha})`;
+        }
+
+        if (scale) {
+            document.body.style.transformOrigin = mirror ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function fmtMs(ms) {
+        const total = parseFloat(ms) / 1000;
+        if (!ms || isNaN(total) || total <= 0) return '--';
+        if (total < 60) return total.toFixed(3);
+        const mins = Math.floor(total / 60);
+        const secs = (total % 60).toFixed(3).padStart(6, '0');
+        return `${mins}:${secs}`;
+    }
+
+    const PENALTIES = new Set(['DNS', 'DNF', 'DSQ', 'DQ']);
+    const PENALTY_CODES = { 1: 'DNS', 2: 'DNF', 3: 'DSQ' };
+
+    function isPenaltyStr(s) { return PENALTIES.has(String(s || '').toUpperCase()); }
+
+    function penaltyLabel(pen, rawTime) {
+        if (pen && PENALTY_CODES[pen]) return PENALTY_CODES[pen];
+        if (isPenaltyStr(rawTime)) return String(rawTime).toUpperCase();
+        return null;
+    }
+
+    function parseTbTime(str) {
+        if (!str || str === '0.000' || isPenaltyStr(str) || str === '--') return Infinity;
+        const v = parseFloat(str);
+        return isNaN(v) || v <= 0 ? Infinity : v;
+    }
+
+    function getRKeys(results) {
+        const keys = new Set();
+        results.forEach(r => {
+            Object.keys(r).forEach(k => { if (/^R\d+$/.test(k)) keys.add(k); });
+        });
+        return Array.from(keys).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    }
+
+    function rowRankClass(standing) {
+        const n = parseInt(standing);
+        if (n === 1) return 'rank-1';
+        if (n === 2) return 'rank-2';
+        if (n === 3) return 'rank-3';
+        return '';
+    }
+
+    function formatName(f, l) {
+        if (!f && !l) return '—';
+        if (!l) return f;
+        if (!f) return l;
+        return f + ' ' + l;
+    }
+
+    // ── Tiebreaker highlights ─────────────────────────────────────
+    function computeTiebreakerHighlights(results, tiebreakers) {
+        const tbDef = {
+            combined_finishtime: { field: 'combined_finishtime', cmp: (a, b) => parseTbTime(a) - parseTbTime(b) },
+            lowest_finishtime:   { field: 'lowest_finishtime',   cmp: (a, b) => parseTbTime(a) - parseTbTime(b) },
+        };
+        const highlights = {};
+        for (let i = 0; i < results.length - 1; i++) {
+            const a = results[i], b = results[i + 1];
+            if ((a.combined_points || 0) !== (b.combined_points || 0)) continue;
+            for (const tb of tiebreakers) {
+                const def = tbDef[tb];
+                if (!def) continue;
+                if (def.cmp(a[def.field], b[def.field]) !== 0) {
+                    if (!highlights[a.cid]) highlights[a.cid] = new Set();
+                    highlights[a.cid].add(tb);
+                    break;
+                }
+            }
+        }
+        return highlights;
+    }
+
+    // ── DOM helpers ───────────────────────────────────────────────
+    function div(cls) {
+        const el = document.createElement('div');
+        el.className = cls;
+        return el;
+    }
+    function span(cls, text) {
+        const el = document.createElement('span');
+        el.className = cls;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+
+    // ── Cutoff divider ────────────────────────────────────────────
+    function buildCutoffDivider() {
+        const el  = div('cutoff-divider');
+        const l1  = div('cutoff-line');
+        const lbl = div('cutoff-label');
+        const l2  = div('cutoff-line');
+        lbl.textContent = 'Kvalifisert til Finale';
+        el.appendChild(l1);
+        el.appendChild(lbl);
+        el.appendChild(l2);
+        return el;
+    }
+
+    // ── Column headers ────────────────────────────────────────────
+    function buildColHeaders(showClassCol, rKeys, showPoints) {
+        const hdr = document.getElementById('col-headers');
+        hdr.innerHTML = '';
+
+        function ch(label, extra) {
+            const el = div('ch' + (extra ? ' ' + extra : ''));
+            el.textContent = label;
+            hdr.appendChild(el);
+        }
+
+        ch('Pos', 'c-pos');
+        ch('#', 'c-cid');
+        ch('Fører', 'c-name');
+        if (showClassCol) ch('Klasse', 'c-class');
+        ch('Klubb', 'c-club');
+        ch('Kjøretøy', 'c-vehicle');
+        rKeys.forEach(k => ch(k, 'c-r'));
+        ch('Beste Tid', 'c-lowest');
+        if (showPoints) ch('Poeng', 'c-pts');
+    }
+
+    // ── Data row ─────────────────────────────────────────────────
+    function buildDataRow(item, showClassCol, rKeys, tiebreakers, showPoints, hlSet) {
+        const hl         = hlSet || new Set();
+        const rank       = rowRankClass(item.internal_standing);
+        const hasAnyPen  = rKeys.some(k => penaltyLabel(item[k + '_penalty'], item[k]));
+        const row        = div('row-slice ' + rank + (hasAnyPen ? ' has-penalty' : ''));
+
+        // Pos
+        const posCell = div('cell c-pos');
+        const badge   = div('pos-badge');
+        badge.textContent = item.internal_standing ?? '';
+        posCell.appendChild(badge);
+        row.appendChild(posCell);
+
+        // CID
+        const cidCell = div('cell c-cid');
+        cidCell.appendChild(span('val-cid', item.cid ?? ''));
+        row.appendChild(cidCell);
+
+        // Name
+        const nameCell = div('cell c-name');
+        nameCell.appendChild(span('val-name', formatName(item.first_name, item.last_name)));
+        row.appendChild(nameCell);
+
+        // Class (conditional)
+        if (showClassCol) {
+            const clsCell = div('cell c-class');
+            clsCell.appendChild(span('val-class', item.class || ''));
+            row.appendChild(clsCell);
+        }
+
+        // Club
+        const clubCell = div('cell c-club');
+        clubCell.appendChild(span('val-club', item.club || '—'));
+        row.appendChild(clubCell);
+
+        // Vehicle / snowmobile
+        const vehicleCell = div('cell c-vehicle');
+        vehicleCell.appendChild(span('val-vehicle', item.snowmobile || '—'));
+        row.appendChild(vehicleCell);
+
+        // Heat columns
+        rKeys.forEach(k => {
+            const raw    = item[k];
+            const pts    = item[k + '_POINTS'];
+            const pen    = item[k + '_penalty'];
+            const pLabel = penaltyLabel(pen, raw);
+            const isPen  = !!pLabel;
+            const isEmpty = !isPen && (!raw || raw === '0.000');
+
+            const cell    = div('cell c-r');
+            const wrapper = div('val-r');
+
+            if (isPen) {
+                wrapper.appendChild(span('val-r-time penalty', pLabel));
+            } else if (isEmpty) {
+                wrapper.appendChild(span('val-r-time empty', '--'));
+            } else {
+                wrapper.appendChild(span('val-r-time', fmtMs(raw)));
+                if (pts > 0) wrapper.appendChild(span('val-r-pts', `(${pts}p)`));
+            }
+
+            cell.appendChild(wrapper);
+            row.appendChild(cell);
+        });
+
+        // Beste Tid
+        const lowestVal  = (item.lowest_finishtime && item.lowest_finishtime !== '0.000') ? fmtMs(item.lowest_finishtime) : '--';
+        const lowestCell = div('cell c-lowest');
+        lowestCell.appendChild(span('val-lowest' + (hl.has('lowest_finishtime') ? ' tb-highlight' : ''), lowestVal));
+        row.appendChild(lowestCell);
+
+        // Poeng (conditional)
+        if (showPoints) {
+            const ptsCell = div('cell c-pts');
+            ptsCell.appendChild(span('val-pts', item.combined_points ?? 0));
+            row.appendChild(ptsCell);
+        }
+
+        return row;
+    }
+
+    // ── Animation ─────────────────────────────────────────────────
+    function animateIn() {
+        document.getElementById('page-header').classList.add('show');
+        setTimeout(() => document.getElementById('col-headers').classList.add('show'), 120);
+        const rows = document.querySelectorAll('#rows .row-slice, #rows .class-slice, #rows .cutoff-divider');
+        rows.forEach((el, i) => setTimeout(() => el.classList.add('show'), 200 + i * 38));
+    }
+
+    // ── Auto-size class column ────────────────────────────────────
+    function applyClassColWidth(showClassCol, results) {
+        if (!showClassCol) return;
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;';
+        document.body.appendChild(probe);
+        let maxW = 0;
+        probe.style.font = '600 11px Inter, Arial, sans-serif';
+        probe.textContent = 'KLASSE';
+        maxW = Math.max(maxW, probe.offsetWidth);
+        probe.style.font = '500 10px Inter, Arial, sans-serif';
+        results.forEach(r => { probe.textContent = r.class || ''; maxW = Math.max(maxW, probe.offsetWidth); });
+        document.body.removeChild(probe);
+        const colW = Math.ceil(maxW) + 28;
+        document.querySelectorAll('.c-class').forEach(el => {
+            el.style.width = colW + 'px'; el.style.minWidth = colW + 'px';
+        });
+    }
+
+    // ── Render ────────────────────────────────────────────────────
+    function render(data) {
+        const meta          = data.meta || {};
+        const results       = data.results || [];
+        const tiebreakers   = meta.tiebreakers || [];
+        const hasMultiClass = meta.has_multiple_classes;
+        const mixClasses    = meta.mix_classes;
+        const showClassCol  = hasMultiClass && mixClasses;
+        const rKeys         = getRKeys(results);
+
+        // Show points column only if any driver has non-zero points
+        const showPoints = results.some(r => (r.combined_points || 0) > 0);
+        const kvaliNr    = (meta.show_kvali && meta.kvali_nr) ? meta.kvali_nr : null;
+
+        document.getElementById('title').textContent = meta.title_2 || '—';
+
+        buildColHeaders(showClassCol, rKeys, showPoints);
+
+        const container = document.getElementById('rows');
+        container.innerHTML = '';
+        container.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+
+        if (hasMultiClass && !mixClasses) {
+            const groups = {}, order = [];
+            results.forEach(r => {
+                const cls = r.class || 'Ukjent';
+                if (!groups[cls]) { groups[cls] = []; order.push(cls); }
+                groups[cls].push(r);
+            });
+            order.forEach(cls => {
+                const groupHL = computeTiebreakerHighlights(groups[cls], tiebreakers);
+                const slice   = div('class-slice');
+                const lbl     = div('class-slice-label');
+                lbl.textContent = cls;
+                slice.appendChild(lbl);
+                container.appendChild(slice);
+                groups[cls].forEach((item, i) => {
+                    const it = Object.assign({}, item, { internal_standing: i + 1 });
+                    container.appendChild(buildDataRow(it, showClassCol, rKeys, tiebreakers, showPoints, groupHL[item.cid]));
+                });
+            });
+        } else {
+            const highlights = computeTiebreakerHighlights(results, tiebreakers);
+            results.forEach((item, i) => {
+                container.appendChild(buildDataRow(item, showClassCol, rKeys, tiebreakers, showPoints, highlights[item.cid]));
+                if (kvaliNr && results.length > kvaliNr && (i + 1) === kvaliNr) {
+                    container.appendChild(buildCutoffDivider());
+                }
+            });
+        }
+
+        applyClassColWidth(showClassCol, results);
+        requestAnimationFrame(animateIn);
+    }
+
+    // ── Fetch ─────────────────────────────────────────────────────
+    const eventPrefix = params.get('event_prefix') || 'active';
+    const apiBase     = params.get('api') || '';
+
+    function load() {
+        fetch(`${apiBase}/api/get_kvali_results?event_prefix=${encodeURIComponent(eventPrefix)}`)
+            .then(r => r.json())
+            .then(render)
+            .catch(e => console.error('[kvali-bakkedrag] feil:', e));
+    }
+
+    load();
+</script>
+</body>
+</html>

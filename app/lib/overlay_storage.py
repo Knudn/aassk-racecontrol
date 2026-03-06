@@ -55,6 +55,7 @@ def _read_group(group_id):
         return None
     with open(path, 'r') as f:
         group = json.load(f)
+
     _migrate_grid(group)
     return group
 
@@ -82,6 +83,7 @@ def _next_group_id():
 def _migrate_grid(group):
     """Migrate old 12x18 grid coords to 48x36."""
     if group.get('grid_version', 1) >= 2:
+        _migrate_grid_v3(group)
         return False
     for v in group.get('views', []):
         for w in v.get('widgets', []):
@@ -90,6 +92,22 @@ def _migrate_grid(group):
             w['gs_w'] = w.get('gs_w', 6) * 4
             w['gs_h'] = w.get('gs_h', 6) * 2
     group['grid_version'] = 2
+    _migrate_grid_v3(group)
+    _write_group(group)
+    return True
+
+
+def _migrate_grid_v3(group):
+    """Migrate 48x36 grid units to percentage-based positioning (0-100 floats)."""
+    if group.get('grid_version', 1) >= 3:
+        return False
+    for v in group.get('views', []):
+        for w in v.get('widgets', []):
+            w['gs_x'] = round(w.get('gs_x', 0) / GRID_COLS * 100, 4)
+            w['gs_y'] = round(w.get('gs_y', 0) / GRID_ROWS * 100, 4)
+            w['gs_w'] = round(w.get('gs_w', GRID_COLS // 2) / GRID_COLS * 100, 4)
+            w['gs_h'] = round(w.get('gs_h', GRID_ROWS // 3) / GRID_ROWS * 100, 4)
+    group['grid_version'] = 3
     _write_group(group)
     return True
 
@@ -110,7 +128,7 @@ def list_groups():
         if fname.endswith('.json'):
             with open(os.path.join(OVERLAYS_DIR, fname), 'r') as f:
                 g = json.load(f)
-                _migrate_grid(g)
+                _migrate_grid(g)   # also calls _migrate_grid_v3 internally
                 groups.append({
                     'id': g['id'],
                     'name': g['name'],
@@ -135,7 +153,7 @@ def create_group(name):
             'next_view_id': 1,
             'res_w': 1920,
             'res_h': 1080,
-            'grid_version': 2,
+            'grid_version': 3,
             'views': []
         }
         _write_group(group)
@@ -255,10 +273,10 @@ def create_widget(group_id, view_id, data):
             'url': data.get('url', ''),
             'params': data.get('params', ''),
             'fullscreen': is_fs,
-            'gs_x': 0 if is_fs else data.get('gs_x', 0),
-            'gs_y': 0 if is_fs else data.get('gs_y', 0),
-            'gs_w': GRID_COLS if is_fs else data.get('gs_w', GRID_COLS // 2),
-            'gs_h': GRID_ROWS if is_fs else data.get('gs_h', GRID_ROWS // 3)
+            'gs_x': 0.0 if is_fs else data.get('gs_x', 0.0),
+            'gs_y': 0.0 if is_fs else data.get('gs_y', 0.0),
+            'gs_w': 100.0 if is_fs else data.get('gs_w', 25.0),
+            'gs_h': 100.0 if is_fs else data.get('gs_h', 25.0)
         }
         view.setdefault('widgets', []).append(widget)
         _write_group(group)
@@ -279,7 +297,7 @@ def update_widget(group_id, view_id, widget_id, data):
                     if key in data:
                         w[key] = data[key]
                 if w.get('fullscreen'):
-                    w['gs_x'] = 0; w['gs_y'] = 0; w['gs_w'] = GRID_COLS; w['gs_h'] = GRID_ROWS
+                    w['gs_x'] = 0.0; w['gs_y'] = 0.0; w['gs_w'] = 100.0; w['gs_h'] = 100.0
                 _write_group(group)
                 return w
         return None
@@ -313,13 +331,12 @@ def switch_view(group_id, view_id):
 
 
 # --- Grid to pixel ---
+# gs_x/y/w/h are now percentage values (0.0–100.0) of the canvas dimensions.
 
 def grid_to_px(gs_x, gs_y, gs_w, gs_h, res_w=1920, res_h=1080):
-    cw = res_w / GRID_COLS
-    ch = res_h / GRID_ROWS
     return {
-        'x': gs_x * cw,
-        'y': gs_y * ch,
-        'w': gs_w * cw,
-        'h': gs_h * ch
+        'x': gs_x / 100 * res_w,
+        'y': gs_y / 100 * res_h,
+        'w': gs_w / 100 * res_w,
+        'h': gs_h / 100 * res_h,
     }

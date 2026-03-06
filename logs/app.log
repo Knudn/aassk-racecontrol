@@ -2297,3 +2297,704 @@
 [2026-02-26 03:50:10,068] INFO in run: App started
 [2026-02-26 04:10:51,608] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f3b5447aed0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
 [2026-02-26 04:11:14,136] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f3b544e9250>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 21:10:48,858] INFO in run: App started
+[2026-03-01 21:10:49,422] INFO in run: App started
+[2026-03-01 21:13:04,088] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe31a2e6d90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 21:13:16,376] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe318918a90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 21:13:53,240] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe31891bdd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 21:38:48,284] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe318933290>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 21:45:07,032] INFO in run: App started
+[2026-03-01 22:25:11,183] INFO in run: App started
+[2026-03-01 22:25:11,756] INFO in run: App started
+[2026-03-01 22:27:22,584] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f84fa00d490>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 22:29:31,608] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f84f8e64990>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 22:30:46,093] INFO in run: App started
+[2026-03-01 22:51:48,979] INFO in run: App started
+[2026-03-01 22:51:52,425] INFO in run: App started
+[2026-03-01 22:54:06,292] INFO in run: App started
+[2026-03-01 22:55:37,832] INFO in run: App started
+[2026-03-01 22:59:49,911] INFO in run: App started
+[2026-03-01 23:00:44,322] INFO in run: App started
+[2026-03-01 23:00:53,266] INFO in run: App started
+[2026-03-01 23:00:57,467] INFO in run: App started
+[2026-03-01 23:02:46,915] INFO in run: App started
+[2026-03-01 23:07:37,029] INFO in run: App started
+[2026-03-01 23:16:34,537] INFO in run: App started
+[2026-03-01 23:19:09,400] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f36e8f28dd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:20:11,667] INFO in run: App started
+[2026-03-01 23:22:29,591] INFO in run: App started
+[2026-03-01 23:22:36,627] INFO in run: App started
+[2026-03-01 23:24:57,560] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f73b458f590>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:24:59,608] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f73b45b77d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:26:01,049] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f73b45d2710>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:26:09,240] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f73b45beed0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:26:42,008] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f7394727c10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:27:12,728] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f73947bd310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-01 23:30:13,758] INFO in run: App started
+[2026-03-01 23:30:37,415] INFO in run: App started
+[2026-03-02 00:10:14,547] INFO in run: App started
+[2026-03-02 00:49:37,159] INFO in run: App started
+[2026-03-02 00:57:36,782] INFO in run: App started
+[2026-03-02 00:57:39,520] INFO in run: App started
+[2026-03-02 00:57:47,281] INFO in run: App started
+[2026-03-02 00:58:25,820] INFO in run: App started
+[2026-03-02 01:02:26,394] INFO in run: App started
+[2026-03-02 01:03:12,188] INFO in run: App started
+[2026-03-02 01:07:34,777] INFO in run: App started
+[2026-03-02 01:07:39,995] INFO in run: App started
+[2026-03-02 01:07:43,271] INFO in run: App started
+[2026-03-02 01:15:50,513] INFO in run: App started
+[2026-03-02 01:19:10,546] INFO in run: App started
+[2026-03-02 23:34:46,360] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f68ac121910>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-03 19:20:54,899] INFO in run: App started
+[2026-03-03 19:20:55,485] INFO in run: App started
+[2026-03-03 19:23:15,672] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ff27c966710>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-03 22:53:02,680] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ff27c905310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-03 23:14:00,795] INFO in run: App started
+[2026-03-03 23:14:27,980] INFO in run: App started
+[2026-03-03 23:15:05,914] INFO in run: App started
+[2026-03-03 23:16:01,859] INFO in run: App started
+[2026-03-03 23:19:48,681] INFO in run: App started
+[2026-03-03 23:20:01,463] INFO in run: App started
+[2026-03-03 23:22:28,879] INFO in run: App started
+[2026-03-03 23:54:57,548] INFO in run: App started
+[2026-03-03 23:54:57,648] INFO in run: Configuring DB for StartLogic
+[2026-03-03 23:54:57,654] INFO in run: Configuring DB for Archive Server
+[2026-03-03 23:54:57,659] INFO in run: Created default global config
+[2026-03-03 23:54:57,664] INFO in run: Configuring DB for SpeakerPageSettings
+[2026-03-03 23:54:57,669] INFO in run: Configuring DB for Ledpanel
+[2026-03-03 23:54:57,674] INFO in run: Configuring DB for Standing Config
+[2026-03-03 23:54:57,678] INFO in run: MicroService DB init
+[2026-03-03 23:54:57,883] INFO in run: Infoscreen DB init
+[2026-03-03 23:54:58,619] INFO in run: App started
+[2026-03-03 23:55:32,523] INFO in run: App started
+[2026-03-03 23:55:55,332] INFO in run: App started
+[2026-03-03 23:56:15,126] INFO in run: App started
+[2026-03-03 23:58:43,401] INFO in run: App started
+[2026-03-04 00:02:26,264] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdaa42255d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:10:45,976] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdaa424cb90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:11:18,744] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdaa4c16410>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:17:23,552] INFO in run: App started
+[2026-03-04 00:17:35,757] INFO in run: App started
+[2026-03-04 00:17:55,751] INFO in run: App started
+[2026-03-04 00:17:57,874] INFO in run: App started
+[2026-03-04 00:19:10,107] INFO in run: App started
+[2026-03-04 00:21:27,000] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5ee6d7ca10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:22:03,864] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5ee447ec50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:24:16,984] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5ee42eb6d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:32:42,232] INFO in run: App started
+[2026-03-04 00:33:11,777] INFO in run: App started
+[2026-03-04 00:34:24,279] INFO in run: App started
+[2026-03-04 00:36:56,792] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7faf9bc39f10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:48:10,588] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7faf982e6890>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:49:05,880] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7faf9bc17390>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:51:48,598] INFO in run: App started
+[2026-03-04 00:53:04,246] INFO in run: App started
+[2026-03-04 00:55:20,664] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f6534d154d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 00:56:54,547] INFO in run: App started
+[2026-03-04 00:57:01,982] INFO in run: App started
+[2026-03-04 00:59:56,563] INFO in run: App started
+[2026-03-04 01:01:11,649] INFO in run: App started
+[2026-03-04 01:01:18,679] INFO in run: App started
+[2026-03-04 01:04:25,432] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f9b9d84b390>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:04:35,672] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f9b9c57b090>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:04:47,960] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f9b9c583190>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:05:26,872] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f9b9c605f90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:05:47,353] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f9b9c5f90d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:17:07,224] INFO in run: App started
+[2026-03-04 01:19:36,792] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f67786c9550>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:19:58,774] INFO in run: App started
+[2026-03-04 01:22:32,920] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f88bf529b50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 01:23:26,983] INFO in run: App started
+[2026-03-04 01:23:31,702] INFO in run: App started
+[2026-03-04 01:28:53,348] INFO in run: App started
+[2026-03-04 01:28:59,626] INFO in run: App started
+[2026-03-04 01:29:04,120] INFO in run: App started
+[2026-03-04 01:34:51,008] INFO in run: App started
+[2026-03-04 01:35:05,931] INFO in run: App started
+[2026-03-04 01:35:29,043] INFO in run: App started
+[2026-03-04 01:48:56,024] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5f1e2abf50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:01:48,106] INFO in run: App started
+[2026-03-04 13:05:04,856] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5f1d90f610>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:08:21,464] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5f1d9ca810>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:08:48,088] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5f1d830d90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:09:30,773] INFO in run: App started
+[2026-03-04 13:16:16,600] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f3329165050>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:17:22,129] INFO in run: App started
+[2026-03-04 13:18:45,626] INFO in run: App started
+[2026-03-04 13:20:21,841] INFO in run: App started
+[2026-03-04 13:20:35,637] INFO in run: App started
+[2026-03-04 13:21:44,851] INFO in run: App started
+[2026-03-04 13:22:12,801] INFO in run: App started
+[2026-03-04 13:23:10,025] INFO in run: App started
+[2026-03-04 13:23:17,838] INFO in run: App started
+[2026-03-04 13:23:36,646] INFO in run: App started
+[2026-03-04 13:27:48,824] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f498983b190>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:29:39,416] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f4988ea9210>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 13:29:42,310] INFO in run: App started
+[2026-03-04 13:30:03,228] INFO in run: App started
+[2026-03-04 13:30:24,097] INFO in run: App started
+[2026-03-04 13:30:42,970] INFO in run: App started
+[2026-03-04 13:42:30,509] INFO in run: App started
+[2026-03-04 13:43:47,210] INFO in run: App started
+[2026-03-04 13:43:47,787] INFO in run: App started
+[2026-03-04 13:55:07,224] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ff81fd67b50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:04:47,121] INFO in run: App started
+[2026-03-04 14:04:47,704] INFO in run: App started
+[2026-03-04 14:06:47,037] INFO in run: App started
+[2026-03-04 14:06:54,956] INFO in run: App started
+[2026-03-04 14:11:20,024] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fbe08facc10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:13:10,616] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fbe086726d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:13:25,232] INFO in run: App started
+[2026-03-04 14:13:40,000] INFO in run: App started
+[2026-03-04 14:13:55,793] INFO in run: App started
+[2026-03-04 14:14:29,644] INFO in run: App started
+[2026-03-04 14:14:54,833] INFO in run: App started
+[2026-03-04 14:17:55,288] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe8bea86110>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:19:47,928] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe8bea2c8d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:21:13,944] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe8bc144dd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:21:48,760] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fe8beafb650>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:28:09,067] INFO in run: App started
+[2026-03-04 14:28:22,029] INFO in run: App started
+[2026-03-04 14:28:54,367] INFO in run: App started
+[2026-03-04 14:32:31,161] INFO in run: App started
+[2026-03-04 14:35:42,891] INFO in run: App started
+[2026-03-04 14:38:01,316] INFO in run: App started
+[2026-03-04 14:39:36,440] INFO in run: App started
+[2026-03-04 14:39:48,219] INFO in run: App started
+[2026-03-04 14:41:16,314] INFO in run: App started
+[2026-03-04 14:41:24,138] INFO in run: App started
+[2026-03-04 14:41:42,953] INFO in run: App started
+[2026-03-04 14:42:11,030] INFO in run: App started
+[2026-03-04 14:42:20,799] INFO in run: App started
+[2026-03-04 14:45:53,383] INFO in run: App started
+[2026-03-04 14:47:15,463] INFO in run: App started
+[2026-03-04 14:47:44,401] INFO in run: App started
+[2026-03-04 14:48:13,557] INFO in run: App started
+[2026-03-04 14:49:55,763] INFO in run: App started
+[2026-03-04 14:50:41,699] INFO in run: App started
+[2026-03-04 14:50:46,502] INFO in run: App started
+[2026-03-04 14:50:53,451] INFO in run: App started
+[2026-03-04 14:54:30,744] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f819a73c310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 14:55:05,205] INFO in run: App started
+[2026-03-04 14:56:10,333] INFO in run: App started
+[2026-03-04 14:57:55,094] INFO in run: App started
+[2026-03-04 15:01:45,730] INFO in run: App started
+[2026-03-04 15:02:58,751] INFO in run: App started
+[2026-03-04 15:04:20,986] INFO in run: App started
+[2026-03-04 15:12:18,714] INFO in run: App started
+[2026-03-04 15:12:38,567] INFO in run: App started
+[2026-03-04 15:20:57,219] INFO in run: App started
+[2026-03-04 15:25:04,927] INFO in run: App started
+[2026-03-04 15:25:51,855] INFO in run: App started
+[2026-03-04 15:31:27,914] INFO in run: App started
+[2026-03-04 15:31:40,834] INFO in run: App started
+[2026-03-04 15:34:38,517] INFO in run: App started
+[2026-03-04 15:35:42,608] INFO in run: App started
+[2026-03-04 15:35:59,471] INFO in run: App started
+[2026-03-04 15:39:42,275] INFO in run: App started
+[2026-03-04 15:40:09,182] INFO in run: App started
+[2026-03-04 15:42:32,280] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f1d50818510>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 15:45:03,832] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f1d4c59ba50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 15:52:01,838] INFO in run: App started
+[2026-03-04 15:56:34,008] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc5980fc390>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 15:57:17,817] INFO in run: App started
+[2026-03-04 15:58:24,131] INFO in run: App started
+[2026-03-04 15:59:23,174] INFO in run: App started
+[2026-03-04 16:00:25,142] INFO in run: App started
+[2026-03-04 16:01:44,281] INFO in run: App started
+[2026-03-04 16:02:31,267] INFO in run: App started
+[2026-03-04 16:02:59,299] INFO in run: App started
+[2026-03-04 16:03:14,350] INFO in run: App started
+[2026-03-04 16:03:23,455] INFO in run: App started
+[2026-03-04 16:04:16,728] INFO in run: App started
+[2026-03-04 16:04:46,742] INFO in run: App started
+[2026-03-04 16:05:23,819] INFO in run: App started
+[2026-03-04 16:06:12,818] INFO in run: App started
+[2026-03-04 16:08:57,432] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd464150fd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 16:09:44,536] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd46419e3d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 16:14:34,800] INFO in run: App started
+[2026-03-04 16:16:45,151] INFO in run: App started
+[2026-03-04 16:17:15,098] INFO in run: App started
+[2026-03-04 16:17:48,282] INFO in run: App started
+[2026-03-04 16:17:48,899] INFO in run: App started
+[2026-03-04 16:17:52,714] INFO in run: App started
+[2026-03-04 16:20:29,656] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fedac41e8d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 16:21:34,499] INFO in run: App started
+[2026-03-04 16:22:09,684] INFO in run: App started
+[2026-03-04 16:22:28,668] INFO in run: App started
+[2026-03-04 16:22:45,466] INFO in run: App started
+[2026-03-04 16:23:13,755] INFO in run: App started
+[2026-03-04 16:23:34,921] INFO in run: App started
+[2026-03-04 16:24:32,936] INFO in run: App started
+[2026-03-04 16:26:49,261] INFO in run: App started
+[2026-03-04 16:34:44,904] INFO in run: App started
+[2026-03-04 16:36:01,955] INFO in run: App started
+[2026-03-04 16:36:20,021] INFO in run: App started
+[2026-03-04 16:36:29,901] INFO in run: App started
+[2026-03-04 16:41:08,515] INFO in run: App started
+[2026-03-04 16:42:14,029] INFO in run: App started
+[2026-03-04 16:44:26,326] INFO in run: App started
+[2026-03-04 16:44:29,852] INFO in run: App started
+[2026-03-04 16:44:29,965] INFO in run: Configuring DB for StartLogic
+[2026-03-04 16:44:29,969] INFO in run: Configuring DB for Archive Server
+[2026-03-04 16:44:29,973] INFO in run: Created default global config
+[2026-03-04 16:44:29,985] INFO in run: Configuring DB for SpeakerPageSettings
+[2026-03-04 16:44:29,990] INFO in run: Configuring DB for Ledpanel
+[2026-03-04 16:44:29,997] INFO in run: Configuring DB for Standing Config
+[2026-03-04 16:44:30,007] INFO in run: MicroService DB init
+[2026-03-04 16:44:30,292] INFO in run: Infoscreen DB init
+[2026-03-04 16:44:31,356] INFO in run: App started
+[2026-03-04 16:44:45,414] INFO in run: App started
+[2026-03-04 16:47:03,000] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fb1282ffa10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 16:47:19,384] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fb1241aac90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 16:49:15,566] INFO in run: App started
+[2026-03-04 16:49:41,919] INFO in run: App started
+[2026-03-04 16:50:08,908] INFO in run: App started
+[2026-03-04 16:52:22,175] INFO in run: App started
+[2026-03-04 16:53:32,379] INFO in run: App started
+[2026-03-04 16:53:49,191] INFO in run: App started
+[2026-03-04 16:54:04,756] INFO in run: App started
+[2026-03-04 16:54:04,853] INFO in run: Configuring DB for StartLogic
+[2026-03-04 16:54:04,858] INFO in run: Configuring DB for Archive Server
+[2026-03-04 16:54:04,864] INFO in run: Created default global config
+[2026-03-04 16:54:04,869] INFO in run: Configuring DB for SpeakerPageSettings
+[2026-03-04 16:54:04,872] INFO in run: Configuring DB for Ledpanel
+[2026-03-04 16:54:04,877] INFO in run: Configuring DB for Standing Config
+[2026-03-04 16:54:04,881] INFO in run: MicroService DB init
+[2026-03-04 16:54:05,042] INFO in run: Infoscreen DB init
+[2026-03-04 16:54:05,804] INFO in run: App started
+[2026-03-04 16:55:32,878] INFO in run: App started
+[2026-03-04 16:55:35,650] INFO in run: App started
+[2026-03-04 16:55:57,463] INFO in run: App started
+[2026-03-04 16:56:35,512] INFO in run: App started
+[2026-03-04 16:56:50,336] INFO in run: App started
+[2026-03-04 16:57:14,394] INFO in run: App started
+[2026-03-04 16:59:15,691] INFO in run: App started
+[2026-03-04 16:59:35,265] INFO in run: App started
+[2026-03-04 17:00:13,727] INFO in run: App started
+[2026-03-04 17:02:32,792] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5328de1550>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:02:34,840] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5328d6c110>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:04:04,952] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f5328420750>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:05:08,440] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f532842dad0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:06:54,155] INFO in run: App started
+[2026-03-04 17:07:21,105] INFO in run: App started
+[2026-03-04 17:09:33,347] INFO in run: App started
+[2026-03-04 17:10:28,452] INFO in run: App started
+[2026-03-04 17:12:43,096] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ffa205ac610>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:13:19,960] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ffa2063d610>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:15:08,504] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ffa22fd3ed0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:16:03,800] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ffa20454650>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:16:07,896] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7ffa2047ca90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:16:10,932] INFO in run: App started
+[2026-03-04 17:17:38,412] INFO in run: App started
+[2026-03-04 17:18:13,088] INFO in run: App started
+[2026-03-04 17:18:34,009] INFO in run: App started
+[2026-03-04 17:18:43,056] INFO in run: App started
+[2026-03-04 17:19:50,408] INFO in run: App started
+[2026-03-04 17:22:02,200] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f344b5810d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:22:14,169] INFO in run: App started
+[2026-03-04 17:24:54,553] INFO in run: App started
+[2026-03-04 17:25:15,178] INFO in run: App started
+[2026-03-04 17:25:27,033] INFO in run: App started
+[2026-03-04 17:25:46,018] INFO in run: App started
+[2026-03-04 17:33:45,011] INFO in run: App started
+[2026-03-04 17:34:34,993] INFO in run: App started
+[2026-03-04 17:34:48,832] INFO in run: App started
+[2026-03-04 17:35:24,721] INFO in run: App started
+[2026-03-04 17:36:13,735] INFO in run: App started
+[2026-03-04 17:36:43,931] INFO in run: App started
+[2026-03-04 17:36:54,803] INFO in run: App started
+[2026-03-04 17:37:18,895] INFO in run: App started
+[2026-03-04 17:37:38,892] INFO in run: App started
+[2026-03-04 17:37:51,900] INFO in run: App started
+[2026-03-04 17:38:23,920] INFO in run: App started
+[2026-03-04 17:38:44,076] INFO in run: App started
+[2026-03-04 17:44:25,186] INFO in run: App started
+[2026-03-04 17:45:06,141] INFO in run: App started
+[2026-03-04 17:48:23,256] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f23a8671b90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:49:26,744] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f23a84cba10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:51:11,192] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f23a83fc9d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 17:51:29,855] INFO in run: App started
+[2026-03-04 17:51:47,003] INFO in run: App started
+[2026-03-04 17:52:26,330] INFO in run: App started
+[2026-03-04 17:52:35,942] INFO in run: App started
+[2026-03-04 17:52:49,974] INFO in run: App started
+[2026-03-04 17:53:39,180] INFO in run: App started
+[2026-03-04 17:53:48,160] INFO in run: App started
+[2026-03-04 17:54:06,471] INFO in run: App started
+[2026-03-04 17:54:28,652] INFO in run: App started
+[2026-03-04 17:54:57,614] INFO in run: App started
+[2026-03-04 17:56:39,027] INFO in run: App started
+[2026-03-04 18:01:05,112] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f0380341c90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:03:32,568] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f0380252550>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:06:35,253] INFO in run: App started
+[2026-03-04 18:08:41,767] INFO in run: App started
+[2026-03-04 18:09:11,777] INFO in run: App started
+[2026-03-04 18:10:22,302] INFO in run: App started
+[2026-03-04 18:10:41,389] INFO in run: App started
+[2026-03-04 18:13:03,960] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f09c85ad810>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:13:46,968] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f09c85d07d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:14:19,736] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f09c85b51d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:14:48,408] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f09c8471610>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:14:56,704] INFO in run: App started
+[2026-03-04 18:19:13,763] INFO in run: App started
+[2026-03-04 18:23:51,519] INFO in run: App started
+[2026-03-04 18:24:27,768] INFO in run: App started
+[2026-03-04 18:26:00,252] INFO in run: App started
+[2026-03-04 18:26:25,241] INFO in run: App started
+[2026-03-04 18:27:04,630] INFO in run: App started
+[2026-03-04 18:27:45,532] INFO in run: App started
+[2026-03-04 18:27:54,595] INFO in run: App started
+[2026-03-04 18:28:05,349] INFO in run: App started
+[2026-03-04 18:30:12,641] INFO in run: App started
+[2026-03-04 18:30:16,370] INFO in run: App started
+[2026-03-04 18:33:30,409] INFO in run: App started
+[2026-03-04 18:34:34,461] INFO in run: App started
+[2026-03-04 18:35:59,931] INFO in run: App started
+[2026-03-04 18:38:25,628] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdf784c9dd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:38:29,720] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdf78510390>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:40:12,120] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdf785212d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:44:10,179] INFO in run: App started
+[2026-03-04 18:44:42,267] INFO in run: App started
+[2026-03-04 18:47:01,183] INFO in run: App started
+[2026-03-04 18:49:51,704] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f76ba3a34d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:50:34,712] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f76b80bb4d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:51:54,466] INFO in run: App started
+[2026-03-04 18:54:05,656] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc526e1f510>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:05,657] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc525432490>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:07,704] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc525480110>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:07,708] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc525470f10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:09,752] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52548d690>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:11,800] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc525493610>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:54:44,572] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc5254d66d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:55:25,528] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc524321fd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:56:31,064] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52433b950>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 18:57:07,982] INFO in run: App started
+[2026-03-04 19:07:28,589] INFO in run: App started
+[2026-03-04 19:07:59,435] INFO in run: App started
+[2026-03-04 19:08:45,636] INFO in run: App started
+[2026-03-04 19:12:36,494] INFO in run: App started
+[2026-03-04 19:15:31,173] INFO in run: App started
+[2026-03-04 19:27:20,408] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fddc475f0d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 19:28:48,472] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fddc4666e90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 19:33:57,720] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fddc68dda10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 19:36:59,992] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fddc6910c90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 19:42:57,676] INFO in run: App started
+[2026-03-04 19:43:11,759] INFO in run: App started
+[2026-03-04 19:43:25,681] INFO in run: App started
+[2026-03-04 19:43:33,482] INFO in run: App started
+[2026-03-04 19:44:55,705] INFO in run: App started
+[2026-03-04 19:46:09,820] INFO in run: App started
+[2026-03-04 19:48:45,190] INFO in run: App started
+[2026-03-04 19:49:28,292] INFO in run: App started
+[2026-03-04 19:53:08,696] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7feaa626cdd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 20:05:17,268] INFO in run: App started
+[2026-03-04 20:07:26,808] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f1399127910>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 20:09:40,514] INFO in run: App started
+[2026-03-04 20:09:46,555] INFO in run: App started
+[2026-03-04 20:12:09,432] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f97df4b0750>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 20:17:18,680] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f97dc0f2250>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 20:17:38,955] INFO in run: App started
+[2026-03-04 20:17:45,882] INFO in run: App started
+[2026-03-04 20:26:41,941] INFO in run: App started
+[2026-03-04 20:27:02,337] INFO in run: App started
+[2026-03-04 20:27:58,951] INFO in run: App started
+[2026-03-04 20:27:59,545] INFO in run: App started
+[2026-03-04 20:28:38,679] INFO in run: App started
+[2026-03-04 20:38:24,278] INFO in run: App started
+[2026-03-04 20:39:26,502] INFO in run: App started
+[2026-03-04 20:39:31,643] INFO in run: App started
+[2026-03-04 20:39:38,966] INFO in run: App started
+[2026-03-04 20:43:39,049] INFO in run: App started
+[2026-03-04 20:44:58,612] INFO in run: App started
+[2026-03-04 20:45:41,503] INFO in run: App started
+[2026-03-04 20:50:41,624] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc53ab3e410>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 20:52:05,592] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc538125310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:01:02,168] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc53816a7d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:08:06,104] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52079a890>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:12:46,680] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52078ac90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:13:09,208] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52079cad0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:13:37,880] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc520794ad0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:14:55,704] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc5207cb950>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:16:21,724] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc5206d9710>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:16:42,200] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc538136190>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:20:04,952] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fc52076b150>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:20:52,440] INFO in run: App started
+[2026-03-04 21:22:52,170] INFO in run: App started
+[2026-03-04 21:24:05,809] INFO in run: App started
+[2026-03-04 21:24:21,365] INFO in run: App started
+[2026-03-04 21:24:46,781] INFO in run: App started
+[2026-03-04 21:25:11,355] INFO in run: App started
+[2026-03-04 21:25:28,579] INFO in run: App started
+[2026-03-04 21:25:47,914] INFO in run: App started
+[2026-03-04 21:25:58,245] INFO in run: App started
+[2026-03-04 21:27:56,507] INFO in run: App started
+[2026-03-04 21:30:52,120] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac418e10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:31:20,792] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac4cafd0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:31:41,272] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac328a50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:35:26,552] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac356650>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:39:52,792] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac1d31d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:40:27,608] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac35c450>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 21:40:33,752] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac1d6e10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 22:22:55,320] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f94ac3472d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 22:23:04,076] INFO in run: App started
+[2026-03-04 22:24:02,417] INFO in run: App started
+[2026-03-04 22:24:23,400] INFO in run: App started
+[2026-03-04 22:24:59,357] INFO in run: App started
+[2026-03-04 22:25:55,356] INFO in run: App started
+[2026-03-04 22:29:22,192] INFO in run: App started
+[2026-03-04 22:29:32,237] INFO in run: App started
+[2026-03-04 22:38:00,065] INFO in run: App started
+[2026-03-04 22:38:15,000] INFO in run: App started
+[2026-03-04 22:39:42,356] INFO in run: App started
+[2026-03-04 22:41:55,765] INFO in run: App started
+[2026-03-04 22:43:22,357] INFO in run: App started
+[2026-03-04 22:43:52,433] INFO in run: App started
+[2026-03-04 22:44:22,755] INFO in run: App started
+[2026-03-04 22:44:26,280] INFO in run: App started
+[2026-03-04 22:52:12,504] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd1c415e290>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 22:56:06,039] INFO in run: App started
+[2026-03-04 22:56:32,096] INFO in run: App started
+[2026-03-04 22:56:55,091] INFO in run: App started
+[2026-03-04 22:57:26,490] INFO in run: App started
+[2026-03-04 22:57:51,760] INFO in run: App started
+[2026-03-04 22:58:33,190] INFO in run: App started
+[2026-03-04 22:59:10,196] INFO in run: App started
+[2026-03-04 22:59:31,083] INFO in run: App started
+[2026-03-04 23:00:00,082] INFO in run: App started
+[2026-03-04 23:01:23,187] INFO in run: App started
+[2026-03-04 23:02:08,010] INFO in run: App started
+[2026-03-04 23:02:08,630] INFO in run: App started
+[2026-03-04 23:02:55,434] INFO in run: App started
+[2026-03-04 23:03:18,752] INFO in run: App started
+[2026-03-04 23:04:20,780] INFO in run: App started
+[2026-03-04 23:04:39,931] INFO in run: App started
+[2026-03-04 23:05:16,954] INFO in run: App started
+[2026-03-04 23:07:30,008] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdb75cac150>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:08:31,448] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdb75ad9310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:08:51,928] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdb75b80d90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:09:02,168] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fdb75bb2310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:09:20,673] INFO in run: App started
+[2026-03-04 23:11:08,936] INFO in run: App started
+[2026-03-04 23:11:43,001] INFO in run: App started
+[2026-03-04 23:11:51,771] INFO in run: App started
+[2026-03-04 23:12:39,271] INFO in run: App started
+[2026-03-04 23:13:22,946] INFO in run: App started
+[2026-03-04 23:13:54,315] INFO in run: App started
+[2026-03-04 23:14:19,373] INFO in run: App started
+[2026-03-04 23:16:12,774] INFO in run: App started
+[2026-03-04 23:17:03,245] INFO in run: App started
+[2026-03-04 23:24:44,248] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd7fdf04710>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:34:20,384] INFO in run: App started
+[2026-03-04 23:35:04,365] INFO in run: App started
+[2026-03-04 23:43:11,502] INFO in run: App started
+[2026-03-04 23:45:45,816] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610cb4ee10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:45:56,056] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c224a10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:46:16,540] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c097750>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-04 23:48:25,560] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c206350>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:33:45,304] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c223510>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:38:48,408] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f6105eeda10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:45:03,192] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610cbf5990>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:45:42,104] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f6105eeb290>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:50:20,632] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c223510>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:51:17,976] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c092310>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:53:29,048] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f61042cc5d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:54:44,824] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c0f3ed0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:55:09,400] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f610c163510>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:55:25,784] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f6105f72650>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 00:56:00,600] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f61042e4d90>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 01:16:55,877] INFO in run: App started
+[2026-03-05 01:18:21,544] INFO in run: App started
+[2026-03-05 01:22:13,558] INFO in run: App started
+[2026-03-05 01:22:40,409] INFO in run: App started
+[2026-03-05 01:22:50,245] INFO in run: App started
+[2026-03-05 01:41:31,458] INFO in run: App started
+[2026-03-05 01:46:39,832] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd7846bb150>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 02:14:16,664] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd785f815d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 02:24:10,584] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd785ca95d0>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 02:31:32,952] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7fd785d77f50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 02:54:02,171] INFO in run: App started
+[2026-03-05 02:54:08,077] INFO in run: App started
+[2026-03-05 02:54:14,114] INFO in run: App started
+[2026-03-05 02:59:13,483] INFO in run: App started
+[2026-03-05 02:59:23,252] INFO in run: App started
+[2026-03-05 03:01:47,573] INFO in run: App started
+[2026-03-05 03:03:54,143] INFO in run: App started
+[2026-03-05 03:04:28,397] INFO in run: App started
+[2026-03-05 03:04:37,302] INFO in run: App started
+[2026-03-05 03:08:01,403] INFO in run: App started
+[2026-03-05 03:08:11,389] INFO in run: App started
+[2026-03-05 03:12:36,696] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f92d4490c50>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 03:16:52,696] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f92d4634350>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 03:17:50,040] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f92d4495c10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 03:40:29,916] ERROR in archive_routes: Error checking heartbeat: HTTPConnectionPool(host='192.168.20.218', port=5000): Max retries exceeded with url: /heartbeat (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.20.218', port=5000) at 0x7f92d5f2ae10>, 'Connection to 192.168.20.218 timed out. (connect timeout=None)'))
+[2026-03-05 03:58:12,954] INFO in run: App started
+[2026-03-05 04:04:37,462] INFO in run: App started
+[2026-03-05 04:20:04,052] INFO in run: App started
+[2026-03-05 04:24:17,733] INFO in run: App started
+[2026-03-05 04:24:18,408] INFO in run: App started
+[2026-03-05 11:43:34,707] INFO in run: App started
+[2026-03-05 11:43:57,275] INFO in run: App started
+[2026-03-05 11:44:02,634] INFO in run: App started
+[2026-03-05 11:44:06,957] INFO in run: App started
+[2026-03-05 11:54:41,605] INFO in run: App started
+[2026-03-05 11:58:20,568] INFO in run: App started
+[2026-03-05 12:38:14,062] INFO in run: App started
+[2026-03-05 12:39:05,035] INFO in run: App started
+[2026-03-05 12:39:43,162] INFO in run: App started
+[2026-03-05 14:04:55,372] INFO in run: App started
+[2026-03-05 14:05:08,361] INFO in run: App started
+[2026-03-05 14:11:16,106] INFO in run: App started
+[2026-03-05 14:11:24,246] INFO in run: App started
+[2026-03-05 14:11:43,246] INFO in run: App started
+[2026-03-05 14:12:02,192] INFO in run: App started
+[2026-03-05 14:19:05,347] INFO in run: App started
+[2026-03-05 14:19:08,564] INFO in run: App started
+[2026-03-05 14:19:21,612] INFO in run: App started
+[2026-03-05 14:19:28,411] INFO in run: App started
+[2026-03-05 14:19:33,268] INFO in run: App started
+[2026-03-05 14:19:36,125] INFO in run: App started
+[2026-03-05 14:24:03,280] INFO in run: App started
+[2026-03-05 14:24:06,604] INFO in run: App started
+[2026-03-05 14:24:09,886] INFO in run: App started
+[2026-03-05 14:24:11,951] INFO in run: App started
+[2026-03-05 14:24:26,908] INFO in run: App started
+[2026-03-05 14:35:03,631] INFO in run: App started
+[2026-03-05 14:36:38,106] INFO in run: App started
+[2026-03-05 14:36:53,923] INFO in run: App started
+[2026-03-05 14:37:50,997] INFO in run: App started
+[2026-03-05 14:38:03,839] INFO in run: App started
+[2026-03-05 14:38:38,739] INFO in run: App started
+[2026-03-05 14:39:39,029] INFO in run: App started
+[2026-03-05 14:39:49,805] INFO in run: App started
+[2026-03-05 14:40:53,134] INFO in run: App started
+[2026-03-05 14:41:06,091] INFO in run: App started
+[2026-03-05 14:41:51,145] INFO in run: App started
+[2026-03-05 14:42:17,152] INFO in run: App started
+[2026-03-05 14:42:39,109] INFO in run: App started
+[2026-03-05 14:42:55,205] INFO in run: App started
+[2026-03-05 14:43:12,705] INFO in run: App started
+[2026-03-05 14:43:52,757] INFO in run: App started
+[2026-03-05 14:44:25,608] INFO in run: App started
+[2026-03-05 14:45:01,730] INFO in run: App started
+[2026-03-05 14:45:20,629] INFO in run: App started
+[2026-03-05 14:46:07,548] INFO in run: App started
+[2026-03-05 14:46:21,492] INFO in run: App started
+[2026-03-05 14:47:17,802] INFO in run: App started
+[2026-03-05 14:49:12,264] INFO in run: App started
+[2026-03-05 14:50:06,248] INFO in run: App started
+[2026-03-05 15:31:50,697] INFO in run: App started
+[2026-03-05 15:31:51,238] INFO in run: App started
+[2026-03-05 15:34:18,651] INFO in run: App started
+[2026-03-05 15:34:24,555] INFO in run: App started
+[2026-03-05 15:34:29,356] INFO in run: App started
+[2026-03-05 15:34:33,161] INFO in run: App started
+[2026-03-05 15:37:53,367] INFO in run: App started
+[2026-03-05 15:37:53,910] INFO in run: App started
+[2026-03-05 15:44:19,192] INFO in run: App started
+[2026-03-05 15:48:23,909] INFO in run: App started
+[2026-03-05 15:52:00,739] INFO in run: App started
+[2026-03-05 15:56:16,563] INFO in run: App started
+[2026-03-05 16:02:24,894] INFO in run: App started
+[2026-03-05 16:02:28,779] INFO in run: App started
+[2026-03-05 16:02:33,549] INFO in run: App started
+[2026-03-05 16:02:42,333] INFO in run: App started
+[2026-03-05 16:02:46,134] INFO in run: App started
+[2026-03-05 16:08:57,495] INFO in run: App started
+[2026-03-05 16:09:06,412] INFO in run: App started
+[2026-03-05 16:26:21,276] INFO in run: App started
+[2026-03-05 16:56:37,152] INFO in run: App started
+[2026-03-05 16:56:37,690] INFO in run: App started
+[2026-03-05 17:19:41,003] INFO in run: App started
+[2026-03-05 17:19:47,758] INFO in run: App started
+[2026-03-05 17:19:53,548] INFO in run: App started
+[2026-03-05 17:20:10,693] INFO in run: App started
+[2026-03-05 17:23:32,400] INFO in run: App started
+[2026-03-05 18:02:02,150] INFO in run: App started
+[2026-03-05 18:02:06,137] INFO in run: App started
+[2026-03-05 18:02:09,099] INFO in run: App started
+[2026-03-05 18:56:44,782] INFO in run: App started
+[2026-03-05 18:57:22,712] INFO in run: App started
+[2026-03-05 18:57:30,798] INFO in run: App started
+[2026-03-05 18:57:31,329] INFO in run: App started
+[2026-03-05 18:58:14,379] INFO in run: App started
+[2026-03-05 18:58:29,134] INFO in run: App started
+[2026-03-05 18:58:37,898] INFO in run: App started
+[2026-03-05 18:59:31,967] INFO in run: App started
+[2026-03-05 19:03:24,715] INFO in run: App started
+[2026-03-05 19:04:11,808] INFO in run: App started
+[2026-03-05 19:04:14,763] INFO in run: App started
+[2026-03-05 19:04:18,501] INFO in run: App started
+[2026-03-05 19:19:47,149] INFO in run: App started
+[2026-03-05 19:19:53,075] INFO in run: App started
+[2026-03-05 19:27:25,752] INFO in run: App started
+[2026-03-05 19:30:31,308] INFO in run: App started
+[2026-03-05 19:38:47,185] INFO in run: App started
+[2026-03-05 20:39:33,452] INFO in run: App started
+[2026-03-05 20:49:20,742] INFO in run: App started
+[2026-03-05 20:52:32,361] INFO in run: App started
+[2026-03-05 21:11:59,039] INFO in run: App started
+[2026-03-05 21:18:01,380] INFO in run: App started
+[2026-03-05 21:18:11,510] INFO in run: App started
+[2026-03-05 21:25:20,109] INFO in run: App started
+[2026-03-05 21:25:28,018] INFO in run: App started
+[2026-03-05 21:25:33,824] INFO in run: App started
+[2026-03-05 21:25:45,716] INFO in run: App started
+[2026-03-05 21:26:08,617] INFO in run: App started
+[2026-03-05 21:26:13,555] INFO in run: App started
+[2026-03-05 21:38:55,538] INFO in run: App started
+[2026-03-05 21:39:02,458] INFO in run: App started
+[2026-03-05 21:43:33,420] INFO in run: App started
+[2026-03-05 22:17:18,235] INFO in run: App started
+[2026-03-05 22:17:18,781] INFO in run: App started
+[2026-03-05 22:23:20,002] INFO in run: App started
+[2026-03-05 23:21:41,007] INFO in run: App started
+[2026-03-05 23:21:41,550] INFO in run: App started
+[2026-03-05 23:37:19,088] INFO in run: App started
+[2026-03-05 23:37:19,632] INFO in run: App started
+[2026-03-05 23:46:36,191] INFO in run: App started
+[2026-03-05 23:46:36,727] INFO in run: App started
+[2026-03-05 23:54:02,630] INFO in run: App started
+[2026-03-05 23:54:03,174] INFO in run: App started
+[2026-03-06 00:16:16,338] INFO in run: App started
+[2026-03-06 00:17:15,393] INFO in run: App started
+[2026-03-06 00:17:18,133] INFO in run: App started
+[2026-03-06 00:17:19,832] INFO in run: App started
+[2026-03-06 00:27:34,177] INFO in run: App started
+[2026-03-06 00:27:42,088] INFO in run: App started
+[2026-03-06 00:27:48,074] INFO in run: App started
+[2026-03-06 00:32:11,305] INFO in run: App started
+[2026-03-06 00:35:30,927] INFO in run: App started
+[2026-03-06 00:43:44,739] INFO in run: App started
+[2026-03-06 00:56:17,684] INFO in run: App started
+[2026-03-06 01:15:19,124] INFO in run: App started
+[2026-03-06 01:15:34,229] INFO in run: App started
+[2026-03-06 01:15:34,762] INFO in run: App started
+[2026-03-06 01:53:57,519] INFO in run: App started
+[2026-03-06 01:54:14,398] INFO in run: App started
+[2026-03-06 01:54:30,249] INFO in run: App started
+[2026-03-06 01:54:47,126] INFO in run: App started
+[2026-03-06 01:56:25,329] INFO in run: App started
+[2026-03-06 01:57:09,329] INFO in run: App started
+[2026-03-06 01:57:30,181] INFO in run: App started
+[2026-03-06 01:57:46,982] INFO in run: App started
+[2026-03-06 02:00:47,513] INFO in run: App started
+[2026-03-06 02:00:55,318] INFO in run: App started
+[2026-03-06 02:01:36,227] INFO in run: App started
+[2026-03-06 02:35:28,332] INFO in run: App started
+[2026-03-06 02:35:28,987] INFO in run: App started
+[2026-03-06 02:52:16,823] INFO in run: App started
+[2026-03-06 03:18:16,154] INFO in run: App started
+[2026-03-06 03:18:16,696] INFO in run: App started
+[2026-03-06 03:49:15,945] INFO in run: App started
+[2026-03-06 03:49:36,944] INFO in run: App started
+[2026-03-06 03:50:00,792] INFO in run: App started
+[2026-03-06 03:51:46,918] INFO in run: App started
+[2026-03-06 04:09:10,123] INFO in run: App started
+[2026-03-06 04:35:48,343] INFO in run: App started
+[2026-03-06 04:35:54,211] INFO in run: App started
+[2026-03-06 04:36:00,979] INFO in run: App started
+[2026-03-06 04:36:05,832] INFO in run: App started
+[2026-03-06 04:36:13,836] INFO in run: App started
+[2026-03-06 04:38:07,124] INFO in run: App started

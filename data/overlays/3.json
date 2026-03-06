@@ -1,0 +1,43 @@
+{
+  "id": 3,
+  "name": "Bakkecross",
+  "active_view_id": 1,
+  "next_view_id": 2,
+  "res_w": 1920,
+  "res_h": 1080,
+  "grid_version": 3,
+  "views": [
+    {
+      "id": 1,
+      "name": "Basic",
+      "next_widget_id": 10,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 7,
+          "file": "bakkecross/standings_overlay.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": 83.03,
+          "gs_y": -0.71,
+          "gs_w": 100.0,
+          "gs_h": 100.0
+        },
+        {
+          "id": 9,
+          "file": "bakkecross/basic_overlay.html",
+          "url": "",
+          "params": "scale=4",
+          "fullscreen": false,
+          "gs_x": 0.41,
+          "gs_y": 67.03,
+          "gs_w": 32.11,
+          "gs_h": 30.78
+        }
+      ]
+    }
+  ]
+}

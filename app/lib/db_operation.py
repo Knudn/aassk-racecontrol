@@ -23,11 +23,15 @@ def delete_events(directory_path, event=None):
 
 def full_db_reload(add_intel_sort=False, sync=False, Event=None):
     from app.models import ActiveEvents, EventOrder, EventType
+    from app.lib.utils import insert_orbits_data
     from app import db
     from sqlalchemy import func
 
 
     g_config = GetEnv()
+
+    if g_config["msport_tm"] == False:
+        insert_orbits_data()
 
     delete_events(g_config["db_location"], event=Event)
     
@@ -212,64 +216,121 @@ def get_active_startlist():
     return data
 
 
-def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=None):
-    from app.models import ActiveEvents
+def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=None, heat=None, event=None):
+    from app.lib.utils import get_event_data
+    from app.models import ActiveDrivers, Session_Race_Records, ActiveEvents
 
-    g_config = GetEnv()
+    if event == None:
+        active_drivers_row = ActiveDrivers.query.get(1)
+        d1 = active_drivers_row.D1 if active_drivers_row else None
+        d2 = active_drivers_row.D2 if active_drivers_row else None
+        event_name = active_drivers_row.Event
+        heat = active_drivers_row.Heat
 
-    if event_comb != None:
-        combined_data = []
-        event_comb_old = event_comb
-        for k, b in enumerate(event_comb_old):
-            event_db_file = (g_config["db_location"]+b[0]["db_file"]+".sqlite")
-            
-            event_comb[k][0]["db_file"] = event_db_file
-            data = format_startlist([event_comb[k][0]], include_timedata=True)
-            combined_data.append(data)
+        if upcoming:
+            current_ae = (
+                ActiveEvents.query
+                .filter(ActiveEvents.event_name == event_name, ActiveEvents.run == heat)
+                .first()
+            )
+            if current_ae:
+                next_ae = (
+                    ActiveEvents.query
+                    .filter(ActiveEvents.sort_order > current_ae.sort_order, ActiveEvents.enabled == True)
+                    .order_by(ActiveEvents.sort_order)
+                    .first()
+                )
+                if next_ae:
+                    event_name = next_ae.event_name
+                    heat = next_ae.run
+                    d1 = 9999
+                    d2 = 9999
+                else:
+                    return [{"race_config": {}}]
 
-        return combined_data
-
-    if event_wl != None:
-        event_db_file = (g_config["db_location"]+event_wl[0]["db_file"]+".sqlite")
-        event_wl[0]["db_file"] = event_db_file
-        data = format_startlist(event_wl, include_timedata=True)
-        return data
-
-    #event = get_active_event()
-    #current_db_file = event[0]["db_file"]
-    #current_heat = event[0]["SPESIFIC_HEAT"]
-
-    if upcoming == True:
-
-        current_entry = ActiveEvents.query.filter_by(event_file=current_db_file, run=current_heat).first()
-
-        upcoming_entry = (ActiveEvents.query
-                        .filter(ActiveEvents.sort_order > current_entry.sort_order,
-                                ActiveEvents.enabled == 1
-                                )
-                        .order_by(ActiveEvents.sort_order.asc())
-                        .first())
-        
-        
-        event_file = upcoming_entry.event_file
-        event_heat = upcoming_entry.run
-        
-        event_db_file = (g_config["db_location"]+event_file+".sqlite")
-        event[0]["SPESIFIC_HEAT"] = event_heat
-
-        event[0]["db_file"] = event_db_file
+        records = (
+            Session_Race_Records.query
+            .filter(Session_Race_Records.title_2 == event_name, Session_Race_Records.heat == heat)
+            .all()
+        )
+        if not records:
+            return []
 
     else:
-        
-        #event_db_file = (g_config["db_location"]+event[0]["db_file"]+".sqlite")
+        d1 = 9999
+        d2 = 9999
+        try:
+            heat = int(heat)
+        except (TypeError, ValueError):
+            pass
+        records = (
+            Session_Race_Records.query
+            .filter(Session_Race_Records.title_2 == event, Session_Race_Records.heat == heat)
+            .all()
+        )
+    if not records:
+        return []
+    records.sort(key=lambda r: (r.data.get("start_pos") or 0))
+    first = records[0].data
+    module = first.get("module", "0")
+    if int(module) == 0:
+        d2 = 9999
+    result = [{
+        "race_config": {
+            "MODE":    int(module),
+            "HEATS":   first.get("heats", len(records)),
+            "HEAT":    first.get("heat", 1),
+            "TITLE_1": first.get("title_1", ""),
+            "TITLE_2": first.get("title_2", ""),
+            "DATE":    "",
+            "CROSS":   GetEnv().get("cross", False),
+        }
+    }]
 
-        #event[0]["db_file"] = event_db_file
-        pass
+    step = 2 if module in ("2", "3") else 1
+    for i in range(0, len(records), step):
+        group = records[i:i + step]
+        drivers = []
+        for rec in group:
+            d = rec.data or {}
+            cid = rec.cid
+            ti = {
+                "INTER_1":    d.get("inter_1", 0),
+                "INTER_2":    d.get("inter_2", 0),
+                "SPEED":      d.get("speed", 0),
+                "PENELTY":    d.get("penalty", 0),
+                "FINISHTIME": d.get("finishtime", 0),
+                "REACTION":   d.get("reaction", 0),
+            }
+            drivers.append({
+                "id":         cid,
+                "first_name": d.get("first_name"),
+                "last_name":  d.get("last_name"),
+                "club":       d.get("club"),
+                "vehicle":    d.get("snowmobile"),
+                "active":     cid in (d1, d2),
+                "time_info":  ti,
+            })
 
-    data = format_startlist(include_timedata=True)
-    #data = json.dumps(format_startlist(event, include_timedata=True))
+        if len(drivers) == 2:
+            a, b = drivers[0], drivers[1]
+            ft_a = a["time_info"]["FINISHTIME"]
+            ft_b = b["time_info"]["FINISHTIME"]
+            pen_a = a["time_info"]["PENELTY"]
+            pen_b = b["time_info"]["PENELTY"]
+            if pen_a and not pen_b:
+                a["status"] = 2; b["status"] = 1
+            elif pen_b and not pen_a:
+                a["status"] = 1; b["status"] = 2
+            elif ft_a and ft_b and not pen_a and not pen_b:
+                if ft_a < ft_b:
+                    a["status"] = 1; b["status"] = 2
+                else:
+                    a["status"] = 2; b["status"] = 1
 
-    return data
+        result.append({"race_id": (i // step) + 1, "drivers": drivers})
+
+    return result
 
 def get_specific_event_data(event_filter=None):
 

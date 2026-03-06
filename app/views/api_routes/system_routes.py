@@ -44,7 +44,7 @@ def register_system_routes(api_bp):
     def test():
         import json
         from app.lib.utils import get_upcoming_drivers
-
+        print(get_upcoming_drivers())
         if not GetEnv()["cross"]: 
             data = get_upcoming_drivers(return_driver_context=True)
         else:

@@ -12,6 +12,30 @@
         font-size: 2em;
         text-align: center;
     }
+    #column-checkboxes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 0;
+    }
+    #column-checkboxes label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        user-select: none;
+    }
+    #column-checkboxes label.extra-field {
+        background-color: #fff8e1;
+        border-color: #ffc107;
+    }
+    #col-vis-toggle {
+        cursor: pointer;
+    }
 </style>
 
 <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
@@ -53,6 +77,18 @@
 </script>
 
 <br>
+
+{% if sqldata != "None" %}
+<div class="mb-2">
+    <button class="btn btn-sm btn-outline-secondary" id="col-vis-toggle" type="button">&#9654; Column Visibility</button>
+    <div id="col-vis-panel" style="display:none; border:1px solid #dee2e6; border-radius:4px; padding:8px; margin-top:4px;">
+        <small class="text-muted">JSON fields</small>
+        <div id="column-checkboxes"></div>
+        <small class="text-muted" style="color:#856404 !important;">&#9656; Highlighted = database fields (outside JSON data)</small>
+    </div>
+</div>
+{% endif %}
+
 <div id="driver-stats-table"></div>
 <br>
 
@@ -61,42 +97,112 @@
 
 <script>
     var table;
+    var STORAGE_KEY = "col_vis__active_events_driver_data";
+
+    var extraKeys  = {{ extra_keys | safe  }};
+    var dynamicKeys = {{ dynamic_keys | safe }};
+
+    function saveVisibility(state) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadVisibility() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // Build dynamic columns: CID first, then JSON keys, then LOCKED
-        var columns = [
-            {title: "CID", field: "CID"}
-        ];
+        // Column toggle panel
+        var toggleBtn = document.getElementById("col-vis-toggle");
+        var panel = document.getElementById("col-vis-panel");
+        if (toggleBtn) {
+            toggleBtn.addEventListener("click", function() {
+                var open = panel.style.display !== "none";
+                panel.style.display = open ? "none" : "block";
+                toggleBtn.textContent = (open ? "\u25BA" : "\u25BC") + " Column Visibility";
+            });
+        }
 
-        {% if dynamic_keys %}
-            {% for key in dynamic_keys %}
-                columns.push({title: "{{ key }}", field: "{{ key }}", editor: "input"});
-            {% endfor %}
-        {% endif %}
+        // Build ordered list of all columns: CID | extra | dynamic | LOCKED
+        var allCols = [];
+        allCols.push({field: "CID", title: "CID", isExtra: false});
+        extraKeys.forEach(function(k) {
+            allCols.push({field: k, title: k, isExtra: true});
+        });
+        dynamicKeys.forEach(function(k) {
+            allCols.push({field: k, title: k, isExtra: false});
+        });
+        allCols.push({field: "LOCKED", title: "Locked", isExtra: false});
 
-        columns.push({title: "Locked", field: "LOCKED", width: 90, hozAlign: "center", formatter: "tickCross", sorter: "boolean", editor: true});
+        var savedVis = loadVisibility();
 
+        // Build Tabulator column defs
+        var columns = allCols.map(function(col) {
+            var defaultVis = !col.isExtra;
+            var visible = (col.field in savedVis) ? savedVis[col.field] : defaultVis;
+            var def = {title: col.title, field: col.field, visible: visible};
+            if (col.field === "LOCKED") {
+                def.width = 90;
+                def.hozAlign = "center";
+                def.formatter = "tickCross";
+                def.sorter = "boolean";
+                def.editor = true;
+            } else if (col.field !== "CID" && !col.isExtra) {
+                def.editor = "input";
+            }
+            return def;
+        });
         var tableData = {% if sqldata != "None" %}{{ sqldata|safe }}{% else %}[]{% endif %};
-
         table = new Tabulator("#driver-stats-table", {
             data: tableData,
             layout: "fitColumns",
             columns: columns,
         });
 
-        document.getElementById("updateData").addEventListener("click", function() {
-            if (!table) {
-                console.error("Table is not initialized yet.");
-                return;
-            }
+        // Build checkboxes
+        var cbContainer = document.getElementById("column-checkboxes");
+        if (cbContainer) {
+            allCols.forEach(function(col) {
+                var defaultVis = !col.isExtra;
+                var visible = (col.field in savedVis) ? savedVis[col.field] : defaultVis;
 
+                var label = document.createElement("label");
+                if (col.isExtra) label.classList.add("extra-field");
+
+                var cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.id = "cb_" + col.field;
+                cb.checked = visible;
+                cb.addEventListener("change", function() {
+                    if (this.checked) {
+                        table.showColumn(col.field);
+                    } else {
+                        table.hideColumn(col.field);
+                    }
+                    table.redraw(true);
+                    // Persist current state
+                    var state = {};
+                    allCols.forEach(function(c) {
+                        var el = document.getElementById("cb_" + c.field);
+                        if (el) state[c.field] = el.checked;
+                    });
+                    saveVisibility(state);
+                });
+
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode("\u00a0" + col.title));
+                cbContainer.appendChild(label);
+            });
+        }
+
+        document.getElementById("updateData").addEventListener("click", function() {
+            if (!table) return;
             var tableData = table.getData();
             var combinedData = {
                 data: tableData,
                 title_2: "{{ event_entry_file.title_2 if event_entry_file != 'None' else '' }}",
                 heat: "{{ event_entry_file.heat if event_entry_file != 'None' else '' }}"
             };
-
             fetch("{{ url_for('admin.admin', tab_name='active_events_driver_data') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -106,16 +212,11 @@
         });
 
         document.getElementById("refresh_data").addEventListener("click", function() {
-            if (!table) {
-                console.error("Table is not initialized yet.");
-                return;
-            }
-
+            if (!table) return;
             var jsonData = {
                 title_2: "{{ event_entry_file.title_2 if event_entry_file != 'None' else '' }}",
                 heat: "{{ event_entry_file.heat if event_entry_file != 'None' else '' }}"
             };
-
             fetch("/api/reload_event", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -131,7 +232,6 @@
     eventDropdown.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const maxHeat = parseInt(selectedOption.getAttribute('data-max-heat'));
-
         runDropdown.innerHTML = '';
         for (let i = 1; i <= maxHeat; i++) {
             const option = document.createElement('option');
@@ -140,6 +240,7 @@
             runDropdown.add(option);
         }
     });
+
 </script>
 
 {% endblock %}

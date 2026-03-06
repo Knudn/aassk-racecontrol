@@ -2294,3 +2294,1952 @@
 [2026-02-26 05:08:52,616] INFO in orbits_display_proxy: WebSocket client disconnected.
 [2026-02-26 05:08:52,739] INFO in server: connection open
 [2026-02-26 05:08:52,740] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52274)
+[2026-03-01 18:20:45,155] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-01 18:20:45,458] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-01 18:20:45,560] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-01 18:21:12,261] INFO in server: connection open
+[2026-03-01 18:21:12,261] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18986)
+[2026-03-01 18:21:12,279] INFO in server: connection open
+[2026-03-01 18:21:12,279] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49373)
+[2026-03-01 19:36:58,020] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-01 19:36:58,175] INFO in server: connection open
+[2026-03-01 19:36:58,176] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7292)
+[2026-03-05 16:18:59,495] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 16:18:59,507] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 16:18:59,507] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 16:18:59,507] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 16:18:59,508] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 16:18:59,615] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 4'
+[2026-03-05 16:18:59,884] INFO in server: connection open
+[2026-03-05 16:18:59,885] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35342)
+[2026-03-05 16:18:59,899] INFO in server: connection open
+[2026-03-05 16:18:59,899] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16420)
+[2026-03-05 16:19:01,373] INFO in server: connection open
+[2026-03-05 16:19:01,373] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 51961)
+[2026-03-05 16:19:01,624] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 16:19:02,666] INFO in server: connection open
+[2026-03-05 16:19:02,666] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38144)
+[2026-03-05 16:19:03,293] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:19:03,312] INFO in server: connection open
+[2026-03-05 16:19:03,312] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32851)
+[2026-03-05 16:19:04,120] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:19:04,167] INFO in server: connection open
+[2026-03-05 16:19:04,167] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32273)
+[2026-03-05 16:19:44,570] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:19:44,637] INFO in server: connection open
+[2026-03-05 16:19:44,637] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1974)
+[2026-03-05 16:19:59,059] INFO in server: connection open
+[2026-03-05 16:19:59,060] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38484)
+[2026-03-05 16:19:59,079] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:20:30,269] INFO in server: connection open
+[2026-03-05 16:20:30,269] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9577)
+[2026-03-05 16:21:52,887] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:21:53,086] INFO in server: connection open
+[2026-03-05 16:21:53,087] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58245)
+[2026-03-05 16:21:53,101] INFO in server: connection open
+[2026-03-05 16:21:53,101] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39103)
+[2026-03-05 16:22:25,733] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:22:25,823] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:22:25,831] INFO in server: connection open
+[2026-03-05 16:22:25,831] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38563)
+[2026-03-05 16:22:26,059] INFO in server: connection open
+[2026-03-05 16:22:26,060] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30317)
+[2026-03-05 16:22:29,582] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:22:29,656] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:22:29,688] INFO in server: connection open
+[2026-03-05 16:22:29,688] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55363)
+[2026-03-05 16:22:29,821] INFO in server: connection open
+[2026-03-05 16:22:29,821] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29529)
+[2026-03-05 16:22:55,836] INFO in server: connection open
+[2026-03-05 16:22:55,837] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 45780)
+[2026-03-05 16:23:18,348] INFO in server: connection open
+[2026-03-05 16:23:18,348] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53636)
+[2026-03-05 16:23:18,430] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:23:24,800] INFO in server: connection open
+[2026-03-05 16:23:24,800] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12664)
+[2026-03-05 16:23:25,008] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:23:50,501] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:24:44,670] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 2'
+[2026-03-05 16:24:46,675] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 16:25:10,240] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:10,497] INFO in server: connection open
+[2026-03-05 16:25:10,497] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58925)
+[2026-03-05 16:25:17,342] INFO in server: server closing
+[2026-03-05 16:25:17,347] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,375] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,402] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,424] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,443] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,443] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:25:17,444] INFO in server: server closed
+[2026-03-05 16:25:19,869] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 16:25:19,875] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 16:25:19,875] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 16:25:19,875] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 16:25:19,876] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 16:25:20,018] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 16:25:20,351] INFO in server: connection open
+[2026-03-05 16:25:20,351] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 40551)
+[2026-03-05 16:25:20,365] INFO in server: connection open
+[2026-03-05 16:25:20,365] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43298)
+[2026-03-05 16:25:20,816] INFO in server: connection open
+[2026-03-05 16:25:20,816] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 11886)
+[2026-03-05 16:25:20,832] INFO in server: connection open
+[2026-03-05 16:25:20,832] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55361)
+[2026-03-05 16:25:20,846] INFO in server: connection open
+[2026-03-05 16:25:20,846] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39224)
+[2026-03-05 16:25:20,860] INFO in server: connection open
+[2026-03-05 16:25:20,860] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17165)
+[2026-03-05 16:25:22,025] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 16:26:21,068] INFO in server: server closing
+[2026-03-05 16:26:21,107] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,118] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,128] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,142] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,143] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,143] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:21,143] INFO in server: server closed
+[2026-03-05 16:26:21,619] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 16:26:21,625] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 16:26:21,625] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 16:26:21,625] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 16:26:21,626] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 16:26:21,820] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 16:26:23,831] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 16:26:24,077] INFO in server: connection open
+[2026-03-05 16:26:24,077] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13686)
+[2026-03-05 16:26:24,091] INFO in server: connection open
+[2026-03-05 16:26:24,091] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37422)
+[2026-03-05 16:26:24,814] INFO in server: connection open
+[2026-03-05 16:26:24,815] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 28948)
+[2026-03-05 16:26:24,828] INFO in server: connection open
+[2026-03-05 16:26:24,829] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25240)
+[2026-03-05 16:26:24,843] INFO in server: connection open
+[2026-03-05 16:26:24,843] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16541)
+[2026-03-05 16:26:24,857] INFO in server: connection open
+[2026-03-05 16:26:24,857] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17369)
+[2026-03-05 16:26:26,636] INFO in server: server closing
+[2026-03-05 16:26:26,644] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,658] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,673] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,701] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,713] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,732] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 16:26:26,732] INFO in server: server closed
+[2026-03-05 17:10:40,316] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 17:10:40,321] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 17:10:40,321] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 17:10:40,322] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 17:10:40,324] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 17:10:40,332] INFO in server: connection open
+[2026-03-05 17:10:40,332] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58639)
+[2026-03-05 17:10:40,346] INFO in server: connection open
+[2026-03-05 17:10:40,346] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3690)
+[2026-03-05 17:10:40,362] INFO in server: connection open
+[2026-03-05 17:10:40,362] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55202)
+[2026-03-05 17:10:40,375] INFO in server: connection open
+[2026-03-05 17:10:40,376] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49544)
+[2026-03-05 17:10:40,390] INFO in server: connection open
+[2026-03-05 17:10:40,390] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64959)
+[2026-03-05 17:10:40,427] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 17:10:40,834] INFO in server: connection open
+[2026-03-05 17:10:40,835] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58137)
+[2026-03-05 17:10:42,435] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 17:10:42,824] INFO in server: connection open
+[2026-03-05 17:10:42,825] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33290)
+[2026-03-05 17:11:33,042] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:33,100] INFO in server: connection open
+[2026-03-05 17:11:33,101] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58360)
+[2026-03-05 17:11:35,423] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:35,458] INFO in server: connection open
+[2026-03-05 17:11:35,459] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7461)
+[2026-03-05 17:11:39,395] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:39,432] INFO in server: connection open
+[2026-03-05 17:11:39,433] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29045)
+[2026-03-05 17:11:45,078] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:45,101] INFO in server: connection open
+[2026-03-05 17:11:45,101] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 21914)
+[2026-03-05 17:11:46,111] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:46,145] INFO in server: connection open
+[2026-03-05 17:11:46,146] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3506)
+[2026-03-05 17:11:46,954] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:46,980] INFO in server: connection open
+[2026-03-05 17:11:46,980] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64753)
+[2026-03-05 17:11:47,155] INFO in server: connection open
+[2026-03-05 17:11:47,155] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57221)
+[2026-03-05 17:11:47,182] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:47,336] INFO in server: connection open
+[2026-03-05 17:11:47,336] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48389)
+[2026-03-05 17:11:47,357] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:47,531] INFO in server: connection open
+[2026-03-05 17:11:47,531] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 28287)
+[2026-03-05 17:11:47,538] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:47,632] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:47,723] INFO in server: connection open
+[2026-03-05 17:11:47,723] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35441)
+[2026-03-05 17:11:47,825] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:47,865] INFO in server: connection open
+[2026-03-05 17:11:47,865] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57059)
+[2026-03-05 17:11:48,032] INFO in server: connection open
+[2026-03-05 17:11:48,033] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27567)
+[2026-03-05 17:11:48,067] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:11:48,215] INFO in server: connection open
+[2026-03-05 17:11:48,215] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 21481)
+[2026-03-05 17:11:48,235] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:12:42,880] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:12:42,901] INFO in server: connection open
+[2026-03-05 17:12:42,901] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18175)
+[2026-03-05 17:13:05,113] INFO in server: server closing
+[2026-03-05 17:13:05,125] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,154] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,168] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,190] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,190] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,206] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,207] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:13:05,207] INFO in server: server closed
+[2026-03-05 17:13:20,799] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 17:13:20,804] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 17:13:20,804] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 17:13:20,804] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 17:13:20,806] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 17:13:20,827] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 17:13:21,235] INFO in server: connection open
+[2026-03-05 17:13:21,235] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36085)
+[2026-03-05 17:13:21,249] INFO in server: connection open
+[2026-03-05 17:13:21,249] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29178)
+[2026-03-05 17:13:21,264] INFO in server: connection open
+[2026-03-05 17:13:21,264] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 59342)
+[2026-03-05 17:13:21,279] INFO in server: connection open
+[2026-03-05 17:13:21,279] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62802)
+[2026-03-05 17:13:21,293] INFO in server: connection open
+[2026-03-05 17:13:21,293] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56323)
+[2026-03-05 17:13:21,825] INFO in server: connection open
+[2026-03-05 17:13:21,826] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54678)
+[2026-03-05 17:13:22,834] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:13:23,824] INFO in server: connection open
+[2026-03-05 17:13:23,825] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58435)
+[2026-03-05 17:20:37,619] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:20:37,926] INFO in server: connection open
+[2026-03-05 17:20:37,926] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7260)
+[2026-03-05 17:20:42,365] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:20:42,407] INFO in server: connection open
+[2026-03-05 17:20:42,407] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52131)
+[2026-03-05 17:20:56,601] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:20:56,705] INFO in server: connection open
+[2026-03-05 17:20:56,705] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 61213)
+[2026-03-05 17:21:06,780] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 4'
+[2026-03-05 17:21:08,787] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:21:31,570] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 1'
+[2026-03-05 17:21:33,576] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:21:59,878] INFO in server: server closing
+[2026-03-05 17:21:59,883] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,921] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,950] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,950] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,950] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,950] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,965] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:21:59,965] INFO in server: server closed
+[2026-03-05 17:22:00,859] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 17:22:00,859] INFO in orbits_display_proxy: Race type: 1
+[2026-03-05 17:22:00,864] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 17:22:00,864] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 17:22:00,864] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 17:22:00,866] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 17:22:01,027] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 1'
+[2026-03-05 17:22:02,887] INFO in server: connection open
+[2026-03-05 17:22:02,887] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 41305)
+[2026-03-05 17:22:02,902] INFO in server: connection open
+[2026-03-05 17:22:02,902] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62847)
+[2026-03-05 17:22:03,034] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:22:03,831] INFO in server: connection open
+[2026-03-05 17:22:03,832] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20369)
+[2026-03-05 17:22:03,845] INFO in server: connection open
+[2026-03-05 17:22:03,845] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46163)
+[2026-03-05 17:22:03,859] INFO in server: connection open
+[2026-03-05 17:22:03,859] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64423)
+[2026-03-05 17:22:03,874] INFO in server: connection open
+[2026-03-05 17:22:03,874] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43556)
+[2026-03-05 17:22:03,887] INFO in server: connection open
+[2026-03-05 17:22:03,888] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24073)
+[2026-03-05 17:22:10,730] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 17:22:12,735] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:23:33,931] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:23:34,189] INFO in server: connection open
+[2026-03-05 17:23:34,189] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12901)
+[2026-03-05 17:23:35,197] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:23:35,278] INFO in server: connection open
+[2026-03-05 17:23:35,278] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48670)
+[2026-03-05 17:23:36,692] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:23:36,791] INFO in server: connection open
+[2026-03-05 17:23:36,791] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 4111)
+[2026-03-05 17:23:38,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:23:38,419] INFO in server: connection open
+[2026-03-05 17:23:38,419] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 51161)
+[2026-03-05 17:24:06,394] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:06,527] INFO in server: connection open
+[2026-03-05 17:24:06,527] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 60702)
+[2026-03-05 17:24:13,779] INFO in server: server closing
+[2026-03-05 17:24:13,793] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,812] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,823] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,824] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,842] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,850] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,865] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:24:13,866] INFO in server: server closed
+[2026-03-05 17:24:14,797] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 17:24:14,797] INFO in orbits_display_proxy: Race type: 1
+[2026-03-05 17:24:14,803] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 17:24:14,803] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 17:24:14,803] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 17:24:14,805] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 17:24:14,832] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 17:24:16,500] INFO in server: server closing
+[2026-03-05 17:24:16,500] INFO in server: server closed
+[2026-03-05 17:24:18,574] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-05 17:24:18,575] INFO in orbits_display_proxy: Race type: 1
+[2026-03-05 17:24:18,580] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-05 17:24:18,580] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-05 17:24:18,580] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-05 17:24:18,582] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-05 17:24:18,627] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - 2'
+[2026-03-05 17:24:18,798] INFO in server: connection open
+[2026-03-05 17:24:18,798] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6409)
+[2026-03-05 17:24:18,812] INFO in server: connection open
+[2026-03-05 17:24:18,813] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43345)
+[2026-03-05 17:24:18,827] INFO in server: connection open
+[2026-03-05 17:24:18,827] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47774)
+[2026-03-05 17:24:18,842] INFO in server: connection open
+[2026-03-05 17:24:18,843] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63471)
+[2026-03-05 17:24:18,858] INFO in server: connection open
+[2026-03-05 17:24:18,858] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 28252)
+[2026-03-05 17:24:18,874] INFO in server: connection open
+[2026-03-05 17:24:18,874] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24811)
+[2026-03-05 17:24:18,891] INFO in server: connection open
+[2026-03-05 17:24:18,891] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26663)
+[2026-03-05 17:24:20,636] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 17:33:18,528] INFO in server: connection open
+[2026-03-05 17:33:18,528] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24701)
+[2026-03-05 17:39:00,097] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:39:00,360] INFO in server: connection open
+[2026-03-05 17:39:00,360] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36367)
+[2026-03-05 17:57:08,892] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 17:57:09,016] INFO in server: connection open
+[2026-03-05 17:57:09,016] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19389)
+[2026-03-05 17:57:15,267] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:00:14,000] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:00:16,006] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 3, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:00:22,703] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 18:00:24,709] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:08:26,878] INFO in server: connection open
+[2026-03-05 18:08:26,878] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37580)
+[2026-03-05 18:08:39,076] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:08:39,214] INFO in server: connection open
+[2026-03-05 18:08:39,214] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48249)
+[2026-03-05 18:08:49,491] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:08:49,612] INFO in server: connection open
+[2026-03-05 18:08:49,612] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 41616)
+[2026-03-05 18:08:57,583] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:08:57,646] INFO in server: connection open
+[2026-03-05 18:08:57,647] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12179)
+[2026-03-05 18:09:39,815] INFO in server: connection open
+[2026-03-05 18:09:39,815] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27903)
+[2026-03-05 18:09:40,926] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:09:41,294] INFO in server: connection open
+[2026-03-05 18:09:41,294] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37609)
+[2026-03-05 18:09:58,717] INFO in server: connection open
+[2026-03-05 18:09:58,718] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 65274)
+[2026-03-05 18:09:58,741] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:24:52,341] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 2'
+[2026-03-05 18:24:54,346] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:24:59,016] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 4'
+[2026-03-05 18:25:01,022] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:25:38,226] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:39,754] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 18:25:40,903] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:41,841] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:25:43,281] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 18:25:44,259] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 18:25:45,687] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 18:25:46,917] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 3'
+[2026-03-05 18:25:48,325] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:49,460] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 18:25:51,006] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:51,804] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:25:53,368] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:54,507] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:25:55,149] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:56,007] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 18:25:58,011] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 18:25:58,235] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:25:58,532] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 18:25:59,907] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 18:26:01,098] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 18:26:03,102] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:26:38,344] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 18:26:40,350] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 18:26:40,743] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 18:26:41,202] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 3'
+[2026-03-05 18:26:41,599] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 18:26:41,925] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 18:26:43,931] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:26:43,997] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 18:26:45,096] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:26:46,017] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 18:26:46,881] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 18:26:48,138] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 18:26:50,143] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:39:03,467] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 2'
+[2026-03-05 18:39:05,472] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:47:01,264] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 18:47:03,270] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:47:12,600] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 18:47:14,606] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 18:55:55,676] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 18:55:55,824] INFO in server: connection open
+[2026-03-05 18:55:55,824] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10371)
+[2026-03-05 19:00:00,483] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 19:00:02,246] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 19:00:04,253] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:00:04,384] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 19:00:06,390] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 3, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:00:06,493] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 19:00:07,801] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:00:09,632] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:00:10,735] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:00:12,741] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:00:16,155] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 2'
+[2026-03-05 19:00:18,160] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:00:31,819] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Finale - 1'
+[2026-03-05 19:00:33,824] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:01:32,877] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 3'
+[2026-03-05 19:01:34,882] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:04:16,057] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,058] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,058] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,058] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,058] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,058] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,059] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,059] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:16,080] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:04:19,111] INFO in server: connection open
+[2026-03-05 19:04:19,111] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57130)
+[2026-03-05 19:04:19,185] INFO in server: connection open
+[2026-03-05 19:04:19,185] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55306)
+[2026-03-05 19:04:19,855] INFO in server: connection open
+[2026-03-05 19:04:19,855] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62458)
+[2026-03-05 19:04:19,870] INFO in server: connection open
+[2026-03-05 19:04:19,871] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27864)
+[2026-03-05 19:04:19,885] INFO in server: connection open
+[2026-03-05 19:04:19,885] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 41570)
+[2026-03-05 19:04:19,899] INFO in server: connection open
+[2026-03-05 19:04:19,899] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20078)
+[2026-03-05 19:04:19,914] INFO in server: connection open
+[2026-03-05 19:04:19,915] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 5439)
+[2026-03-05 19:04:19,929] INFO in server: connection open
+[2026-03-05 19:04:19,929] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36164)
+[2026-03-05 19:04:19,943] INFO in server: connection open
+[2026-03-05 19:04:19,943] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19621)
+[2026-03-05 19:04:44,520] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 19:04:45,995] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 19:04:46,983] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 19:04:47,184] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 19:04:47,484] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 19:04:47,775] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:04:48,161] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:04:48,336] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 3'
+[2026-03-05 19:04:48,601] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 2'
+[2026-03-05 19:04:50,608] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 3, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:04:55,168] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 1'
+[2026-03-05 19:04:57,176] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:04:57,632] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 19:04:58,242] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 19:04:59,493] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 19:05:00,464] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:05:01,461] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:05:03,467] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:05:40,663] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 2'
+[2026-03-05 19:05:42,669] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:08:50,240] INFO in server: connection open
+[2026-03-05 19:08:50,240] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50234)
+[2026-03-05 19:08:54,362] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 19:08:56,368] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:08:58,897] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:08:58,917] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:08:58,966] INFO in server: connection open
+[2026-03-05 19:08:58,966] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18033)
+[2026-03-05 19:08:59,084] INFO in server: connection open
+[2026-03-05 19:08:59,084] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57608)
+[2026-03-05 19:09:23,890] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:09:23,890] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:09:23,911] INFO in server: connection open
+[2026-03-05 19:09:23,911] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20213)
+[2026-03-05 19:09:24,021] INFO in server: connection open
+[2026-03-05 19:09:24,021] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26345)
+[2026-03-05 19:09:28,812] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 19:09:30,818] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:09:30,950] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 3'
+[2026-03-05 19:09:32,956] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:12:48,153] INFO in server: connection open
+[2026-03-05 19:12:48,153] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57549)
+[2026-03-05 19:12:50,600] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 1'
+[2026-03-05 19:12:52,606] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:12:53,038] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 2'
+[2026-03-05 19:12:53,227] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 2' -> 'Kvalifisering - 3'
+[2026-03-05 19:12:53,407] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 3' -> 'Kvalifisering - 4'
+[2026-03-05 19:12:53,585] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:12:55,591] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:12:58,295] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:13:00,301] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:13:08,934] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:13:15,530] INFO in server: connection open
+[2026-03-05 19:13:15,530] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47286)
+[2026-03-05 19:13:29,809] INFO in server: connection open
+[2026-03-05 19:13:29,809] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 41344)
+[2026-03-05 19:13:29,845] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:20:00,568] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Kvalifisering - 1'
+[2026-03-05 19:20:02,575] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:20:45,409] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:20:47,416] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:20:47,810] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:20:49,817] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:20:58,379] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:21:53,643] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 1'
+[2026-03-05 19:21:55,649] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:30:47,541] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:41:35,562] INFO in server: connection open
+[2026-03-05 19:41:35,563] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 59444)
+[2026-03-05 19:41:36,471] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 19:41:40,028] INFO in server: connection open
+[2026-03-05 19:41:40,028] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22753)
+[2026-03-05 19:41:43,844] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - 4'
+[2026-03-05 19:41:45,852] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:41:46,980] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 4' -> 'Finale - 1'
+[2026-03-05 19:41:48,985] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': '600 Stock - Finale '}
+[2026-03-05 19:41:50,672] INFO in orbits_display_proxy: Event changed: 'Finale - 1' -> 'Kvalifisering - 1'
+[2026-03-05 19:41:52,679] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 19:56:12,792] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:17:55,772] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - 1' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:17:57,777] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 20:23:16,596] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:23:18,601] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 4, 'title': '600 Stock - Kvalifisering'}
+[2026-03-05 20:30:52,030] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:30:53,945] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:30:55,954] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:33:58,339] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Finale A'
+[2026-03-05 20:34:00,346] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:34:01,411] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:34:03,417] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:44:21,064] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:44:22,561] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:44:23,613] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:44:24,517] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:44:25,329] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:44:26,414] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:44:27,373] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale A'
+[2026-03-05 20:44:29,380] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:44:29,416] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:44:30,504] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:44:31,515] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-05 20:44:32,520] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 1' -> 'Kvalifisering - Gruppe 4 - Heat 1'
+[2026-03-05 20:44:33,494] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:44:34,588] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:44:35,556] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 3 - Heat 2'
+[2026-03-05 20:44:36,831] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 2'
+[2026-03-05 20:44:37,871] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:44:38,885] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:44:39,933] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 3 - Heat 3'
+[2026-03-05 20:44:41,002] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 3' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 20:44:42,129] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:44:43,211] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:44:44,221] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:44:45,243] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:44:47,250] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:44:47,276] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:44:48,184] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:44:49,248] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:44:50,420] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 20:44:52,427] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:44:53,088] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:44:54,126] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:44:55,044] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:44:56,057] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:44:56,956] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:44:57,884] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:44:58,885] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:44:59,878] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:45:00,844] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:45:01,914] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:45:03,921] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:45:04,104] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:45:05,304] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:06,241] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:07,303] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 20:45:09,310] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:45:09,359] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:45:10,455] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:45:11,415] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:12,473] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:45:13,510] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:14,601] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:45:15,648] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:45:16,849] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:45:17,840] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:45:18,834] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:45:20,836] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:45:21,954] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:45:22,972] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-05 20:45:24,030] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 1' -> 'Kvalifisering - Gruppe 4 - Heat 1'
+[2026-03-05 20:45:25,068] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:26,116] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:45:27,048] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 3 - Heat 2'
+[2026-03-05 20:45:28,173] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 2'
+[2026-03-05 20:45:29,224] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:30,257] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:45:31,366] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 3 - Heat 3'
+[2026-03-05 20:45:32,327] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 3' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 20:45:33,303] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:45:34,604] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:45:35,609] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:45:36,623] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:45:38,631] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:45:38,874] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:45:39,871] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:45:40,833] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:41,872] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:45:42,852] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:43,897] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:45:44,970] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:45:46,167] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:45:47,194] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:45:48,197] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:45:50,205] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:45:50,322] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:45:51,358] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:52,366] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:53,425] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 20:45:55,431] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:45:56,429] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:45:56,668] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:45:58,676] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 3, 'title': 'Ungdom 14-16 Luft Stock 600 - Kvalifisering - Gruppe 1'}
+[2026-03-05 20:48:21,336] INFO in server: connection open
+[2026-03-05 20:48:21,336] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2068)
+[2026-03-05 20:48:30,890] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:48:32,897] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 3, 'title': 'Top Fuel - Kvalifisering - Gruppe 1'}
+[2026-03-05 20:48:33,045] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:48:33,073] INFO in server: connection open
+[2026-03-05 20:48:33,073] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43829)
+[2026-03-05 20:52:20,995] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:52:21,016] INFO in server: connection open
+[2026-03-05 20:52:21,016] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3012)
+[2026-03-05 20:53:44,314] INFO in server: connection open
+[2026-03-05 20:53:44,314] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42038)
+[2026-03-05 20:54:07,357] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:54:09,363] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 1, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 20:54:09,961] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:54:11,966] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 2, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 20:54:17,113] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 20:54:17,852] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-05 20:54:18,750] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 1' -> 'Kvalifisering - Gruppe 4 - Heat 1'
+[2026-03-05 20:54:19,677] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 20:54:20,746] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:54:21,856] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 3 - Heat 2'
+[2026-03-05 20:54:22,873] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 2'
+[2026-03-05 20:54:23,887] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 20:54:24,940] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 20:54:25,983] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 3 - Heat 3'
+[2026-03-05 20:54:27,084] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 3' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 20:54:28,107] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Finale C1'
+[2026-03-05 20:54:29,197] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 20:54:30,325] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 20:54:31,299] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 20:54:33,307] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 20:54:35,804] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:54:35,934] INFO in server: connection open
+[2026-03-05 20:54:35,934] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10559)
+[2026-03-05 20:55:54,802] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:56:24,569] INFO in server: connection open
+[2026-03-05 20:56:24,570] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57577)
+[2026-03-05 20:56:24,571] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:56:57,617] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:57:22,915] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 20:57:24,920] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 20:58:14,114] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 20:58:16,120] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 20:58:22,718] INFO in server: connection open
+[2026-03-05 20:58:22,718] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56857)
+[2026-03-05 20:58:44,943] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 20:58:44,948] INFO in server: connection open
+[2026-03-05 20:58:44,949] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38703)
+[2026-03-05 21:01:26,790] INFO in server: connection open
+[2026-03-05 21:01:26,791] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62486)
+[2026-03-05 21:01:29,234] INFO in server: connection open
+[2026-03-05 21:01:29,235] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42240)
+[2026-03-05 21:01:53,605] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:03:02,899] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:03:03,015] INFO in server: connection open
+[2026-03-05 21:03:03,016] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54955)
+[2026-03-05 21:03:23,359] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:03:27,803] INFO in server: connection open
+[2026-03-05 21:03:27,803] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48979)
+[2026-03-05 21:03:42,497] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:03:42,568] INFO in server: connection open
+[2026-03-05 21:03:42,568] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35555)
+[2026-03-05 21:04:00,223] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 21:04:02,228] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 12, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 21:04:27,182] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:04:27,209] INFO in server: connection open
+[2026-03-05 21:04:27,209] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46587)
+[2026-03-05 21:04:37,510] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:04:37,569] INFO in server: connection open
+[2026-03-05 21:04:37,569] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46633)
+[2026-03-05 21:04:45,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:04:45,311] INFO in server: connection open
+[2026-03-05 21:04:45,311] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19458)
+[2026-03-05 21:04:55,965] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:04:55,971] INFO in server: connection open
+[2026-03-05 21:04:55,972] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3280)
+[2026-03-05 21:14:18,236] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:14:20,243] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 1, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-05 21:14:59,005] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:14:59,271] INFO in server: connection open
+[2026-03-05 21:14:59,271] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50900)
+[2026-03-05 21:15:53,103] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:15:53,264] INFO in server: connection open
+[2026-03-05 21:15:53,264] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 15397)
+[2026-03-05 21:16:04,338] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:16:04,450] INFO in server: connection open
+[2026-03-05 21:16:04,451] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 65443)
+[2026-03-05 21:16:17,422] INFO in server: connection open
+[2026-03-05 21:16:17,423] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23173)
+[2026-03-05 21:16:17,439] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:18:12,127] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:18:12,456] INFO in server: connection open
+[2026-03-05 21:18:12,456] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3338)
+[2026-03-05 21:18:24,804] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:18:24,806] INFO in server: connection open
+[2026-03-05 21:18:24,806] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46893)
+[2026-03-05 21:19:19,858] INFO in server: connection open
+[2026-03-05 21:19:19,859] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53284)
+[2026-03-05 21:19:41,729] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:19:42,028] INFO in server: connection open
+[2026-03-05 21:19:42,028] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23886)
+[2026-03-05 21:20:04,294] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 4 - Heat 2'
+[2026-03-05 21:20:06,300] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 1, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-05 21:20:08,322] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:20:08,431] INFO in server: connection open
+[2026-03-05 21:20:08,431] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2966)
+[2026-03-05 21:20:11,963] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 21:20:13,970] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 12, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 21:20:15,936] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:20:17,943] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 1, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-05 21:20:23,176] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:20:25,181] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 1, 'title': 'Ungdom 14-16 Luft Stock 600 - Kvalifisering'}
+[2026-03-05 21:20:35,741] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:20:37,747] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 1, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:20:39,934] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:20:41,939] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 6, 'heats': 2, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:20:48,583] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:20:49,441] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:20:50,354] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:20:51,195] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:20:52,394] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:20:53,522] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:20:54,520] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale A'
+[2026-03-05 21:20:55,383] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:20:57,388] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 6, 'heats': 4, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:20:57,926] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:20:58,099] INFO in server: connection open
+[2026-03-05 21:20:58,099] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33170)
+[2026-03-05 21:21:05,374] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:21:06,775] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:21:08,186] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:21:10,192] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:21:15,375] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:21:16,520] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:21:18,528] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:21:32,951] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-05 21:21:34,957] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 21:21:35,156] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:21:37,162] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 21:21:43,429] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:21:45,434] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:21:45,971] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:21:47,977] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:21:49,650] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:21:50,976] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:21:52,014] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:21:54,020] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:21:54,244] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:21:55,018] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:21:55,715] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:21:57,721] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:21:58,364] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:22:00,369] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:22:00,401] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:22:02,406] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:22:13,037] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:22:13,663] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:22:15,667] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:24:35,342] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:24:35,494] INFO in server: connection open
+[2026-03-05 21:24:35,494] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37838)
+[2026-03-05 21:25:00,642] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:00,650] INFO in server: connection open
+[2026-03-05 21:25:00,650] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 8591)
+[2026-03-05 21:25:09,298] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:09,373] INFO in server: connection open
+[2026-03-05 21:25:09,373] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38316)
+[2026-03-05 21:25:29,056] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,082] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,082] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,083] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,083] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,083] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,083] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,084] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,084] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,084] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,084] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:29,122] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:25:32,311] INFO in server: connection open
+[2026-03-05 21:25:32,312] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39274)
+[2026-03-05 21:25:32,888] INFO in server: connection open
+[2026-03-05 21:25:32,888] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57241)
+[2026-03-05 21:25:32,904] INFO in server: connection open
+[2026-03-05 21:25:32,905] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33848)
+[2026-03-05 21:25:32,920] INFO in server: connection open
+[2026-03-05 21:25:32,920] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 8023)
+[2026-03-05 21:25:32,935] INFO in server: connection open
+[2026-03-05 21:25:32,935] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27782)
+[2026-03-05 21:25:32,949] INFO in server: connection open
+[2026-03-05 21:25:32,949] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26019)
+[2026-03-05 21:25:32,966] INFO in server: connection open
+[2026-03-05 21:25:32,966] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2977)
+[2026-03-05 21:25:32,980] INFO in server: connection open
+[2026-03-05 21:25:32,980] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64358)
+[2026-03-05 21:25:32,994] INFO in server: connection open
+[2026-03-05 21:25:32,994] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7309)
+[2026-03-05 21:25:33,008] INFO in server: connection open
+[2026-03-05 21:25:33,008] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43856)
+[2026-03-05 21:25:33,022] INFO in server: connection open
+[2026-03-05 21:25:33,022] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2305)
+[2026-03-05 21:25:33,035] INFO in server: connection open
+[2026-03-05 21:25:33,035] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 31873)
+[2026-03-05 21:27:22,844] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:27:24,590] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:27:26,596] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 5, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:36,443] INFO in server: connection open
+[2026-03-05 21:27:36,443] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32309)
+[2026-03-05 21:27:40,023] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:27:40,419] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:27:42,424] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 5, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:43,479] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:27:45,485] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 6, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:45,607] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale A'
+[2026-03-05 21:27:47,614] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:27:49,236] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:27:51,241] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:53,443] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:27:55,448] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 6, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:56,466] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:27:58,472] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:27:58,766] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:28:00,772] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:28:03,022] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:28:04,533] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:28:05,999] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:28:07,422] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:28:08,652] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:28:10,056] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale A'
+[2026-03-05 21:28:12,063] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:28:12,317] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:28:12,515] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:28:12,730] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:28:14,736] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-05 21:28:15,083] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:28:16,024] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:28:17,573] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:28:19,536] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:28:21,079] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:28:22,278] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:28:23,254] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 21:28:25,260] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:28:25,943] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 21:28:27,274] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 21:28:28,164] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 21:28:30,170] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:28:30,545] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:28:31,701] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:28:32,957] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:28:34,942] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 21:28:36,949] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:28:38,455] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:28:39,953] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:28:41,791] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:28:43,431] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:28:45,337] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:28:47,075] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:28:48,380] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 21:28:50,375] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 21:28:50,697] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 21:28:51,487] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 21:28:52,972] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:28:54,977] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': 'Top Fuel - Kvalifisering'}
+[2026-03-05 21:28:55,350] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:28:57,356] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 2, 'title': 'Top Fuel - Kvalifisering'}
+[2026-03-05 21:28:58,548] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-05 21:29:00,391] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 1' -> 'Kvalifisering - Gruppe 4 - Heat 1'
+[2026-03-05 21:29:01,543] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:02,772] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:29:03,810] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 3 - Heat 2'
+[2026-03-05 21:29:04,681] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 2' -> 'Kvalifisering - Gruppe 4 - Heat 2'
+[2026-03-05 21:29:05,692] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:29:06,792] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:29:08,551] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Kvalifisering - Gruppe 3 - Heat 3'
+[2026-03-05 21:29:10,034] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 3 - Heat 3' -> 'Kvalifisering - Gruppe 4 - Heat 3'
+[2026-03-05 21:29:11,000] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 3' -> 'Finale C1'
+[2026-03-05 21:29:12,645] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 21:29:12,843] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 21:29:13,017] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 21:29:13,966] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:29:15,044] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:29:15,953] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:16,970] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-05 21:29:18,928] INFO in server: connection open
+[2026-03-05 21:29:18,928] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 14506)
+[2026-03-05 21:29:18,976] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 4, 'title': 'Ungdom 14-16 - Kvalifisering'}
+[2026-03-05 21:29:22,153] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-05 21:29:22,988] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-05 21:29:23,348] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-05 21:29:23,554] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-05 21:29:23,751] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-05 21:29:25,002] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:29:27,007] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 2, 'title': 'Ungdom 14-16 Luft Stock 600 - Kvalifisering'}
+[2026-03-05 21:29:27,072] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:28,329] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:29:29,529] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 21:29:30,963] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:29:32,744] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:33,811] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:29:34,532] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:35,598] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:29:36,836] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-05 21:29:37,381] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-05 21:29:37,951] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Finale A'
+[2026-03-05 21:29:39,958] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-05 21:30:17,846] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 21:30:19,851] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 8, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 21:31:58,053] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:31:58,303] INFO in server: connection open
+[2026-03-05 21:31:58,303] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58856)
+[2026-03-05 21:32:20,729] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:32:20,837] INFO in server: connection open
+[2026-03-05 21:32:20,837] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24674)
+[2026-03-05 21:32:35,688] INFO in server: connection open
+[2026-03-05 21:32:35,688] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30929)
+[2026-03-05 21:34:06,533] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:34:06,792] INFO in server: connection open
+[2026-03-05 21:34:06,793] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32770)
+[2026-03-05 21:35:37,905] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:35:38,070] INFO in server: connection open
+[2026-03-05 21:35:38,071] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 61897)
+[2026-03-05 21:38:13,433] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:38:13,532] INFO in server: connection open
+[2026-03-05 21:38:13,533] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23403)
+[2026-03-05 21:38:24,857] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:38:33,552] INFO in server: connection open
+[2026-03-05 21:38:33,552] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17621)
+[2026-03-05 21:38:35,066] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:38:44,738] INFO in server: connection open
+[2026-03-05 21:38:44,738] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19179)
+[2026-03-05 21:38:48,176] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:39:23,129] INFO in server: connection open
+[2026-03-05 21:39:23,129] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30085)
+[2026-03-05 21:39:47,030] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:40:05,836] INFO in server: connection open
+[2026-03-05 21:40:05,836] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47453)
+[2026-03-05 21:40:10,878] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:40:10,968] INFO in server: connection open
+[2026-03-05 21:40:10,968] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26961)
+[2026-03-05 21:40:53,815] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:40:53,833] INFO in server: connection open
+[2026-03-05 21:40:53,834] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53373)
+[2026-03-05 21:41:12,401] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:41:12,425] INFO in server: connection open
+[2026-03-05 21:41:12,425] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17569)
+[2026-03-05 21:41:18,366] INFO in server: connection open
+[2026-03-05 21:41:18,366] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26727)
+[2026-03-05 21:41:18,371] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:41:25,723] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:41:25,772] INFO in server: connection open
+[2026-03-05 21:41:25,773] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19158)
+[2026-03-05 21:41:39,899] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:41:39,934] INFO in server: connection open
+[2026-03-05 21:41:39,936] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 21264)
+[2026-03-05 21:41:47,398] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:41:47,413] INFO in server: connection open
+[2026-03-05 21:41:47,413] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52799)
+[2026-03-05 21:42:17,879] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:44:23,652] INFO in server: connection open
+[2026-03-05 21:44:23,652] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35446)
+[2026-03-05 21:44:25,144] INFO in server: connection open
+[2026-03-05 21:44:25,145] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47285)
+[2026-03-05 21:44:25,164] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:44:57,990] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:45:02,325] INFO in server: connection open
+[2026-03-05 21:45:02,325] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 14019)
+[2026-03-05 21:45:03,636] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:46:10,642] INFO in server: connection open
+[2026-03-05 21:46:10,642] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23210)
+[2026-03-05 21:46:54,645] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:46:54,722] INFO in server: connection open
+[2026-03-05 21:46:54,722] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43374)
+[2026-03-05 21:47:04,918] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:47:59,079] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:47:59,161] INFO in server: connection open
+[2026-03-05 21:47:59,161] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44267)
+[2026-03-05 21:49:31,625] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:49:31,699] INFO in server: connection open
+[2026-03-05 21:49:31,700] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27287)
+[2026-03-05 21:49:35,972] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:49:36,017] INFO in server: connection open
+[2026-03-05 21:49:36,017] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23992)
+[2026-03-05 21:50:31,911] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:50:32,620] INFO in server: connection open
+[2026-03-05 21:50:32,620] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50906)
+[2026-03-05 21:50:47,234] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:52:20,587] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:53:00,681] INFO in server: connection open
+[2026-03-05 21:53:00,681] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 14705)
+[2026-03-05 21:53:00,984] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:53:01,401] INFO in server: connection open
+[2026-03-05 21:53:01,401] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 14770)
+[2026-03-05 21:53:02,109] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 21:53:02,142] INFO in server: connection open
+[2026-03-05 21:53:02,142] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20530)
+[2026-03-05 21:54:35,768] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 21:54:37,774] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-05 22:01:01,727] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-05 22:01:03,733] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-05 22:05:11,819] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-05 22:05:13,825] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-05 22:14:15,118] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 22:16:33,440] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:22:07,641] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:36:47,387] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:40,397] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:40,397] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:40,498] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:40,599] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:40,701] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:41,003] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:41,004] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:41,004] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:41,205] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-05 23:46:53,636] INFO in server: connection open
+[2026-03-05 23:46:53,637] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63680)
+[2026-03-05 23:48:57,026] INFO in server: connection open
+[2026-03-05 23:48:57,026] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46827)
+[2026-03-05 23:48:59,850] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:12:28,345] INFO in server: connection open
+[2026-03-06 00:12:28,346] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9104)
+[2026-03-06 00:13:10,394] INFO in server: connection open
+[2026-03-06 00:13:10,395] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 8005)
+[2026-03-06 00:13:23,204] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:13:23,225] INFO in server: connection open
+[2026-03-06 00:13:23,225] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38547)
+[2026-03-06 00:16:27,444] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:16:27,504] INFO in server: connection open
+[2026-03-06 00:16:27,504] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22915)
+[2026-03-06 00:19:18,719] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:19:58,216] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:19:58,435] INFO in server: connection open
+[2026-03-06 00:19:58,435] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54920)
+[2026-03-06 00:20:56,478] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:20:56,702] INFO in server: connection open
+[2026-03-06 00:20:56,702] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62703)
+[2026-03-06 00:28:01,758] INFO in server: connection open
+[2026-03-06 00:28:01,758] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46236)
+[2026-03-06 00:28:06,506] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:30:17,414] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 00:30:19,420] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 00:31:22,818] INFO in server: connection open
+[2026-03-06 00:31:22,818] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56878)
+[2026-03-06 00:31:25,944] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:31:25,979] INFO in server: connection open
+[2026-03-06 00:31:25,980] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 60864)
+[2026-03-06 00:31:26,788] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:32:56,157] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-06 00:32:58,165] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 2, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 00:35:26,356] INFO in server: connection open
+[2026-03-06 00:35:26,356] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24240)
+[2026-03-06 00:36:07,742] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:37:43,797] INFO in server: connection open
+[2026-03-06 00:37:43,797] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48064)
+[2026-03-06 00:38:02,360] INFO in server: connection open
+[2026-03-06 00:38:02,361] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30079)
+[2026-03-06 00:38:02,372] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:38:05,269] INFO in server: connection open
+[2026-03-06 00:38:05,269] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39029)
+[2026-03-06 00:38:05,289] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:38:28,474] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:38:28,501] INFO in server: connection open
+[2026-03-06 00:38:28,502] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32817)
+[2026-03-06 00:38:50,995] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:38:51,003] INFO in server: connection open
+[2026-03-06 00:38:51,003] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 34350)
+[2026-03-06 00:39:18,140] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:39:18,191] INFO in server: connection open
+[2026-03-06 00:39:18,191] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19261)
+[2026-03-06 00:39:19,263] INFO in server: connection open
+[2026-03-06 00:39:19,263] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23149)
+[2026-03-06 00:39:19,304] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:39:19,970] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:39:19,993] INFO in server: connection open
+[2026-03-06 00:39:19,993] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7112)
+[2026-03-06 00:39:21,091] INFO in server: connection open
+[2026-03-06 00:39:21,091] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25279)
+[2026-03-06 00:39:21,106] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:39:21,878] INFO in server: connection open
+[2026-03-06 00:39:21,878] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57530)
+[2026-03-06 00:39:21,899] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:39:36,607] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:41:23,484] INFO in server: connection open
+[2026-03-06 00:41:23,485] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12870)
+[2026-03-06 00:42:45,888] INFO in server: connection open
+[2026-03-06 00:42:45,889] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62282)
+[2026-03-06 00:42:47,001] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:47:10,833] INFO in server: connection open
+[2026-03-06 00:47:10,833] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62633)
+[2026-03-06 00:47:11,944] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:47:37,241] INFO in server: connection open
+[2026-03-06 00:47:37,241] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9461)
+[2026-03-06 00:47:40,972] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:51:30,502] INFO in server: connection open
+[2026-03-06 00:51:30,503] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 15056)
+[2026-03-06 00:51:47,454] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:51:47,478] INFO in server: connection open
+[2026-03-06 00:51:47,478] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29015)
+[2026-03-06 00:52:03,117] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:52:03,117] INFO in server: connection open
+[2026-03-06 00:52:03,118] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42438)
+[2026-03-06 00:52:13,059] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:52:13,130] INFO in server: connection open
+[2026-03-06 00:52:13,130] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44639)
+[2026-03-06 00:52:23,141] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:52:23,173] INFO in server: connection open
+[2026-03-06 00:52:23,173] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2779)
+[2026-03-06 00:55:38,907] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:55:44,893] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:55:44,985] INFO in server: connection open
+[2026-03-06 00:55:44,986] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53789)
+[2026-03-06 00:56:59,374] INFO in server: connection open
+[2026-03-06 00:56:59,376] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 34150)
+[2026-03-06 00:56:59,376] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:57:40,651] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:57:40,681] INFO in server: connection open
+[2026-03-06 00:57:40,681] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38701)
+[2026-03-06 00:57:47,134] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:57:47,151] INFO in server: connection open
+[2026-03-06 00:57:47,151] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38932)
+[2026-03-06 00:57:54,008] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:57:54,039] INFO in server: connection open
+[2026-03-06 00:57:54,039] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47020)
+[2026-03-06 00:58:08,157] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:58:08,194] INFO in server: connection open
+[2026-03-06 00:58:08,194] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12606)
+[2026-03-06 00:58:21,249] INFO in server: connection open
+[2026-03-06 00:58:21,249] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32236)
+[2026-03-06 00:58:21,855] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:58:24,635] INFO in server: connection open
+[2026-03-06 00:58:24,635] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39009)
+[2026-03-06 00:58:37,961] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:58:37,986] INFO in server: connection open
+[2026-03-06 00:58:37,987] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10225)
+[2026-03-06 00:58:45,973] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:58:46,000] INFO in server: connection open
+[2026-03-06 00:58:46,001] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12978)
+[2026-03-06 00:58:47,992] INFO in server: connection open
+[2026-03-06 00:58:47,992] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62306)
+[2026-03-06 00:58:48,023] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:13,188] INFO in server: connection open
+[2026-03-06 00:59:13,188] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36451)
+[2026-03-06 00:59:21,479] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:21,483] INFO in server: connection open
+[2026-03-06 00:59:21,484] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48010)
+[2026-03-06 00:59:21,520] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:21,566] INFO in server: connection open
+[2026-03-06 00:59:21,566] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49142)
+[2026-03-06 00:59:32,899] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:32,967] INFO in server: connection open
+[2026-03-06 00:59:32,967] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38746)
+[2026-03-06 00:59:41,675] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:41,781] INFO in server: connection open
+[2026-03-06 00:59:41,781] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9402)
+[2026-03-06 00:59:56,239] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 00:59:56,315] INFO in server: connection open
+[2026-03-06 00:59:56,316] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 51050)
+[2026-03-06 01:00:21,174] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:00:21,178] INFO in server: connection open
+[2026-03-06 01:00:21,178] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50093)
+[2026-03-06 01:00:57,826] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:00:57,888] INFO in server: connection open
+[2026-03-06 01:00:57,888] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27833)
+[2026-03-06 01:01:03,286] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:01:03,380] INFO in server: connection open
+[2026-03-06 01:01:03,381] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13107)
+[2026-03-06 01:01:07,014] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:01:37,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:02:28,318] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:02:28,334] INFO in server: connection open
+[2026-03-06 01:02:28,334] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12318)
+[2026-03-06 01:06:05,371] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:06:05,462] INFO in server: connection open
+[2026-03-06 01:06:05,462] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44800)
+[2026-03-06 01:06:14,401] INFO in server: connection open
+[2026-03-06 01:06:14,401] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10121)
+[2026-03-06 01:06:14,439] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:06:18,536] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:06:18,595] INFO in server: connection open
+[2026-03-06 01:06:18,596] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43952)
+[2026-03-06 01:06:28,072] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:06:31,528] INFO in server: connection open
+[2026-03-06 01:06:31,528] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54748)
+[2026-03-06 01:06:33,342] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:06:47,079] INFO in server: connection open
+[2026-03-06 01:06:47,079] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44257)
+[2026-03-06 01:10:27,034] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:10:27,105] INFO in server: connection open
+[2026-03-06 01:10:27,105] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64628)
+[2026-03-06 01:11:13,536] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:06,474] INFO in server: connection open
+[2026-03-06 01:13:06,475] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3639)
+[2026-03-06 01:13:15,256] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:15,296] INFO in server: connection open
+[2026-03-06 01:13:15,296] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 59081)
+[2026-03-06 01:13:15,903] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:15,928] INFO in server: connection open
+[2026-03-06 01:13:15,928] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36948)
+[2026-03-06 01:13:16,433] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:16,452] INFO in server: connection open
+[2026-03-06 01:13:16,452] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33943)
+[2026-03-06 01:13:16,957] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:16,997] INFO in server: connection open
+[2026-03-06 01:13:16,997] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25814)
+[2026-03-06 01:13:17,501] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:17,546] INFO in server: connection open
+[2026-03-06 01:13:17,546] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43239)
+[2026-03-06 01:13:18,143] INFO in server: connection open
+[2026-03-06 01:13:18,144] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49981)
+[2026-03-06 01:13:18,151] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:19,219] INFO in server: connection open
+[2026-03-06 01:13:19,219] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52322)
+[2026-03-06 01:13:19,253] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:20,330] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:20,351] INFO in server: connection open
+[2026-03-06 01:13:20,351] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19863)
+[2026-03-06 01:13:21,248] INFO in server: connection open
+[2026-03-06 01:13:21,248] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30300)
+[2026-03-06 01:13:21,260] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:22,361] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:22,368] INFO in server: connection open
+[2026-03-06 01:13:22,368] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54019)
+[2026-03-06 01:13:23,247] INFO in server: connection open
+[2026-03-06 01:13:23,248] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 11487)
+[2026-03-06 01:13:23,278] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:13:24,339] INFO in server: connection open
+[2026-03-06 01:13:24,340] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 4173)
+[2026-03-06 01:13:24,360] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:15:20,804] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:15:20,953] INFO in server: connection open
+[2026-03-06 01:15:20,953] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2209)
+[2026-03-06 01:17:56,774] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:17:56,825] INFO in server: connection open
+[2026-03-06 01:17:56,825] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26142)
+[2026-03-06 01:18:22,333] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:18:22,346] INFO in server: connection open
+[2026-03-06 01:18:22,347] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 61625)
+[2026-03-06 01:18:53,587] INFO in server: connection open
+[2026-03-06 01:18:53,587] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55568)
+[2026-03-06 01:18:53,599] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:19:01,031] INFO in server: connection open
+[2026-03-06 01:19:01,031] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 61758)
+[2026-03-06 01:19:01,047] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:19:13,536] INFO in server: connection open
+[2026-03-06 01:19:13,537] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17174)
+[2026-03-06 01:19:13,545] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:19:17,102] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-06 01:19:19,107] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 5, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 01:19:27,851] INFO in server: connection open
+[2026-03-06 01:19:27,851] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 11377)
+[2026-03-06 01:19:27,867] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:20:23,785] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:40:09,725] INFO in server: connection open
+[2026-03-06 01:40:09,726] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38314)
+[2026-03-06 01:45:03,600] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:45:03,623] INFO in server: connection open
+[2026-03-06 01:45:03,624] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 5416)
+[2026-03-06 01:46:17,845] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 01:46:18,048] INFO in server: connection open
+[2026-03-06 01:46:18,048] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18593)
+[2026-03-06 01:46:27,834] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-06 01:46:29,404] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale C1'
+[2026-03-06 01:46:30,501] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Finale C2'
+[2026-03-06 01:46:31,311] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale B'
+[2026-03-06 01:46:32,343] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale A'
+[2026-03-06 01:46:33,844] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 01:46:35,209] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-06 01:46:35,890] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 01:46:36,327] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Finale A'
+[2026-03-06 01:46:36,540] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Finale B'
+[2026-03-06 01:46:36,758] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Finale C2'
+[2026-03-06 01:46:36,971] INFO in orbits_display_proxy: Event changed: 'Finale C2' -> 'Finale C1'
+[2026-03-06 01:46:37,207] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Kvalifisering - Gruppe 2 - Heat 3'
+[2026-03-06 01:46:39,213] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 6, 'heats': 5, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 01:46:49,892] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 3' -> 'Finale A'
+[2026-03-06 01:46:51,897] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': 'Klasse 8 Millennium - Finale A'}
+[2026-03-06 01:47:50,121] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 4 - Heat 1'
+[2026-03-06 01:47:52,126] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 01:47:55,396] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 4 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-06 01:47:57,401] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 4, 'heats': 6, 'title': 'Klasse 8 Millennium - Kvalifisering'}
+[2026-03-06 01:48:16,214] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 01:48:18,218] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 1, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 01:48:18,269] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-06 01:48:19,650] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 3 - Heat 1'
+[2026-03-06 01:48:21,657] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': None, 'finish_laps': 0, 'finish_time': '00:00', 'heat': 3, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 02:10:27,213] INFO in server: connection open
+[2026-03-06 02:10:27,214] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20972)
+[2026-03-06 02:10:30,042] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:10:35,034] INFO in server: connection open
+[2026-03-06 02:10:35,035] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 34398)
+[2026-03-06 02:10:47,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:10:47,272] INFO in server: connection open
+[2026-03-06 02:10:47,272] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17222)
+[2026-03-06 02:10:51,713] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:10:52,594] INFO in server: connection open
+[2026-03-06 02:10:52,594] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17760)
+[2026-03-06 02:10:53,199] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:11:03,362] INFO in server: connection open
+[2026-03-06 02:11:03,363] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7262)
+[2026-03-06 02:12:47,265] INFO in server: server closing
+[2026-03-06 02:12:47,297] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:12:47,297] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:12:47,297] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:12:47,324] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 02:12:47,324] INFO in server: server closed
+[2026-03-06 03:50:43,370] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-06 03:50:43,371] INFO in orbits_display_proxy: Race type: 1
+[2026-03-06 03:50:43,376] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-06 03:50:43,376] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-06 03:50:43,376] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-06 03:50:43,378] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-06 03:50:43,564] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 03:50:43,658] INFO in server: connection open
+[2026-03-06 03:50:43,658] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57318)
+[2026-03-06 03:50:43,672] INFO in server: connection open
+[2026-03-06 03:50:43,673] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50303)
+[2026-03-06 03:50:43,688] INFO in server: connection open
+[2026-03-06 03:50:43,688] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10760)
+[2026-03-06 03:50:43,702] INFO in server: connection open
+[2026-03-06 03:50:43,702] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20188)
+[2026-03-06 03:50:44,966] INFO in server: connection open
+[2026-03-06 03:50:44,967] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43269)
+[2026-03-06 03:50:45,575] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 03:50:46,827] INFO in server: connection open
+[2026-03-06 03:50:46,827] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.99', 40204)
+[2026-03-06 03:50:47,636] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,834] INFO in server: server closing
+[2026-03-06 03:51:46,865] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,890] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,931] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,932] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,932] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:51:46,932] INFO in server: server closed
+[2026-03-06 03:51:47,468] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-06 03:51:47,469] INFO in orbits_display_proxy: Race type: 1
+[2026-03-06 03:51:47,474] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-06 03:51:47,474] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-06 03:51:47,474] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-06 03:51:47,476] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-06 03:51:47,569] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 03:51:49,580] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 03:51:49,893] INFO in server: connection open
+[2026-03-06 03:51:49,893] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.99', 39004)
+[2026-03-06 03:51:49,966] INFO in server: connection open
+[2026-03-06 03:51:49,966] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 65050)
+[2026-03-06 03:51:49,982] INFO in server: connection open
+[2026-03-06 03:51:49,982] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49498)
+[2026-03-06 03:51:49,997] INFO in server: connection open
+[2026-03-06 03:51:49,997] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36581)
+[2026-03-06 03:51:50,012] INFO in server: connection open
+[2026-03-06 03:51:50,012] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35038)
+[2026-03-06 03:51:50,027] INFO in server: connection open
+[2026-03-06 03:51:50,027] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7441)
+[2026-03-06 03:51:51,608] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 03:52:05,898] INFO in server: connection open
+[2026-03-06 03:52:05,898] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.99', 35814)
+[2026-03-06 03:53:45,529] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:03:23,278] INFO in server: connection open
+[2026-03-06 04:03:23,278] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 40214)
+[2026-03-06 04:03:23,884] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:04:37,083] INFO in server: connection open
+[2026-03-06 04:04:37,083] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18977)
+[2026-03-06 04:06:06,761] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:06,903] INFO in server: connection open
+[2026-03-06 04:06:06,903] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 57979)
+[2026-03-06 04:06:39,973] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:40,111] INFO in server: connection open
+[2026-03-06 04:06:40,112] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33723)
+[2026-03-06 04:06:41,325] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:41,362] INFO in server: connection open
+[2026-03-06 04:06:41,362] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9413)
+[2026-03-06 04:06:42,170] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:42,193] INFO in server: connection open
+[2026-03-06 04:06:42,193] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7682)
+[2026-03-06 04:06:43,104] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:43,129] INFO in server: connection open
+[2026-03-06 04:06:43,129] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 30261)
+[2026-03-06 04:06:43,882] INFO in server: connection open
+[2026-03-06 04:06:43,882] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53500)
+[2026-03-06 04:06:43,938] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:44,691] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:44,711] INFO in server: connection open
+[2026-03-06 04:06:44,712] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64938)
+[2026-03-06 04:06:45,411] INFO in server: connection open
+[2026-03-06 04:06:45,411] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 5616)
+[2026-03-06 04:06:45,419] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:46,194] INFO in server: connection open
+[2026-03-06 04:06:46,194] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13841)
+[2026-03-06 04:06:46,222] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:47,207] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:47,211] INFO in server: connection open
+[2026-03-06 04:06:47,211] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 41983)
+[2026-03-06 04:06:48,080] INFO in server: connection open
+[2026-03-06 04:06:48,081] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50698)
+[2026-03-06 04:06:48,121] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:48,924] INFO in server: connection open
+[2026-03-06 04:06:48,925] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6820)
+[2026-03-06 04:06:48,989] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:49,632] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:49,646] INFO in server: connection open
+[2026-03-06 04:06:49,646] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52091)
+[2026-03-06 04:06:50,352] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:50,353] INFO in server: connection open
+[2026-03-06 04:06:50,353] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58301)
+[2026-03-06 04:06:51,061] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:51,067] INFO in server: connection open
+[2026-03-06 04:06:51,067] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36202)
+[2026-03-06 04:06:52,078] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:52,103] INFO in server: connection open
+[2026-03-06 04:06:52,104] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63171)
+[2026-03-06 04:06:53,483] INFO in server: connection open
+[2026-03-06 04:06:53,484] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54236)
+[2026-03-06 04:06:53,521] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:58,500] INFO in server: connection open
+[2026-03-06 04:06:58,501] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53162)
+[2026-03-06 04:06:58,541] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:06:59,957] INFO in server: connection open
+[2026-03-06 04:06:59,957] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32024)
+[2026-03-06 04:07:00,018] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:07:00,766] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:07:00,775] INFO in server: connection open
+[2026-03-06 04:07:00,775] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1382)
+[2026-03-06 04:07:03,649] INFO in server: connection open
+[2026-03-06 04:07:03,650] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44486)
+[2026-03-06 04:07:03,709] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:07:08,299] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:07:08,356] INFO in server: connection open
+[2026-03-06 04:07:08,356] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58606)
+[2026-03-06 04:07:10,783] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:07:10,817] INFO in server: connection open
+[2026-03-06 04:07:10,817] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58180)
+[2026-03-06 04:09:18,756] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:09:18,785] INFO in server: connection open
+[2026-03-06 04:09:18,785] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12292)
+[2026-03-06 04:10:14,353] INFO in server: server closing
+[2026-03-06 04:10:14,404] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:10:14,405] INFO in server: server closed
+[2026-03-06 04:10:15,184] INFO in orbits_display_proxy: Working directory: /home/administrator/aassk-racecontrol
+[2026-03-06 04:10:15,185] INFO in orbits_display_proxy: Race type: 1
+[2026-03-06 04:10:15,193] INFO in server: server listening on 0.0.0.0:4444
+[2026-03-06 04:10:15,193] INFO in orbits_display_proxy: WebSocket server listening on port 4444
+[2026-03-06 04:10:15,193] INFO in orbits_display_proxy: Connecting to Orbits 5 at 192.168.20.23:50000 …
+[2026-03-06 04:10:15,195] INFO in orbits_display_proxy: Connected to Orbits 5.
+[2026-03-06 04:10:15,368] INFO in orbits_display_proxy: Event changed: None -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:10:17,361] INFO in server: connection open
+[2026-03-06 04:10:17,361] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55045)
+[2026-03-06 04:10:17,378] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 12, 'title': 'Pro - Kvalifisering'}
+[2026-03-06 04:10:17,971] INFO in server: connection open
+[2026-03-06 04:10:17,971] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54706)
+[2026-03-06 04:10:17,986] INFO in server: connection open
+[2026-03-06 04:10:17,986] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27564)
+[2026-03-06 04:10:18,000] INFO in server: connection open
+[2026-03-06 04:10:18,001] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63309)
+[2026-03-06 04:10:18,014] INFO in server: connection open
+[2026-03-06 04:10:18,014] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6134)
+[2026-03-06 04:10:18,029] INFO in server: connection open
+[2026-03-06 04:10:18,029] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1862)
+[2026-03-06 04:10:18,549] INFO in server: connection open
+[2026-03-06 04:10:18,549] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56161)
+[2026-03-06 04:10:18,770] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:13:46,688] INFO in server: connection open
+[2026-03-06 04:13:46,688] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9576)
+[2026-03-06 04:13:46,814] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:16:08,915] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Finale C1'
+[2026-03-06 04:16:10,921] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': 'Pro - Finale C1'}
+[2026-03-06 04:16:49,829] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:16:49,835] INFO in server: connection open
+[2026-03-06 04:16:49,835] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 21667)
+[2026-03-06 04:18:10,443] INFO in server: connection open
+[2026-03-06 04:18:10,444] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9934)
+[2026-03-06 04:18:10,830] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:18:19,100] INFO in server: connection open
+[2026-03-06 04:18:19,100] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55865)
+[2026-03-06 04:18:19,832] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:18:20,313] INFO in server: connection open
+[2026-03-06 04:18:20,313] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19640)
+[2026-03-06 04:18:20,407] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:18:40,844] INFO in server: connection open
+[2026-03-06 04:18:40,844] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36777)
+[2026-03-06 04:18:45,042] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:19:41,638] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:19:44,595] INFO in server: connection open
+[2026-03-06 04:19:44,595] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 4133)
+[2026-03-06 04:21:09,617] INFO in server: connection open
+[2026-03-06 04:21:09,618] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50542)
+[2026-03-06 04:21:09,860] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:21:13,410] INFO in server: connection open
+[2026-03-06 04:21:13,410] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 60803)
+[2026-03-06 04:21:13,858] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:21:27,870] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:21:30,592] INFO in server: connection open
+[2026-03-06 04:21:30,592] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52951)
+[2026-03-06 04:21:36,550] INFO in server: connection open
+[2026-03-06 04:21:36,550] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 58566)
+[2026-03-06 04:21:36,565] INFO in server: connection open
+[2026-03-06 04:21:36,565] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3220)
+[2026-03-06 04:21:36,854] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:21:47,369] INFO in server: connection open
+[2026-03-06 04:21:47,369] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 33966)
+[2026-03-06 04:21:47,443] INFO in server: connection open
+[2026-03-06 04:21:47,443] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39586)
+[2026-03-06 04:21:47,782] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:21:47,797] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:07,198] INFO in server: connection open
+[2026-03-06 04:22:07,199] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7220)
+[2026-03-06 04:22:07,213] INFO in server: connection open
+[2026-03-06 04:22:07,213] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27546)
+[2026-03-06 04:22:07,796] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:07,869] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:34,173] INFO in server: connection open
+[2026-03-06 04:22:34,174] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 31981)
+[2026-03-06 04:22:34,187] INFO in server: connection open
+[2026-03-06 04:22:34,187] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55952)
+[2026-03-06 04:22:34,855] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:34,870] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:40,068] INFO in server: connection open
+[2026-03-06 04:22:40,068] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24650)
+[2026-03-06 04:22:40,085] INFO in server: connection open
+[2026-03-06 04:22:40,085] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9570)
+[2026-03-06 04:22:40,816] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:40,839] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:42,786] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:42,801] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:22:42,807] INFO in server: connection open
+[2026-03-06 04:22:42,807] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25255)
+[2026-03-06 04:22:42,881] INFO in server: connection open
+[2026-03-06 04:22:42,881] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32117)
+[2026-03-06 04:23:13,837] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:23:14,054] INFO in server: connection open
+[2026-03-06 04:23:14,054] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2556)
+[2026-03-06 04:23:14,070] INFO in server: connection open
+[2026-03-06 04:23:14,070] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 3924)
+[2026-03-06 04:23:14,261] INFO in server: connection open
+[2026-03-06 04:23:14,261] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56360)
+[2026-03-06 04:23:14,278] INFO in server: connection open
+[2026-03-06 04:23:14,278] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63864)
+[2026-03-06 04:23:14,798] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:23:14,826] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:23:15,668] INFO in server: connection open
+[2026-03-06 04:23:15,668] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39530)
+[2026-03-06 04:23:15,684] INFO in server: connection open
+[2026-03-06 04:23:15,684] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24173)
+[2026-03-06 04:25:26,197] INFO in server: connection open
+[2026-03-06 04:25:26,197] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35938)
+[2026-03-06 04:25:26,219] INFO in server: connection open
+[2026-03-06 04:25:26,219] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37633)
+[2026-03-06 04:25:26,235] INFO in server: connection open
+[2026-03-06 04:25:26,235] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47975)
+[2026-03-06 04:25:26,248] INFO in server: connection open
+[2026-03-06 04:25:26,249] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 64228)
+[2026-03-06 04:25:26,263] INFO in server: connection open
+[2026-03-06 04:25:26,263] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6849)
+[2026-03-06 04:25:26,326] INFO in server: connection open
+[2026-03-06 04:25:26,326] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 40300)
+[2026-03-06 04:25:26,807] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:26,807] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:26,808] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:26,808] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:26,808] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:26,823] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:28,378] INFO in server: connection open
+[2026-03-06 04:25:28,378] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25072)
+[2026-03-06 04:25:28,392] INFO in server: connection open
+[2026-03-06 04:25:28,393] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55418)
+[2026-03-06 04:25:33,468] INFO in server: connection open
+[2026-03-06 04:25:33,469] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6499)
+[2026-03-06 04:25:33,482] INFO in server: connection open
+[2026-03-06 04:25:33,483] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25837)
+[2026-03-06 04:25:33,832] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:33,848] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:35,064] INFO in server: connection open
+[2026-03-06 04:25:35,065] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46632)
+[2026-03-06 04:25:35,079] INFO in server: connection open
+[2026-03-06 04:25:35,079] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53511)
+[2026-03-06 04:25:35,788] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:35,804] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:36,336] INFO in server: connection open
+[2026-03-06 04:25:36,337] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 49667)
+[2026-03-06 04:25:36,391] INFO in server: connection open
+[2026-03-06 04:25:36,391] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 12603)
+[2026-03-06 04:25:36,778] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:36,795] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:38,797] INFO in server: connection open
+[2026-03-06 04:25:38,798] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36484)
+[2026-03-06 04:25:38,811] INFO in server: connection open
+[2026-03-06 04:25:38,811] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39770)
+[2026-03-06 04:25:38,817] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:25:38,860] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:26:29,507] INFO in server: connection open
+[2026-03-06 04:26:29,507] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43895)
+[2026-03-06 04:26:29,562] INFO in server: connection open
+[2026-03-06 04:26:29,563] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53398)
+[2026-03-06 04:26:29,813] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:26:29,828] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:27:16,796] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:27:16,847] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:27:17,034] INFO in server: connection open
+[2026-03-06 04:27:17,035] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6440)
+[2026-03-06 04:27:17,088] INFO in server: connection open
+[2026-03-06 04:27:17,089] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46216)
+[2026-03-06 04:28:44,356] INFO in server: connection open
+[2026-03-06 04:28:44,357] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22577)
+[2026-03-06 04:28:44,371] INFO in server: connection open
+[2026-03-06 04:28:44,372] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 20602)
+[2026-03-06 04:28:46,798] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:28:46,855] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:29:20,217] INFO in orbits_display_proxy: Event changed: 'Finale C1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:29:22,222] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 04:29:58,447] INFO in server: connection open
+[2026-03-06 04:29:58,447] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22835)
+[2026-03-06 04:29:58,507] INFO in server: connection open
+[2026-03-06 04:29:58,508] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 62358)
+[2026-03-06 04:33:56,378] INFO in server: connection open
+[2026-03-06 04:33:56,379] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1669)
+[2026-03-06 04:33:56,392] INFO in server: connection open
+[2026-03-06 04:33:56,393] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44721)
+[2026-03-06 04:34:35,705] INFO in server: connection open
+[2026-03-06 04:34:35,706] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29540)
+[2026-03-06 04:34:35,721] INFO in server: connection open
+[2026-03-06 04:34:35,721] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13733)
+[2026-03-06 04:34:48,368] INFO in server: connection open
+[2026-03-06 04:34:48,368] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17270)
+[2026-03-06 04:34:48,483] INFO in server: connection open
+[2026-03-06 04:34:48,483] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42060)
+[2026-03-06 04:34:55,978] INFO in server: connection open
+[2026-03-06 04:34:55,978] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 19185)
+[2026-03-06 04:34:56,038] INFO in server: connection open
+[2026-03-06 04:34:56,039] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63601)
+[2026-03-06 04:34:56,382] INFO in server: connection open
+[2026-03-06 04:34:56,382] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32855)
+[2026-03-06 04:34:56,399] INFO in server: connection open
+[2026-03-06 04:34:56,399] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 28799)
+[2026-03-06 04:34:56,414] INFO in server: connection open
+[2026-03-06 04:34:56,414] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13724)
+[2026-03-06 04:34:56,482] INFO in server: connection open
+[2026-03-06 04:34:56,482] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24570)
+[2026-03-06 04:34:56,499] INFO in server: connection open
+[2026-03-06 04:34:56,500] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23514)
+[2026-03-06 04:34:56,513] INFO in server: connection open
+[2026-03-06 04:34:56,513] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 54983)
+[2026-03-06 04:35:17,058] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-06 04:35:17,076] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,076] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,076] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,077] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,099] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,099] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,100] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,100] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,100] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,115] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,116] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,116] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,135] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,136] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,136] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:17,154] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:35:18,291] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-06 04:35:18,837] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:35:20,261] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-06 04:35:20,468] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-06 04:35:20,672] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-06 04:35:20,878] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-06 04:35:21,566] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 2 - Heat 2'
+[2026-03-06 04:35:23,241] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-06 04:35:23,911] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 2 - Heat 1'
+[2026-03-06 04:35:25,119] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 2 - Heat 1' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:35:27,125] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 6, 'title': 'Rekrutt 11-12 - Kvalifisering'}
+[2026-03-06 04:35:29,606] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Finale A'
+[2026-03-06 04:35:31,613] ERROR in orbits_display_proxy: Failed to fetch event data: HTTP Error 500: INTERNAL SERVER ERROR
+[2026-03-06 04:35:31,669] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Kvalifisering - Gruppe 1 - Heat 3'
+[2026-03-06 04:35:33,675] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 3, 'heats': 3, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-06 04:35:37,922] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 3' -> 'Kvalifisering - Gruppe 1 - Heat 2'
+[2026-03-06 04:35:39,927] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 2, 'heats': 3, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-06 04:35:40,485] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 2' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:35:42,490] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 3, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-06 04:35:45,682] INFO in orbits_display_proxy: Event changed: 'Kvalifisering - Gruppe 1 - Heat 1' -> 'Finale A'
+[2026-03-06 04:35:46,960] INFO in orbits_display_proxy: Event changed: 'Finale A' -> 'Finale B'
+[2026-03-06 04:35:48,966] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 1, 'title': 'Pro - Finale B'}
+[2026-03-06 04:35:58,546] INFO in server: connection open
+[2026-03-06 04:35:58,546] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18902)
+[2026-03-06 04:35:58,630] INFO in server: connection open
+[2026-03-06 04:35:58,631] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32055)
+[2026-03-06 04:36:02,760] INFO in server: connection open
+[2026-03-06 04:36:02,760] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36085)
+[2026-03-06 04:36:02,785] INFO in server: connection open
+[2026-03-06 04:36:02,786] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22398)
+[2026-03-06 04:38:28,313] INFO in server: connection open
+[2026-03-06 04:38:28,313] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44542)
+[2026-03-06 04:38:46,650] INFO in server: connection open
+[2026-03-06 04:38:46,650] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43268)
+[2026-03-06 04:38:48,992] INFO in server: connection open
+[2026-03-06 04:38:48,992] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 21556)
+[2026-03-06 04:38:49,283] INFO in server: connection open
+[2026-03-06 04:38:49,283] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 24078)
+[2026-03-06 04:38:49,319] INFO in server: connection open
+[2026-03-06 04:38:49,320] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38634)
+[2026-03-06 04:38:49,339] INFO in server: connection open
+[2026-03-06 04:38:49,339] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23050)
+[2026-03-06 04:38:50,760] INFO in server: connection open
+[2026-03-06 04:38:50,760] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16613)
+[2026-03-06 04:39:27,928] INFO in server: connection open
+[2026-03-06 04:39:27,929] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42316)
+[2026-03-06 04:39:38,721] INFO in server: connection open
+[2026-03-06 04:39:38,721] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 50871)
+[2026-03-06 04:39:38,807] INFO in server: connection open
+[2026-03-06 04:39:38,808] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16903)
+[2026-03-06 04:40:09,239] INFO in orbits_display_proxy: Event changed: 'Finale B' -> 'Kvalifisering - Gruppe 1 - Heat 1'
+[2026-03-06 04:40:09,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,248] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,249] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,257] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,258] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,268] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:09,278] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:40:11,245] INFO in orbits_display_proxy: Event data fetched: {'finish_criteria': 'individual_laps', 'finish_laps': 1, 'finish_time': '00:00', 'heat': 1, 'heats': 3, 'title': 'Pro Women - Kvalifisering'}
+[2026-03-06 04:40:17,032] INFO in server: connection open
+[2026-03-06 04:40:17,033] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 9872)
+[2026-03-06 04:40:17,126] INFO in server: connection open
+[2026-03-06 04:40:17,127] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 63031)
+[2026-03-06 04:40:19,545] INFO in server: connection open
+[2026-03-06 04:40:19,545] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48492)
+[2026-03-06 04:40:19,618] INFO in server: connection open
+[2026-03-06 04:40:19,618] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16379)
+[2026-03-06 04:40:27,153] INFO in server: connection open
+[2026-03-06 04:40:27,153] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36395)
+[2026-03-06 04:40:27,217] INFO in server: connection open
+[2026-03-06 04:40:27,217] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46742)
+[2026-03-06 04:40:32,052] INFO in server: connection open
+[2026-03-06 04:40:32,053] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42420)
+[2026-03-06 04:40:42,420] INFO in server: connection open
+[2026-03-06 04:40:42,421] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25319)
+[2026-03-06 04:40:42,492] INFO in server: connection open
+[2026-03-06 04:40:42,492] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17305)
+[2026-03-06 04:40:57,401] INFO in server: connection open
+[2026-03-06 04:40:57,401] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36010)
+[2026-03-06 04:40:57,416] INFO in server: connection open
+[2026-03-06 04:40:57,416] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35217)
+[2026-03-06 04:41:11,411] INFO in server: connection open
+[2026-03-06 04:41:11,412] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39193)
+[2026-03-06 04:41:11,469] INFO in server: connection open
+[2026-03-06 04:41:11,469] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 42871)
+[2026-03-06 04:41:11,486] INFO in server: connection open
+[2026-03-06 04:41:11,486] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23795)
+[2026-03-06 04:41:11,522] INFO in server: connection open
+[2026-03-06 04:41:11,522] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1482)
+[2026-03-06 04:41:11,539] INFO in server: connection open
+[2026-03-06 04:41:11,540] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27753)
+[2026-03-06 04:41:11,554] INFO in server: connection open
+[2026-03-06 04:41:11,555] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 22766)
+[2026-03-06 04:41:11,781] INFO in server: connection open
+[2026-03-06 04:41:11,782] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 26454)
+[2026-03-06 04:41:11,801] INFO in server: connection open
+[2026-03-06 04:41:11,802] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52915)
+[2026-03-06 04:41:11,817] INFO in server: connection open
+[2026-03-06 04:41:11,817] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 13877)
+[2026-03-06 04:41:11,832] INFO in server: connection open
+[2026-03-06 04:41:11,832] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 59056)
+[2026-03-06 04:41:13,079] INFO in server: connection open
+[2026-03-06 04:41:13,079] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 31134)
+[2026-03-06 04:41:13,093] INFO in server: connection open
+[2026-03-06 04:41:13,094] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29738)
+[2026-03-06 04:41:19,450] INFO in server: connection open
+[2026-03-06 04:41:19,451] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 25756)
+[2026-03-06 04:41:19,473] INFO in server: connection open
+[2026-03-06 04:41:19,473] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23930)
+[2026-03-06 04:41:19,532] INFO in server: connection open
+[2026-03-06 04:41:19,532] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35183)
+[2026-03-06 04:41:19,556] INFO in server: connection open
+[2026-03-06 04:41:19,556] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 7787)
+[2026-03-06 04:41:19,641] INFO in server: connection open
+[2026-03-06 04:41:19,641] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 44943)
+[2026-03-06 04:41:19,658] INFO in server: connection open
+[2026-03-06 04:41:19,658] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 15190)
+[2026-03-06 04:41:19,677] INFO in server: connection open
+[2026-03-06 04:41:19,677] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 43379)
+[2026-03-06 04:41:19,695] INFO in server: connection open
+[2026-03-06 04:41:19,695] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56828)
+[2026-03-06 04:41:19,711] INFO in server: connection open
+[2026-03-06 04:41:19,711] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 27702)
+[2026-03-06 04:41:19,727] INFO in server: connection open
+[2026-03-06 04:41:19,727] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 18061)
+[2026-03-06 04:41:19,744] INFO in server: connection open
+[2026-03-06 04:41:19,744] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 46672)
+[2026-03-06 04:41:19,760] INFO in server: connection open
+[2026-03-06 04:41:19,761] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1945)
+[2026-03-06 04:41:29,360] INFO in server: connection open
+[2026-03-06 04:41:29,361] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 38606)
+[2026-03-06 04:41:29,383] INFO in server: connection open
+[2026-03-06 04:41:29,384] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 36957)
+[2026-03-06 04:41:29,412] INFO in server: connection open
+[2026-03-06 04:41:29,412] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 55419)
+[2026-03-06 04:41:29,434] INFO in server: connection open
+[2026-03-06 04:41:29,435] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56738)
+[2026-03-06 04:41:29,452] INFO in server: connection open
+[2026-03-06 04:41:29,452] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 6548)
+[2026-03-06 04:41:29,467] INFO in server: connection open
+[2026-03-06 04:41:29,468] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 35146)
+[2026-03-06 04:41:29,484] INFO in server: connection open
+[2026-03-06 04:41:29,484] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 31088)
+[2026-03-06 04:41:29,511] INFO in server: connection open
+[2026-03-06 04:41:29,511] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17203)
+[2026-03-06 04:41:29,525] INFO in server: connection open
+[2026-03-06 04:41:29,526] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 56961)
+[2026-03-06 04:41:29,540] INFO in server: connection open
+[2026-03-06 04:41:29,540] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 45867)
+[2026-03-06 04:41:29,566] INFO in server: connection open
+[2026-03-06 04:41:29,566] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 47275)
+[2026-03-06 04:41:29,580] INFO in server: connection open
+[2026-03-06 04:41:29,580] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32769)
+[2026-03-06 04:42:04,788] INFO in server: connection open
+[2026-03-06 04:42:04,789] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 48156)
+[2026-03-06 04:42:04,899] INFO in server: connection open
+[2026-03-06 04:42:04,899] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 1638)
+[2026-03-06 04:42:04,928] INFO in server: connection open
+[2026-03-06 04:42:04,928] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37334)
+[2026-03-06 04:42:05,176] INFO in server: connection open
+[2026-03-06 04:42:05,176] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 16166)
+[2026-03-06 04:42:05,198] INFO in server: connection open
+[2026-03-06 04:42:05,199] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 11088)
+[2026-03-06 04:42:05,250] INFO in server: connection open
+[2026-03-06 04:42:05,251] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 4935)
+[2026-03-06 04:42:05,281] INFO in server: connection open
+[2026-03-06 04:42:05,281] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 61063)
+[2026-03-06 04:42:05,307] INFO in server: connection open
+[2026-03-06 04:42:05,307] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 32008)
+[2026-03-06 04:42:05,331] INFO in server: connection open
+[2026-03-06 04:42:05,331] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 23302)
+[2026-03-06 04:42:05,353] INFO in server: connection open
+[2026-03-06 04:42:05,353] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 17986)
+[2026-03-06 04:42:05,368] INFO in server: connection open
+[2026-03-06 04:42:05,368] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 2458)
+[2026-03-06 04:42:05,383] INFO in server: connection open
+[2026-03-06 04:42:05,383] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 10558)
+[2026-03-06 04:42:05,675] INFO in server: connection open
+[2026-03-06 04:42:05,675] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 29681)
+[2026-03-06 04:42:05,691] INFO in server: connection open
+[2026-03-06 04:42:05,691] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 37216)
+[2026-03-06 04:42:38,371] INFO in server: connection open
+[2026-03-06 04:42:38,371] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 4881)
+[2026-03-06 04:42:38,436] INFO in server: connection open
+[2026-03-06 04:42:38,436] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 52999)
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,913] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,914] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,914] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,914] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,914] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,919] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,920] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,920] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,920] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,935] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,935] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,935] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,935] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,936] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,952] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,952] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,952] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,952] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,953] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,953] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,953] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,953] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,963] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,963] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,964] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,964] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,964] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,964] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,965] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,965] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,965] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,975] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,976] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,976] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,976] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,976] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,984] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,985] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,985] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:00,985] INFO in orbits_display_proxy: WebSocket client disconnected.
+[2026-03-06 04:43:48,156] INFO in server: connection open
+[2026-03-06 04:43:48,156] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 39914)
+[2026-03-06 04:47:26,622] INFO in server: connection open
+[2026-03-06 04:47:26,623] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 53850)
+[2026-03-06 04:47:26,702] INFO in server: connection open
+[2026-03-06 04:47:26,703] INFO in orbits_display_proxy: WebSocket client connected: ('192.168.1.1', 59644)

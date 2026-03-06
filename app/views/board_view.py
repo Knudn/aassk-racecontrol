@@ -119,35 +119,47 @@ def speaker():
         SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
         return render_template('board/speaker_board_cross_v2.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
 
-    active_event = get_active_event()
-
-    query = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
-    ActiveEvents.event_file == active_event[0]["db_file"]
-    )
-    results = query.first()
-    mode = results[2]
+    if race_type == 1:
+        SpeakerPageConfig = SpeakerPageSettings.query.first()
+        SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
+        return render_template('board/speaker_board_orbits_v1.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
 
     SpeakerPageConfig = SpeakerPageSettings.query.first()
 
     kvali_criteria = [event.to_dict() for event in EventKvaliRate.query.all()]
 
-
     if request.method == 'POST':
         data = request.get_json()
-
         SpeakerPageConfig.match_parrallel = data["matchingParallel"]
         SpeakerPageConfig.h_server_url = data["h_server_url"]
-
         db.session.commit()
 
-    SpeakerPageConfig_json = {"matching_parallel":SpeakerPageConfig.match_parrallel,"h_server_url":SpeakerPageConfig.h_server_url}
+    SpeakerPageConfig_json = {"matching_parallel": SpeakerPageConfig.match_parrallel, "h_server_url": SpeakerPageConfig.h_server_url}
     cross_state = g_config["cross"]
 
     if str(cross_state) == "True" and g_config["msport_tm"]:
         return render_template('board/speaker_board_cross.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
     elif str(cross_state) == "True" and not g_config["msport_tm"]:
         return render_template('board/speaker_board_cross_mylaps.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
-    elif mode == 3:
+
+    if g_config.get("msport_tm"):
+        from app.models import ActiveDrivers, Session_Race_Records
+
+        active_driver_id = ActiveDrivers.query.first().Event_id
+        module = Session_Race_Records.query.filter(Session_Race_Records.event_id == active_driver_id).first().data["module"]
+        print()
+        if module in ("2", "3"):
+            return render_template('board/speaker_board_p.html', SpeakerPageConfig_json=SpeakerPageConfig_json, kvali_criteria=json.dumps(kvali_criteria))
+        else:
+            return render_template('board/speaker_board_s.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
+
+    active_event = get_active_event()
+    results = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
+        ActiveEvents.event_file == active_event[0]["db_file"]
+    ).first()
+    mode = results[2] if results else 0
+
+    if mode == 3:
         return render_template('board/speaker_board_stige.html', SpeakerPageConfig_json=SpeakerPageConfig_json)
     elif mode == 1 or mode == 2:
         return render_template('board/speaker_board_p.html', SpeakerPageConfig_json=SpeakerPageConfig_json, kvali_criteria=json.dumps(kvali_criteria))

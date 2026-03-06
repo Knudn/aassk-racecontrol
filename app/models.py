@@ -271,6 +271,7 @@ class Session_Race_Records(db.Model):
     __tablename__ = 'Active_Session_Race_Records'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     event_id = db.Column(db.String(8), nullable=False)
+    title_1 = db.Column(db.String(84), nullable=False)
     title_2 = db.Column(db.String(84), nullable=False)
     cid =  db.Column(db.Integer, nullable=True, default=55)
     active_event = db.Column(db.Boolean, nullable=False, default=False)

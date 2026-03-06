@@ -62,7 +62,7 @@ old_main_driver = ""
 
 async def async_update_event(listen_ip):
     async with aiohttp.ClientSession() as session:
-        url = f"http://{listen_ip}:7777/api/active_event_update"
+        url = f"http://{listen_ip}:7777/api/update_event?active=true"
         try:
             async with session.get(url) as response:
                 if response.status == 200:

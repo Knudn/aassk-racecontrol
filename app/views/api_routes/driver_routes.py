@@ -58,7 +58,7 @@ def register_driver_routes(api_bp):
     @api_bp.route('/api/set_active_state', methods=['POST'])
     def set_active_state():
         from app.views.api_view import send_data_to_room
-        from app.lib.utils import get_event_data, set_active_event, create_event_id_checksum
+        from app.lib.utils import get_event_data, set_active_event, create_event_id_checksum, GetEnv
         data = request.json
         
         
@@ -73,12 +73,14 @@ def register_driver_routes(api_bp):
         else:
             push_to_room = bool(push_to_room)
         
-        if event_id == None:
-            event_id = create_event_id_checksum(event + " " + heat)
-
-        event_file = ActiveEvents.query.filter(
-            ActiveEvents.event_name == data.get("event")).first()
-
+        if GetEnv()["msport_tm"] == False:
+            if event_id is None:
+                event_id = create_event_id_checksum(str(event) + " " + str(heat))
+            # else: use the event_id provided directly (checksum from orbits script)
+        else:
+            event_id = ActiveEvents.query.filter(
+                ActiveEvents.event_name == event).first().event_file
+        
         current_active_state = ActiveDrivers.query.first()
         current_active_state.Event = event
         current_active_state.Heat = heat
@@ -88,8 +90,8 @@ def register_driver_routes(api_bp):
         db.session.commit()
         
         set_active_event(event, heat)
-        if push_to_room:
-            send_data_to_room(get_event_data())
+        #if push_to_room:
+        #    send_data_to_room(get_event_data())
 
         return {"status": "success", "message": "Active state updated"}
 
@@ -228,11 +230,14 @@ def register_driver_routes(api_bp):
     
     @api_bp.route('/api/retry_entries', methods=['POST', 'GET'])
     def retry_entries():
-        from app.lib.db_operation import get_active_event
+        from app.models import ActiveDrivers
+
+
         
-        active_event_file = get_active_event()
+        active_event_file = ActiveDrivers.query.first().Event_id
+
         active_entry = db.session.query(ActiveEvents.event_name, ActiveEvents.run, ActiveEvents.mode).filter(
-            ActiveEvents.event_file == active_event_file[0]["db_file"]
+            ActiveEvents.event_file == active_event_file
         ).first()
 
         active_title_heat = active_entry[0] + str(active_entry[1])
@@ -246,12 +251,11 @@ def register_driver_routes(api_bp):
                 cid = request.json["cid"]
                 g_config = GetEnv()
                 db_location = g_config["db_location"]
-                event_file = db_location + active_event_file[0]["db_file"] + ".sqlite"
                 
                 new_retry_entry = RetryEntries(
                     cid=cid, 
                     title=active_title_heat, 
-                    driver_name=get_active_driver_name(event_file, cid)
+                    driver_name=get_active_driver_name(active_event_file, cid)
                 )
                 db.session.add(new_retry_entry)
                 db.session.commit()

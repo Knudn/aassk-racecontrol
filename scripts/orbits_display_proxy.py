@@ -5,6 +5,7 @@ import json
 import logging
 import io
 import os
+import sqlite3
 import urllib.request
 from websockets.exceptions import ConnectionClosed
 from logging.handlers import RotatingFileHandler
@@ -28,6 +29,12 @@ logging.basicConfig(
 current_working_directory = os.getcwd()
 logging.info("Working directory: %s", current_working_directory)
 
+# ── Race type ─────────────────────────────────────────────────────────────────
+with sqlite3.connect("site.db") as _con:
+    _cur = _con.cursor()
+    RACE_TYPE = int(_cur.execute("SELECT race_type FROM global_config;").fetchone()[0])
+
+logging.info("Race type: %s", RACE_TYPE)
 
 # ── Orbits 5 source ──────────────────────────────────────────────────────────
 ORBITS_HOST = "192.168.20.23"
@@ -60,6 +67,12 @@ event_state = {
     "title": "",
 }
 
+# Parsed live from Orbits stream
+competitor_state = {}   # bib -> {"firstname": str, "lastname": str}
+standings_state = {}    # bib -> {"pos": int, "bib": str, "finished": bool, "time": str}
+class_state = {}        # class_id -> class_name
+event_info_state = {}   # e.g. {"TRACKNAME": "...", "TRACKLENGTH": "..."}
+
 _current_event_name = None
 _fetch_task = None  # type: asyncio.Task | None
 
@@ -73,13 +86,56 @@ def format_finish_time(minutes: int) -> str:
     return f"{m:02d}:{s:02d}"
 
 
+def build_standings() -> list:
+    """Return standings sorted by position, with competitor names resolved."""
+    result = []
+    for entry in sorted(standings_state.values(), key=lambda x: x["pos"]):
+        bib = entry["bib"]
+        comp = competitor_state.get(bib, {})
+        firstname = comp.get("firstname", "")
+        lastname = comp.get("lastname", "")
+        name = f"{firstname} {lastname}".strip()
+        result.append({
+            "pos": entry["pos"],
+            "bib": bib,
+            "name": name,
+            "firstname": firstname,
+            "lastname": lastname,
+            "finished": entry["finished"],
+            "time": entry["time"],
+        })
+    return result
+
+
 def build_output() -> dict:
     """Build the JSON payload to send to WebSocket clients."""
     laps = race_state["laps_to_go"]
     timer = race_state["timer"]
     status = race_state["status"]
 
-    # Warmup: Orbits uses 9999 as a sentinel for "countdown/warmup, no lap count yet"
+    # Common extra fields included regardless of race type
+    extra = {
+        "standings": build_standings(),
+        "event_name": _current_event_name or "",
+        "track_name": event_info_state.get("TRACKNAME", ""),
+        "track_length": event_info_state.get("TRACKLENGTH", ""),
+        "class_name": next(iter(class_state.values()), "") if class_state else "",
+    }
+
+    if RACE_TYPE == 1:
+        # Bakkecross: just report elapsed time and status, nothing else needed
+        if status == "":
+            laps_val = int(laps) if isinstance(laps, (int, str)) and str(laps).isdigit() else 0
+            if laps_val == 9999:
+                status = "warmup"
+        # Convert HH:MM:SS → M:SS (drop the hours field)
+        parts = str(timer).split(":")
+        if len(parts) == 3:
+            minutes = int(parts[0]) * 60 + int(parts[1])
+            timer = f"{minutes}:{parts[2]}"
+        return {"timer": timer, "status": status, **extra}
+
+    # ── All other race types: full logic ─────────────────────────────────────
     tmp_status = status
     if laps == 9999 and status == "":
         status = "warmup"
@@ -87,13 +143,11 @@ def build_output() -> dict:
         tmp_status = True
 
     if status != "Green" and status != "Finish":
-        # Race has not started — show the planned format from the API
         if event_state["finish_laps"]:
             laps = event_state["finish_laps"]
         if event_state["finish_time"]:
             timer = event_state["finish_time"]
     elif status == "Finish":
-
         if event_state["finish_laps"]:
             laps = 0
         if event_state["finish_time"]:
@@ -102,7 +156,6 @@ def build_output() -> dict:
         timer = "00:00"
         laps = 0
     else:
-        # Race running — if Orbits still reports 9999, cap to API finish laps
         if laps == 9999 and event_state["finish_laps"]:
             laps = event_state["finish_laps"]
         if len(str(timer).split(":")) == 3:
@@ -120,6 +173,7 @@ def build_output() -> dict:
         "heat": event_state["heat"],
         "heats": event_state["heats"],
         "title": event_state["title"],
+        **extra,
     }
 
 
@@ -155,53 +209,126 @@ def schedule_event_fetch():
 
 
 # ── Line parser ───────────────────────────────────────────────────────────────
+def _csv_fields(line: str):
+    """Parse a CSV line and return fields list, or None on error."""
+    try:
+        return next(csv.reader(io.StringIO(line)))
+    except Exception:
+        return None
+
+
 def parse_line(line: str):
     """Parse a single Orbits 5 protocol line and update state."""
     global _current_event_name
     line = line.strip()
+    if not line:
+        return
 
-    if line.startswith("$B"):
-        # $B,<score>,"<event_name>"  — signals which event/session is active
+    tag = line.split(",", 1)[0]
+
+    # ── $B — event/session name ───────────────────────────────────────────────
+    if tag == "$B":
+        fields = _csv_fields(line)
+        if fields and len(fields) >= 3:
+            event_name = fields[2].strip()
+            if event_name != _current_event_name:
+                logging.info("Event changed: %r -> %r", _current_event_name, event_name)
+                _current_event_name = event_name
+                # Clear live per-session state on event change
+                standings_state.clear()
+                competitor_state.clear()
+                class_state.clear()
+                schedule_event_fetch()
+        return
+
+    # ── $F — race clock / status ──────────────────────────────────────────────
+    if tag == "$F":
+        # $F,<laps_to_go>,"<timer>","<time_of_day>","<elapsed>","<status>"
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 6:
+            return
         try:
-            reader = csv.reader(io.StringIO(line))
-            fields = next(reader)
-            if len(fields) >= 3:
-                event_name = fields[2].strip()
-                if event_name != _current_event_name:
-                    logging.info("Event changed: %r -> %r", _current_event_name, event_name)
-                    _current_event_name = event_name
-                    schedule_event_fetch()
-        except Exception:
-            pass
+            laps_to_go = int(fields[1])
+        except ValueError:
+            laps_to_go = 0
+        status = fields[5].strip()
+        timer = fields[4].strip() if RACE_TYPE == 1 else fields[2].strip()
+        race_state["timer"] = timer
+        race_state["laps_to_go"] = laps_to_go
+        race_state["status"] = status
+        logging.debug("State updated: timer=%s laps_to_go=%s status=%s",
+                      timer, laps_to_go, status)
         return
 
-    if not line.startswith("$F"):
+    # ── $SR / $SP — standings (split result / split position) ─────────────────
+    # $SR,<pos>,"<bib>",<finished>,"<time>",<transponder>
+    # finished field is "1" if done, empty string if still racing
+    if tag in ("$SR", "$SP"):
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 5:
+            return
+        try:
+            pos = int(fields[1])
+        except ValueError:
+            return
+        bib = fields[2].strip()
+        finished_raw = fields[3].strip()
+        finished = finished_raw == "1"
+        time_str = fields[4].strip()
+        standings_state[bib] = {
+            "pos": pos,
+            "bib": bib,
+            "finished": finished,
+            "time": time_str,
+        }
         return
 
-    # $F, laps_to_go, timer, time_of_day, elapsed, status
-    try:
-        reader = csv.reader(io.StringIO(line))
-        fields = next(reader)
-    except Exception:
+    # ── $A — athlete / transponder entry ──────────────────────────────────────
+    # $A,"<bib>","<bib2>",<transponder>,"<firstname>","<lastname>","",<flag>
+    if tag == "$A":
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 6:
+            return
+        bib = fields[1].strip()
+        firstname = fields[4].strip()
+        lastname = fields[5].strip()
+        if bib not in competitor_state:
+            competitor_state[bib] = {"firstname": firstname, "lastname": lastname}
         return
 
-    if len(fields) < 6:
+    # ── $COMP — competitor entry ───────────────────────────────────────────────
+    # $COMP,"<bib>","<bib2>",<flag>,"<firstname>","<lastname>","",""
+    if tag == "$COMP":
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 6:
+            return
+        bib = fields[1].strip()
+        firstname = fields[4].strip()
+        lastname = fields[5].strip()
+        competitor_state[bib] = {"firstname": firstname, "lastname": lastname}
         return
 
-    try:
-        laps_to_go = int(fields[1])
-    except ValueError:
-        laps_to_go = 0
+    # ── $C — class ────────────────────────────────────────────────────────────
+    # $C,<id>,"<name>"
+    if tag == "$C":
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 3:
+            return
+        try:
+            class_id = int(fields[1])
+        except ValueError:
+            class_id = fields[1]
+        class_state[class_id] = fields[2].strip()
+        return
 
-    timer = fields[2].strip()
-    status = fields[5].strip()
-
-    race_state["timer"] = timer
-    race_state["laps_to_go"] = laps_to_go
-    race_state["status"] = status
-
-    logging.debug("State updated: timer=%s laps_to_go=%s status=%s",
-                  timer, laps_to_go, status)
+    # ── $E — event / track info ───────────────────────────────────────────────
+    # $E,"<KEY>","<VALUE>"
+    if tag == "$E":
+        fields = _csv_fields(line)
+        if not fields or len(fields) < 3:
+            return
+        event_info_state[fields[1].strip()] = fields[2].strip()
+        return
 
 
 # ── TCP client — connects to Orbits 5 and reads lines ────────────────────────
@@ -238,10 +365,14 @@ async def orbits_client():
 # ── WebSocket server — streams race_state to every connected client ───────────
 async def ws_handler(websocket, path=None):
     logging.info("WebSocket client connected: %s", websocket.remote_address)
+    last_sent = None
     try:
         while True:
             try:
-                await websocket.send(json.dumps(build_output()))
+                payload = json.dumps(build_output(), separators=(',', ':'))
+                if payload != last_sent:
+                    await websocket.send(payload)
+                    last_sent = payload
                 await asyncio.sleep(0.1)
             except ConnectionClosed:
                 logging.info("WebSocket client disconnected.")

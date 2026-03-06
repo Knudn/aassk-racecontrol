@@ -140,13 +140,13 @@ def register_archive_routes(api_bp):
 
         else:
             return {"error": "Invalid update type"}, 400
-        single_event = True
         data = {
             "token": password,
             "data": send_data,
             "single_event": single_event,
             "race_type": race_type,
-            "kvali_ranking": None,
+            "kvali_ranking": json.dumps(result) if result is not None else None,
+            "event_data": json.dumps(event_data) if event_data is not None else None,
             "start_state": json.dumps(current_app.config["start_state"])
         }
 

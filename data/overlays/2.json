@@ -1,0 +1,170 @@
+{
+  "id": 2,
+  "name": "Bakkel\u00f8p",
+  "active_view_id": 2,
+  "next_view_id": 8,
+  "res_w": 1920,
+  "res_h": 1080,
+  "grid_version": 3,
+  "views": [
+    {
+      "id": 1,
+      "name": "base_overlay",
+      "next_widget_id": 6,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 3,
+          "file": "bakkedrag/active_driver_dash.html",
+          "url": "",
+          "params": "w=700,pos=bottom",
+          "fullscreen": false,
+          "gs_x": 6.25,
+          "gs_y": 5.5556,
+          "gs_w": 91.6667,
+          "gs_h": 94.4444
+        },
+        {
+          "id": 4,
+          "file": "bakkedrag/event_title.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": 2.0833,
+          "gs_y": 5.5556,
+          "gs_w": 93.75,
+          "gs_h": 83.3333
+        },
+        {
+          "id": 5,
+          "file": "bakkedrag/heat_results_widget.html",
+          "url": "",
+          "params": "scale=1.2",
+          "fullscreen": false,
+          "gs_x": 0.0,
+          "gs_y": 8.3333,
+          "gs_w": 100.0,
+          "gs_h": 100.0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "kvali_combinert_active",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkedrag/kvali_results_overlay.html",
+          "url": "",
+          "params": "w=1500, scale=1.2",
+          "fullscreen": false,
+          "gs_x": 8.74,
+          "gs_y": 10.48,
+          "gs_w": 85.98,
+          "gs_h": 91.87
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "kvali_combinert_loop",
+      "next_widget_id": 3,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkedrag/kvali_loop_overlay.html",
+          "url": "",
+          "params": "finished=false,timer=3,w=1000",
+          "fullscreen": false,
+          "gs_x": 33.3333,
+          "gs_y": 13.8889,
+          "gs_w": 60.4167,
+          "gs_h": 122.2222
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "startliste_active_kvali",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkedrag/startlist_overlay.html",
+          "url": "",
+          "params": "w=1100,scale=1.4",
+          "fullscreen": false,
+          "gs_x": 16.6667,
+          "gs_y": 8.3333,
+          "gs_w": 79.1667,
+          "gs_h": 105.5556
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "startliste_loop_kvali",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkedrag/startlist_loop_overlay.html",
+          "url": "",
+          "params": "w=1400",
+          "fullscreen": false,
+          "gs_x": 16.6667,
+          "gs_y": 11.1111,
+          "gs_w": 83.3333,
+          "gs_h": 77.7778
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "base_overlay_finale",
+      "next_widget_id": 3,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "active_driver_dash_single.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": 8.3333,
+          "gs_y": 50.0,
+          "gs_w": 85.4167,
+          "gs_h": 88.8889
+        },
+        {
+          "id": 2,
+          "file": "bakkedrag/event_title.html",
+          "url": "",
+          "params": "scale=1.3",
+          "fullscreen": false,
+          "gs_x": 2.0833,
+          "gs_y": 2.7778,
+          "gs_w": 79.1667,
+          "gs_h": 80.5556
+        }
+      ]
+    }
+  ]
+}

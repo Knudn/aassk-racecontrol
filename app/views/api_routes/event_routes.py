@@ -73,7 +73,7 @@ def register_event_routes(api_bp):
     @api_bp.route('/api/get_startlist', methods=['GET'])
     def get_startlists():
         from app.models import Session_Race_Records
-        from app.lib.utils import get_combined_results, extract_class
+        from app.lib.utils import get_combined_results, extract_class, GetEnv
 
         r_type = ""
         event_name = request.args.get('event_name', default=None)
@@ -114,12 +114,16 @@ def register_event_routes(api_bp):
                     r_type = "other"
                     start_lst["track_placement"] = "random"
                 
-                
+
                 start_lst["mode"] = r_type
                 start_lst["event"] = a.title_2
                 start_lst["heat"] = a.heat
 
-            
+            if GetEnv()["msport_tm"] == True:
+                class_dev = a.data["title_2"].replace(" - Kvalifisering","")
+            else:
+                class_dev = a.data["class"]
+
             data = {
                 "num": k,
                 "cid": a.data["cid"],
@@ -127,7 +131,7 @@ def register_event_routes(api_bp):
                 "last_name": a.data["last_name"],
                 "club": a.data["club"],
                 "snowmobile": a.data["snowmobile"],
-                "klasse": a.data["class"],
+                "klasse": class_dev,
                 "qualifying_standing": driver_q_p[a.data["cid"]] if a.data["cid"] in driver_q_p else k,
             }
             
@@ -165,20 +169,43 @@ def register_event_routes(api_bp):
 
     @api_bp.route('/api/get_kvali_results', methods=['GET'])
     def get_kvali_resuts():
-
-
+        from app.lib.utils import GetEnv
         event_prefix = request.args.get('event_prefix', default=None)
 
-        if event_prefix == None:
+        if event_prefix is None:
             return "Invalid prefix"
 
         if event_prefix == "active":
             from app.lib.db_operation import get_active_event
-            from app.models import ActiveEvents
 
             active_event_id = get_active_event()[0]["event_id"]
-            event_prefix = ActiveEvents.query.filter(ActiveEvents.event_checksum == active_event_id).first().event_name
+            if GetEnv()["msport_tm"]:
+                from app.models import ActiveDrivers
+                event_prefix = ActiveDrivers.query.first().Event
+
+            else:
+                event_prefix = ActiveEvents.query.filter(ActiveEvents.event_checksum == active_event_id).first().event_name
+
+        if GetEnv().get("msport_tm"):
+            from app.lib.utils import calculate_standing_msport
+            from app.models import EventKvaliRate
+            entries = Session_Race_Records.query.filter(
+                Session_Race_Records.title_2.like(f"%{event_prefix}%")
+            ).all()
+            r_data = calculate_standing_msport([r.data for r in entries if r.data])
             
+            if "kvali" in event_prefix.lower():
+                try:
+                    kvali_nr = EventKvaliRate.query.filter(EventKvaliRate.event.like(f"%{event_prefix}%")).first().kvalinr
+                except:
+                    kvali_nr = 10
+                r_data["meta"]["kvali_nr"] = kvali_nr
+                r_data["meta"]["show_kvali"] = True
+            else:
+                r_data["meta"]["kvali_nr"] = 0
+                r_data["meta"]["show_kvali"] = False                
+            return r_data
+
         return get_combined_results(event_prefix)
 
 
@@ -194,12 +221,15 @@ def register_event_routes(api_bp):
 
     @api_bp.route('/api/update_event', methods=['GET'])
     def event_update():
-        from app.lib.utils import insert_event_data, get_event_data, get_dash_data
+        from app.lib.utils import insert_event_data, get_event_data, get_dash_data, GetEnv, get_event_data
         from app.views.api_view import send_data_to_room
         
+        
+
         event_id = request.args.get('event_id', default=None)
         full_sync = bool(request.args.get('full_sync', default=False))
         
+
         active = bool(request.args.get('active', default=False))
 
         if event_id == None and full_sync == False and active == False:
@@ -207,9 +237,20 @@ def register_event_routes(api_bp):
         elif full_sync:
             insert_event_data(full_sync=True)
         elif active == True:
+            from app.lib.utils import get_event_meta
+            from app.models import archive_server
             insert_event_data(active=True)
-            send_data_to_room(get_event_data())
-            send_data_to_room(get_dash_data(),room="active_dash")
+            send_data_to_room(get_current_startlist_w_data())
+            send_data_to_room(get_event_meta(),room="event_meta")
+            if GetEnv()["msport_tm"] == False:
+                send_data_to_room(get_dash_data(),room="active_dash")
+                send_data_to_room(get_event_data(),room="default")
+
+
+            remote_server_state = archive_server.query.first()
+
+            if remote_server_state.enabled:
+                requests.get(f'http://127.0.0.1:7777/api/upate_remote_data?type=single')
         else:
             insert_event_data(event_id=event_id)
         return "asdasd"
@@ -222,10 +263,23 @@ def register_event_routes(api_bp):
         from app.lib.db_func import insert_orbits_data
         from app.lib.db_operation import get_active_event
 
-        event_id = get_active_event()[0]["event_id"]
         g_config = GetEnv()
-        insert_event_data(event_id=event_id)
 
+        msport_usage=g_config["msport_tm"]
+
+
+        def create_event_id_checksum(event_entry):
+            import zlib
+            #The checksum will be based on str(run_name + heat)
+            checksum = zlib.crc32(event_entry.encode())
+            return f"{checksum:08x}"
+        
+        if msport_usage == False:
+            event_id = get_active_event()[0]["event_id"]
+        else:
+            return "asd"
+        insert_event_data(event_id=event_id)
+        
         send_data_to_room(get_event_data())
         
         return {"status": "success", "message": "Event data updated"}
@@ -302,37 +356,17 @@ def register_event_routes(api_bp):
     @api_bp.route('/api/get_current_startlist_w_data', methods=['GET'])
     def get_current_startlist_w_data():
         from app.lib.utils import get_event_data
+        from app.lib.db_operation import get_active_startlist_w_timedate
+        from app.models import ActiveDrivers
 
         upcoming = request.args.get('upcoming')
         event = request.args.get('event')
         heat = request.args.get('heat')
         event_comb = request.args.get('event_comb')
 
-        return get_event_data(event=event, heat=heat)
-        if event_comb is not None:
-            events = []
-            active_event_current = get_active_event()
-            query = db.session.query(ActiveEvents.event_file, ActiveEvents.run).distinct().filter(
-                        ActiveEvents.event_name.like(f"%{event_comb}%")).all()
-            
-            for a in query:
-                events.append([{'db_file': a.event_file, 'SPESIFIC_HEAT': a.run}])
+        return get_active_startlist_w_timedate(event=event, heat=heat)
 
-            return get_active_startlist_w_timedate(event_comb=events)
 
-        if upcoming is not None:
-            if upcoming.lower() == "true":
-                return get_active_startlist_w_timedate(upcoming=True)
-        
-        if event is not None:
-            query = db.session.query(ActiveEvents.event_file, ActiveEvents.run, ActiveEvents.mode).filter(
-                ActiveEvents.event_name == event, ActiveEvents.run == heat
-            ).first()
-
-            event = [{'db_file': query.event_file, 'SPESIFIC_HEAT': query.run}]
-            return get_active_startlist_w_timedate(event_wl=event)
-        
-        return get_active_startlist_w_timedate()
     
     @api_bp.route('/api/get_current_startlist_w_data_loop', methods=['GET'])
     def get_current_startlist_w_data_loop():
@@ -557,23 +591,47 @@ def register_event_routes(api_bp):
     
     @api_bp.route('/api/get_event_order', methods=['GET'])
     def get_event_order():
+        g_config = GetEnv()
+
+        if g_config.get("msport_tm"):
+            rows = (
+                db.session.query(
+                    Session_Race_Records.title_2,
+                    Session_Race_Records.heat,
+                    func.max(Session_Race_Records.active_event).label("is_active"),
+                )
+                .group_by(Session_Race_Records.title_2, Session_Race_Records.heat)
+                .order_by(Session_Race_Records.title_2, Session_Race_Records.heat)
+                .all()
+            )
+            return [
+                {
+                    "Order": i,
+                    "Event": row.title_2,
+                    "Enabled": True,
+                    "Heat": row.heat,
+                    "Active": bool(row.is_active),
+                }
+                for i, row in enumerate(rows)
+            ]
+
         event_order = ActiveEvents.query.order_by(ActiveEvents.sort_order).all()
         current_active_event = get_active_event()[0]
 
         data = []
-        
+
         for a in event_order:
-            state = (str(a.event_file) == str(current_active_event["db_file"]) and 
+            state = (str(a.event_file) == str(current_active_event["db_file"]) and
                     str(current_active_event["SPESIFIC_HEAT"]) == str(a.run))
-            
+
             data.append({
-                "Order": a.sort_order, 
-                "Event": a.event_name, 
-                "Enabled": a.enabled, 
-                "Heat": a.run, 
+                "Order": a.sort_order,
+                "Event": a.event_name,
+                "Enabled": a.enabled,
+                "Heat": a.run,
                 "Active": state
             })
-        
+
         return data
 
     @api_bp.route('/api/get_cross_results', methods=['GET'])

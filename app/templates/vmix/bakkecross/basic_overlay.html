@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Control Overlay – Bakkecross</title>
+    <script src="{{url_for('static', filename='js/socket.io.js')}}"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #widget {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            display: inline-flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #widget.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Layout ── */
+        #card {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: stretch;
+            white-space: nowrap;
+        }
+
+        /* Heat block — left accent column */
+        #heat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #4d79ff;
+            padding: 9px 13px;
+            gap: 1px;
+            transition: background-color 0.4s ease;
+        }
+        #heat-label {
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.60);
+            line-height: 1;
+        }
+        #heat-value {
+            font-size: 26px;
+            font-weight: 900;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        #heat-of {
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.50);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        /* Title block — middle */
+        #title-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(8, 8, 12, 0.92);
+            padding: 9px 14px;
+            gap: 3px;
+        }
+        #title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.2px;
+            line-height: 1;
+        }
+        #event-type {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            color: rgba(77, 121, 255, 0.80);
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        /* Vertical separator */
+        #col-sep {
+            width: 1px;
+            background: rgba(255,255,255,0.07);
+            align-self: stretch;
+        }
+
+        /* Timer block — right */
+        #timer-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            background: rgba(8, 8, 12, 0.92);
+            padding: 9px 14px;
+            gap: 2px;
+        }
+        #timer-label {
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.28);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .active-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #2ecc71;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            flex-shrink: 0;
+        }
+        .active-dot.on { opacity: 1; }
+        #timer {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            transition: color 0.4s ease;
+        }
+        #timer.dimmed { color: rgba(255,255,255,0.18); }
+
+        /* Crossfade helper */
+        .xfade { transition: opacity 0.18s ease, transform 0.18s ease; }
+        .xfade.out { opacity: 0; transform: translateY(-4px); }
+        .xfade.in  { opacity: 0; transform: translateY(4px); }
+    </style>
+</head>
+<body>
+
+<div id="widget">
+    <div id="card">
+        <div id="heat-block">
+            <div id="heat-label">Heat</div>
+            <div id="heat-value" class="xfade">—</div>
+            <div id="heat-of"    class="xfade" style="opacity:0">/ —</div>
+        </div>
+        <div id="title-block">
+            <div id="title"      class="xfade">—</div>
+            <div id="event-type" class="xfade">—</div>
+        </div>
+        <div id="col-sep"></div>
+        <div id="timer-block">
+            <div id="timer-label">
+                <span class="active-dot" id="timer-dot"></span>
+                Tid
+            </div>
+            <div id="timer">0:00.0</div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    // ── URL params ──────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const widget = document.getElementById('widget');
+    const wsHost = params.get('host') || document.domain;
+    const wsPort = params.get('port') || location.port || '7777';
+
+    (function applyParams() {
+        const w      = params.get('w');
+        const h      = params.get('h');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+
+        if (w) { widget.style.display = 'flex'; widget.style.width = w + 'px'; }
+        if (h) widget.style.height = h + 'px';
+
+        if (mirror) {
+            widget.style.left  = 'auto';
+            widget.style.right = '60px';
+        }
+
+        if (scale) {
+            const origin = mirror ? 'bottom right' : 'bottom left';
+            document.body.style.transformOrigin = origin;
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Element refs ─────────────────────────────────────────────
+    const titleEl     = document.getElementById('title');
+    const heatValueEl = document.getElementById('heat-value');
+    const heatOfEl    = document.getElementById('heat-of');
+    const eventTypeEl = document.getElementById('event-type');
+    const heatBlock   = document.getElementById('heat-block');
+    const timerEl     = document.getElementById('timer');
+    const timerDot    = document.getElementById('timer-dot');
+
+    // ── Crossfade helper ─────────────────────────────────────────
+    function xfade(el, newText, newColor) {
+        if (el.textContent === newText) return;
+        el.classList.add('out');
+        setTimeout(function () {
+            el.textContent = newText;
+            if (newColor) el.style.color = newColor;
+            el.classList.remove('out');
+            el.classList.add('in');
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { el.classList.remove('in'); });
+            });
+        }, 160);
+    }
+
+    // ── Accent colour ─────────────────────────────────────────────
+    function accentForType(eventType) {
+        return (eventType === 'Finale' || eventType === 'Stige') ? '#e87c2a' : '#4d79ff';
+    }
+
+    // ── Shared race status (set by Orbits WS, read by renderMeta) ─
+    let currentStatus = '';
+    let frozenTimer   = null;   // set when Finish, cleared on new race
+    let lastAccent    = '#4d79ff';
+
+    // ── Render event_meta ─────────────────────────────────────────
+    let lastEventKey = null;
+
+    function renderMeta(data) {
+        if (!data || !data.TITLE_2) return;
+
+        const accent   = accentForType(data.EVENT_TYPE);
+        const eventKey = (data.TITLE_2 || '') + '|' + data.HEAT;
+
+        if (eventKey !== lastEventKey) {
+            timerEl.textContent = '0:00.0';
+            timerEl.classList.add('dimmed');
+            timerDot.classList.remove('on');
+            frozenTimer = null;   // new event — unfreeze
+            lastEventKey = eventKey;
+        }
+
+        lastAccent = accent;
+
+        xfade(titleEl,     data.TITLE_2 || '—');
+        xfade(heatValueEl, String(data.HEAT  || '—'));
+
+        const heats = data.HEATS || 1;
+        heatOfEl.textContent  = '/ ' + heats;
+        heatOfEl.style.opacity = heats > 1 ? '1' : '0';
+
+        const typeText = data.EVENT_TYPE || '';
+        xfade(eventTypeEl, typeText);
+        const isOrange = typeText === 'Finale' || typeText === 'Stige';
+        eventTypeEl.style.color = isOrange ? 'rgba(232,124,42,0.85)' : 'rgba(77,121,255,0.80)';
+
+        // Only apply accent when no active race status is driving the colour
+        if (!currentStatus) {
+            heatBlock.style.background = accent;
+        }
+        widget.classList.add('visible');
+    }
+
+    // ── Orbits WS (port 4444) — timer + flag state ───────────────
+    function connectOrbitsWS() {
+        const ws = new WebSocket('ws://' + wsHost + ':4444');
+
+        ws.onmessage = function (evt) {
+            try {
+                const d      = JSON.parse(evt.data);
+                const status = (d.status || '').trim();
+                const timer  = d.timer  || '';
+
+                const prevStatus  = currentStatus;
+                currentStatus = status;
+
+                // Freeze timer on first Finish message
+                if (status === 'Finish' && prevStatus !== 'Finish') {
+                    frozenTimer = timerEl.textContent;
+                }
+                // Reset timer when warmup begins
+                if (status === 'warmup' && prevStatus !== 'warmup') {
+                    frozenTimer = null;
+                    timerEl.textContent = '0:00.0';
+                }
+                // Clear freeze if race restarted (Green)
+                if (status === 'Green' && prevStatus !== 'Green') {
+                    frozenTimer = null;
+                }
+
+                // Update timer only when not frozen
+                if (frozenTimer !== null) {
+                    timerEl.textContent = frozenTimer;
+                } else if (timer) {
+                    timerEl.textContent = timer;
+                }
+
+                // Active dot
+                timerDot.classList.toggle('on', status === 'Green');
+
+                // Dim timer when idle
+                if (status === 'Green' || status === 'Finish') {
+                    timerEl.classList.remove('dimmed');
+                } else {
+                    timerEl.classList.add('dimmed');
+                }
+
+                // Heat block colour — status takes priority over accent
+                if (status === 'Green') {
+                    heatBlock.style.background = '#1a8f1a';
+                } else if (status === 'Red' || status === 'red') {
+                    heatBlock.style.background = '#cc2222';
+                } else if (status === 'warmup') {
+                    heatBlock.style.background = '#8b32c8';
+                } else if (status === 'Finish') {
+                    heatBlock.style.background = '#2471a3';
+                } else {
+                    // Idle — restore event accent colour
+                    heatBlock.style.background = lastAccent;
+                }
+            } catch (e) { /* ignore */ }
+        };
+
+        ws.onclose = function () { setTimeout(connectOrbitsWS, 3000); };
+        ws.onerror = function () { ws.close(); };
+    }
+
+    // ── Flask-SocketIO — event_meta room ──────────────────────────
+    const socket = io('http://' + wsHost + ':' + wsPort, { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', function () {
+        socket.emit('join', { username: 'overlay_bakkecross', room: 'event_meta' });
+    });
+
+    socket.on('response', function (dataString) {
+        try {
+            const data = typeof dataString === 'string' ? JSON.parse(dataString) : dataString;
+            if (!data) return;
+            if (data.TITLE_2 !== undefined) renderMeta(data);
+        } catch (e) { console.error('[bakkecross overlay] parse error:', e); }
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    connectOrbitsWS();
+})();
+</script>
+</body>
+</html>

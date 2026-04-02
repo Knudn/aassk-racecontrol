@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finale Aktiv</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+        }
+
+        /* ── Header ── */
+        #page-header {
+            flex-shrink: 0;
+            align-self: center;
+            width: fit-content;
+            min-width: 240px;
+            padding: 8px 28px 6px;
+            text-align: center;
+            background: rgba(14, 16, 28, 0.98);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #page-header.show { opacity: 1; transform: translateY(0); }
+
+        #title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        #result-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .sep {
+            font-size: 13px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.35);
+            line-height: 1;
+        }
+
+        #title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        /* ── Main card ── */
+        #table-wrap {
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px 14px;
+            gap: 2px;
+            background: rgba(10, 12, 20, 0.97);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Column header row ── */
+        #col-headers {
+            display: flex;
+            align-items: center;
+            padding: 10px 0 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease 0.15s;
+        }
+        #col-headers.show { opacity: 1; }
+
+        .ch {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            flex-shrink: 0;
+            padding: 0 14px;
+            border-right: 1px solid rgba(255,255,255,0.12);
+            text-align: center;
+        }
+        .ch.c-name { padding: 0 8px; text-align: left; }
+        .ch:last-child { border-right: none; }
+
+        /* ── Data rows ── */
+        .row-slice {
+            display: flex;
+            align-items: center;
+            height: 34px;
+            background: transparent;
+            border-left: 2px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .row-slice.show { opacity: 1; transform: translateX(0); }
+
+        .row-slice.rank-1 { border-left-color: #e8b840; }
+        .row-slice.rank-2 { border-left-color: rgba(200,200,215,0.30); }
+        .row-slice.rank-3 { border-left-color: #c07030; }
+        .row-slice.has-penalty { border-left-color: rgba(255,80,80,0.45); }
+
+        /* ── Column widths ── */
+        .c-pos    { width: 48px;  min-width: 48px;  flex-shrink: 0; }
+        .c-name   { flex: 1;      min-width: 120px; }
+        .c-club   { width: 210px; min-width: 140px; flex-shrink: 0; }
+        .c-vehicle{ width: 180px; min-width: 120px; flex-shrink: 0; }
+        .c-time   { width: 110px; min-width: 110px; flex-shrink: 0; }
+
+        /* ── Cell content ── */
+        .cell {
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 1px solid rgba(255,255,255,0.10);
+        }
+        .cell:last-child { border-right: none; }
+        .cell.c-name { padding: 0 8px; justify-content: flex-start; }
+
+        /* Position badge */
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.28);
+            background: rgba(255,255,255,0.04);
+        }
+        .rank-1 .pos-badge { color: #e8b840; background: rgba(232,184,64,0.10); }
+        .rank-2 .pos-badge { color: rgba(210,210,225,0.75); background: rgba(210,210,225,0.07); }
+        .rank-3 .pos-badge { color: #c07030; background: rgba(192,112,48,0.10); }
+
+        /* Values */
+        .val-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .val-club, .val-vehicle {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.60);
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .val-time {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .val-time.empty   { color: rgba(255,255,255,0.22); font-weight: 500; }
+        .val-time.penalty { color: rgba(255,100,100,0.90); }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div id="page-header">
+        <div id="title-row">
+            <span id="result-label">Finale</span>
+            <span class="sep">·</span>
+            <span id="title">—</span>
+        </div>
+    </div>
+
+    <div id="table-wrap">
+        <div id="col-headers"></div>
+        <div id="rows"></div>
+    </div>
+
+</div>
+<script>
+    // ── URL params ────────────────────────────────────────────────
+    const params  = new URLSearchParams(window.location.search);
+    const apiBase = params.get('api') || 'http://192.168.1.50:7777';
+
+    (function applyParams() {
+        const app    = document.getElementById('app');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+        const w      = params.get('w');
+        const h      = params.get('h');
+        if (w) app.style.width  = w + 'px';
+        if (h) app.style.height = h + 'px';
+
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const alpha = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.getElementById('table-wrap').style.background = `rgba(10, 12, 20, ${alpha})`;
+        }
+
+        if (scale) {
+            document.body.style.transformOrigin = mirror ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function fmtMs(ms) {
+        const total = parseFloat(ms) / 1000;
+        if (!ms || isNaN(total) || total <= 0) return '--';
+        if (total < 60) return total.toFixed(3);
+        const mins = Math.floor(total / 60);
+        const secs = (total % 60).toFixed(3).padStart(6, '0');
+        return `${mins}:${secs}`;
+    }
+
+    const PENALTY_CODES = { 1: 'DNS', 2: 'DNF', 3: 'DSQ' };
+    function penaltyLabel(pen) { return PENALTY_CODES[pen] || null; }
+
+    function formatName(f, l) {
+        if (!f && !l) return '—';
+        if (!l) return f;
+        if (!f) return l;
+        return f + ' ' + l;
+    }
+
+    // ── Parse raw API data into flat sorted driver list ───────────
+    function parseStartlist(rawArray) {
+        const config = (rawArray[0] || {}).race_config || {};
+        const title  = config.TITLE_2 || config.TITLE_1 || '—';
+
+        const drivers = [];
+        rawArray.forEach(entry => {
+            if (!entry.drivers) return;
+            entry.drivers.forEach(d => {
+                drivers.push({
+                    id:         d.id,
+                    first_name: d.first_name || '',
+                    last_name:  d.last_name  || '',
+                    club:       d.club        || '',
+                    vehicle:    d.vehicle     || '',
+                    finishtime: d.time_info?.FINISHTIME || 0,
+                    penalty:    d.time_info?.PENELTY    || 0,
+                });
+            });
+        });
+
+        // Penalised → bottom; then sort by finishtime asc; 0 (not yet run) → bottom
+        drivers.sort((a, b) => {
+            const aPen = a.penalty !== 0;
+            const bPen = b.penalty !== 0;
+            if (aPen && !bPen) return 1;
+            if (!aPen && bPen) return -1;
+            if (aPen && bPen) return 0;
+            const aT = a.finishtime || Infinity;
+            const bT = b.finishtime || Infinity;
+            return aT - bT;
+        });
+
+        return { title, drivers };
+    }
+
+    // ── DOM helpers ───────────────────────────────────────────────
+    function div(cls) {
+        const el = document.createElement('div');
+        el.className = cls;
+        return el;
+    }
+    function span(cls, text) {
+        const el = document.createElement('span');
+        el.className = cls;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+
+    // ── Column headers ────────────────────────────────────────────
+    function buildColHeaders() {
+        const hdr = document.getElementById('col-headers');
+        hdr.innerHTML = '';
+        [
+            ['Pos',      'c-pos'],
+            ['Fører',    'c-name'],
+            ['Klubb',    'c-club'],
+            ['Kjøretøy', 'c-vehicle'],
+            ['Tid',      'c-time'],
+        ].forEach(([label, cls]) => {
+            const el = div('ch ' + cls);
+            el.textContent = label;
+            hdr.appendChild(el);
+        });
+    }
+
+    // ── Data row ─────────────────────────────────────────────────
+    function buildDataRow(driver, pos) {
+        const hasPen  = driver.penalty !== 0;
+        const hasTime = driver.finishtime > 0 && !hasPen;
+
+        let rankCls = '';
+        if (!hasPen && hasTime) {
+            if (pos === 1)      rankCls = 'rank-1';
+            else if (pos === 2) rankCls = 'rank-2';
+            else if (pos === 3) rankCls = 'rank-3';
+        }
+
+        const row = div('row-slice ' + rankCls + (hasPen ? ' has-penalty' : ''));
+
+        // Pos
+        const posCell = div('cell c-pos');
+        const badge   = div('pos-badge');
+        badge.textContent = (hasPen || !hasTime) ? '' : pos;
+        posCell.appendChild(badge);
+        row.appendChild(posCell);
+
+        // Name
+        const nameCell = div('cell c-name');
+        nameCell.appendChild(span('val-name', formatName(driver.first_name, driver.last_name)));
+        row.appendChild(nameCell);
+
+        // Club
+        const clubCell = div('cell c-club');
+        clubCell.appendChild(span('val-club', driver.club || '—'));
+        row.appendChild(clubCell);
+
+        // Vehicle
+        const vehicleCell = div('cell c-vehicle');
+        vehicleCell.appendChild(span('val-vehicle', driver.vehicle || '—'));
+        row.appendChild(vehicleCell);
+
+        // Time
+        const timeCell = div('cell c-time');
+        const pLabel   = penaltyLabel(driver.penalty);
+        if (pLabel) {
+            timeCell.appendChild(span('val-time penalty', pLabel));
+        } else if (!hasTime) {
+            timeCell.appendChild(span('val-time empty', '--'));
+        } else {
+            timeCell.appendChild(span('val-time', fmtMs(driver.finishtime)));
+        }
+        row.appendChild(timeCell);
+
+        return row;
+    }
+
+    // ── Animation ─────────────────────────────────────────────────
+    function animateIn() {
+        document.getElementById('page-header').classList.add('show');
+        setTimeout(() => document.getElementById('col-headers').classList.add('show'), 120);
+        document.querySelectorAll('#rows .row-slice')
+            .forEach((el, i) => setTimeout(() => el.classList.add('show'), 200 + i * 38));
+    }
+
+    // ── Render ────────────────────────────────────────────────────
+    function render(rawArray) {
+        const { title, drivers } = parseStartlist(rawArray);
+
+        const cleanTitle = title.replace(/\s*-\s*finale\s*/i, '').trim();
+        document.getElementById('title').textContent = cleanTitle || '—';
+
+        buildColHeaders();
+
+        const container = document.getElementById('rows');
+        container.innerHTML = '';
+        container.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+
+        let pos = 1;
+        drivers.forEach(d => {
+            const hasPen  = d.penalty !== 0;
+            const hasTime = d.finishtime > 0 && !hasPen;
+            container.appendChild(buildDataRow(d, hasTime ? pos++ : null));
+        });
+
+        requestAnimationFrame(animateIn);
+    }
+
+    // ── Fetch ─────────────────────────────────────────────────────
+    function load() {
+        fetch(`${apiBase}/api/get_current_startlist_w_data`)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length < 2) throw new Error('empty');
+                render(data);
+            })
+            .catch(e => console.error('[finale-aktiv] feil:', e));
+    }
+
+    load();
+</script>
+</body>
+</html>

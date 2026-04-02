@@ -530,6 +530,15 @@ def calculate_standing(entries):
         if best_time is None:
             return float('inf')
 
+        best_time = str(best_time)
+        if ":" in best_time:
+            parts = best_time.split(":")
+            total_seconds = 0
+            for index, part in enumerate(parts):
+                value = float(part)
+                total_seconds += value * 60 if index == 0 else value
+            return total_seconds
+
         return float(best_time)
 
 
@@ -627,9 +636,8 @@ def calculate_standing(entries):
         
 def insert_event_data(event_id=None, full_sync=None, active=None):
     from app.lib.db_func import insert_orbits_data, insert_msports_data
- 
+    print(full_sync)
     g_config = GetEnv()
-
     if g_config["msport_tm"] == False:
         if event_id != None:
             insert_orbits_data(event_id=event_id)

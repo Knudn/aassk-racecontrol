@@ -1,0 +1,24 @@
+[2026-03-07 18:27:20,468] INFO in _internal: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.50:5000
+[2026-03-07 18:27:20,469] INFO in clock_server_vola: TCP server listening on 192.168.1.51:7000
+[2026-03-07 18:27:20,470] INFO in _internal: [33mPress CTRL+C to quit[0m
+[2026-03-07 18:42:21,328] INFO in _internal: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.50:5000
+[2026-03-07 18:42:21,329] INFO in _internal: [33mPress CTRL+C to quit[0m
+[2026-03-07 18:42:21,329] INFO in clock_server_vola: TCP server listening on 192.168.1.51:7000
+[2026-03-07 22:17:25,949] INFO in _internal: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.50:5000
+[2026-03-07 22:17:25,950] INFO in clock_server_vola: TCP server listening on 192.168.1.51:7000
+[2026-03-07 22:17:25,951] INFO in _internal: [33mPress CTRL+C to quit[0m
+[2026-03-07 23:14:46,789] INFO in _internal: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.50:5000
+[2026-03-07 23:14:46,790] INFO in clock_server_vola: TCP server listening on 192.168.1.51:7000
+[2026-03-07 23:14:46,790] INFO in _internal: [33mPress CTRL+C to quit[0m

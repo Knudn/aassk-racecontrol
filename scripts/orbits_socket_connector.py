@@ -106,7 +106,7 @@ def tcp_thread():
     while True:
         try:
             sock = socket.socket()
-            sock.connect(('192.168.20.23', 50000))
+            sock.connect(('192.168.1.186', 50000))
             logger.info("[TCP] Connected")
             buf = ""
             while True:

@@ -61,6 +61,7 @@ def register_archive_routes(api_bp):
             else:
 
                 send_data = get_active_startlist_w_timedate()
+                
                 single_event = True
                 result = None
                 event_data = None
@@ -85,9 +86,12 @@ def register_archive_routes(api_bp):
 
         elif update_type == "full_sync":
             from app.models import Session_Race_Records
-
-            title_1_filter = Session_Race_Records.query.first().title_1
-
+            
+            if race_type == "MyLaps Cross":
+                title_1_filter = ""
+            else:
+                title_1_filter = Session_Race_Records.query.first().title_1
+            
             event_data = []
 
             single_event = False
@@ -97,7 +101,6 @@ def register_archive_routes(api_bp):
                 .order_by(ActiveEvents.sort_order)
                 .all()
             )
-
             for k, a in enumerate(events):
                 event_data.append(
                     {
@@ -109,7 +112,9 @@ def register_archive_routes(api_bp):
                 )
 
             result = [event.to_dict() for event in data]
+
             send_data = export_events()
+            print(export_events())
             revered_data = []
             if not g_config["msport_tm"]:
                 points_data = ""
@@ -135,8 +140,7 @@ def register_archive_routes(api_bp):
                                         send_data[tk][k - 1]["drivers"][0]["time_info"][
                                             "POINTS"
                                         ] = a.points
-
-                                        # print(a.first_name, a.last_name, heat, a.points, a.laps)
+                                        print(a)
 
         else:
             return {"error": "Invalid update type"}, 400

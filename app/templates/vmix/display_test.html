@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Display</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      padding: 2rem;
+    }
+
+    #text-output {
+      max-width: 90vw;
+      word-wrap: break-word;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Info box shown when no params are set */
+    #info {
+      font-family: monospace;
+      font-size: 13px;
+      color: #888;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      max-width: 560px;
+      line-height: 1.8;
+    }
+
+    #info h2 {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 0.75rem;
+    }
+
+    #info code {
+      background: #f0f0f0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #c0392b;
+    }
+
+    #info .example {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #eee;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+<div id="text-output"></div>
+<div id="info" style="display:none">
+  <h2>URL Params</h2>
+  <table style="border-collapse:collapse;width:100%">
+    <tr><td style="padding:2px 8px 2px 0"><code>text</code></td><td>The text to display</td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>size</code></td><td>Font size (e.g. <code>32</code>, <code>2rem</code>, <code>5vw</code>)</td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>color</code></td><td>Color name or hex (e.g. <code>red</code>, <code>%23ff6600</code>)</td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>font</code></td><td><code>serif</code>, <code>sans</code>, <code>mono</code>, <code>cursive</code>, <code>fantasy</code></td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>bg</code></td><td>Background color</td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>align</code></td><td><code>left</code>, <code>center</code>, <code>right</code></td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>bold</code></td><td><code>1</code> to enable bold</td></tr>
+    <tr><td style="padding:2px 8px 2px 0"><code>italic</code></td><td><code>1</code> to enable italic</td></tr>
+  </table>
+  <div class="example">
+    Example:<br>
+    <code>?text=Hello+World&amp;size=48&amp;color=%23e74c3c&amp;font=serif&amp;bold=1</code>
+  </div>
+</div>
+
+<script>
+  const FONTS = {
+    serif:   'Georgia, "Times New Roman", serif',
+    sans:    '"Helvetica Neue", Arial, sans-serif',
+    mono:    '"Courier New", Courier, monospace',
+    cursive: 'Georgia, cursive',
+    fantasy: 'Impact, fantasy'
+  };
+
+  const params = new URLSearchParams(window.location.search);
+
+  const text   = params.get('text');
+  const size   = params.get('size');
+  const color  = params.get('color');
+  const font   = params.get('font');
+  const bg     = params.get('bg');
+  const align  = params.get('align');
+  const bold   = params.get('bold');
+  const italic = params.get('italic');
+
+  const el   = document.getElementById('text-output');
+  const info = document.getElementById('info');
+
+  if (!text) {
+    // No text param — show usage info
+    el.style.display = 'none';
+    info.style.display = 'block';
+  } else {
+    el.textContent = text;
+
+    if (size)   el.style.fontSize   = isNaN(size) ? size : size + 'px';
+    if (color)  el.style.color      = color;
+    if (font)   el.style.fontFamily = FONTS[font] || font;
+    if (align)  el.style.textAlign  = align;
+    if (bold   === '1') el.style.fontWeight  = 'bold';
+    if (italic === '1') el.style.fontStyle   = 'italic';
+    if (bg)     document.body.style.background = bg;
+  }
+</script>
+</body>
+</html>

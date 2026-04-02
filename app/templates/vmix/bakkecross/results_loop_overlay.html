@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultater – Løkke</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%; height: 100%;
+            position: relative;
+        }
+
+        /* ── Header ── */
+        #page-header {
+            flex-shrink: 0;
+            align-self: center;
+            width: fit-content;
+            padding: 8px 28px 6px;
+            text-align: center;
+            background: rgba(14, 16, 28, 0.98);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #page-header.show { opacity: 1; transform: translateY(0); }
+
+        #title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        #result-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .sep {
+            font-size: 13px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.35);
+            line-height: 1;
+        }
+
+        #title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        #heat-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+        }
+
+        #counter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.40);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ── Progress bar ── */
+        #progress-wrap {
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 1px;
+            margin-top: 6px;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: rgba(255,255,255,0.45);
+            border-radius: 1px;
+        }
+
+        /* ── Main card ── */
+        #table-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 16px 14px;
+            gap: 2px;
+            overflow: hidden;
+            background: rgba(10, 12, 20, 0.97);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Column header row ── */
+        #col-headers {
+            display: flex;
+            align-items: center;
+            padding: 10px 0 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease 0.15s;
+        }
+        #col-headers.show { opacity: 1; }
+
+        .ch {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.55);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .ch.right  { text-align: right; }
+        .ch.center { text-align: center; }
+
+        /* ── Data row slice ── */
+        .row-slice {
+            display: flex;
+            align-items: center;
+            height: 56px;
+            background: transparent;
+            border-left: 4px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .row-slice.show { opacity: 1; transform: translateX(0); }
+
+        .row-slice.rank-1 { border-left-color: #e8b840; }
+        .row-slice.rank-2 { border-left-color: rgba(200,200,215,0.30); }
+        .row-slice.rank-3 { border-left-color: #c07030; }
+        .row-slice.is-penalty { opacity: 0.30 !important; }
+
+        /* ── Column widths ── */
+        .c-pos   { width: 68px;  min-width: 68px;  }
+        .c-cid   { width: 56px;  min-width: 56px;  }
+        .c-name  { flex: 1;      min-width: 0;     }
+        .c-sled  { width: 16%;   min-width: 90px;  }
+        .c-time  { width: 118px; min-width: 118px; }
+        .c-gap   { width: 108px; min-width: 108px; }
+        .c-pts   { width: 62px;  min-width: 62px;  }
+
+        /* ── Cell content ── */
+        .cell {
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .cell.right  { justify-content: flex-end; }
+        .cell.center { justify-content: center; }
+
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px; height: 38px;
+            border-radius: 6px;
+            font-size: 20px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.28);
+            background: rgba(255,255,255,0.04);
+        }
+        .rank-1 .pos-badge { color: #e8b840; background: rgba(232,184,64,0.10); }
+        .rank-2 .pos-badge { color: rgba(210,210,225,0.75); background: rgba(210,210,225,0.07); }
+        .rank-3 .pos-badge { color: #c07030; background: rgba(192,112,48,0.10); }
+        .is-penalty .pos-badge {
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            color: rgba(210,70,70,0.75);
+            background: rgba(210,70,70,0.08);
+        }
+
+        .val-cid {
+            font-size: 17px; font-weight: 600;
+            color: rgba(255,255,255,0.60);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-name {
+            font-size: 20px; font-weight: 700;
+            color: #fff;
+            text-overflow: ellipsis; overflow: hidden;
+        }
+        .val-sled {
+            font-size: 14px; font-weight: 500;
+            color: rgba(255,255,255,0.65);
+            text-overflow: ellipsis; overflow: hidden;
+        }
+        .val-time {
+            font-size: 20px; font-weight: 700;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .val-time.penalty-text {
+            font-size: 13px; font-weight: 700;
+            letter-spacing: 1px;
+            color: rgba(255, 80, 80, 0.90);
+        }
+        .val-gap {
+            font-size: 14px; font-weight: 500;
+            color: rgba(255,255,255,0.65);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-pts {
+            font-size: 17px; font-weight: 700;
+            color: rgba(255,255,255,0.50);
+            font-variant-numeric: tabular-nums;
+        }
+        .val-pts.lit { color: #fff; }
+
+        /* ── Tom tilstand ── */
+        #tom-melding {
+            display: none;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.20);
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div id="page-header">
+        <div id="title-row">
+            <span id="result-label">Resultater</span>
+            <span class="sep">·</span>
+            <span id="title">—</span>
+            <span class="sep">·</span>
+            <span id="heat-label">—</span>
+            <span class="sep">·</span>
+            <span id="counter-label">— / —</span>
+        </div>
+        <div id="progress-wrap">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div id="table-wrap">
+        <div id="col-headers"></div>
+        <div id="rows"></div>
+        <div id="tom-melding">Ingen resultater funnet</div>
+    </div>
+
+</div>
+<script>
+    // ── URL params ───────────────────────────────────────────────
+    const params       = new URLSearchParams(window.location.search);
+    const TIMER_SEC    = Math.max(3, parseInt(params.get('timer') || '10'));
+
+    // filter: delstreng på hendelsesnavn
+    const FILTER       = (params.get('filter') || '').toLowerCase().trim();
+
+    // finished: 'true' = kun avsluttede, 'false' = alle (standard for resultater)
+    const FERDIG_PARAM = (params.get('finished') || 'all').toLowerCase().trim();
+
+    // points: 'false' = skjul poengkolonnen
+    const VIS_POENG    = params.get('points') !== 'false';
+
+    (function applyParams() {
+        const app    = document.getElementById('app');
+        const mirror = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const scale  = params.get('scale');
+        const w = params.get('w'), h = params.get('h');
+        if (w) app.style.width  = w + 'px';
+        if (h) app.style.height = h + 'px';
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const alpha = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.getElementById('table-wrap').style.background = `rgba(10, 12, 20, ${alpha})`;
+        }
+        if (scale) {
+            document.body.style.transformOrigin = mirror ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(scale) + ')';
+        }
+    })();
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function formatName(f, l) {
+        if (!f && !l) return '—';
+        if (f === l) return l || '—';
+        if (!l) return f;
+        if (!f) return l;
+        return f.charAt(0) + '. ' + l;
+    }
+
+    function formatMs(ms) {
+        if (!ms || ms <= 0) return '—';
+        const totalMs = Math.round(ms);
+        const minutes = Math.floor(totalMs / 60000);
+        const seconds = Math.floor((totalMs % 60000) / 1000);
+        const millis  = totalMs % 1000;
+        const secStr  = String(seconds).padStart(minutes > 0 ? 2 : 1, '0');
+        const msStr   = String(millis).padStart(3, '0');
+        return minutes > 0 ? `${minutes}:${secStr}.${msStr}` : `${secStr}.${msStr}`;
+    }
+
+    function formatGap(ms) {
+        if (!ms || ms <= 0) return '';
+        return '+' + formatMs(ms);
+    }
+
+    function penaltyLabel(code) {
+        const map = { 1: 'DNS', 2: 'DNF', 3: 'DSQ' };
+        return map[code] || 'PEN';
+    }
+
+    function div(cls, inner) {
+        const el = document.createElement('div');
+        el.className = cls;
+        if (inner !== undefined) el.textContent = inner;
+        return el;
+    }
+
+    // ── Column headers ───────────────────────────────────────────
+    function buildHeaders() {
+        const hdr = document.getElementById('col-headers');
+        hdr.innerHTML = '';
+        function ch(label, cls) { hdr.appendChild(div('ch ' + cls, label)); }
+        ch('Pos',     'center c-pos');
+        ch('#',       'center c-cid');
+        ch('Fører',   'c-name');
+        ch('Scooter', 'c-sled');
+        ch('Tid',     'right c-time');
+        ch('Gap',     'right c-gap');
+        if (VIS_POENG) ch('Pkt', 'right c-pts');
+    }
+
+    // ── Row builder ──────────────────────────────────────────────
+    function makeRow(d, leaderMs) {
+        const isPen    = d.penalty > 0;
+        const standing = d.internal_standing ?? '';
+        const rankCls  = isPen ? 'is-penalty' : (standing === 1 ? 'rank-1' : standing === 2 ? 'rank-2' : standing === 3 ? 'rank-3' : '');
+        const row      = div('row-slice ' + rankCls);
+
+        const posCell = div('cell center c-pos');
+        const badge   = div('pos-badge', isPen ? '' : standing);
+        posCell.appendChild(badge);
+        row.appendChild(posCell);
+
+        const cidCell = div('cell center c-cid');
+        cidCell.appendChild(div('val-cid', d.cid ?? ''));
+        row.appendChild(cidCell);
+
+        const nameCell = div('cell c-name');
+        nameCell.appendChild(div('val-name', formatName(d.first_name, d.last_name)));
+        row.appendChild(nameCell);
+
+        const sledCell = div('cell c-sled');
+        sledCell.appendChild(div('val-sled', d.snowmobile || ''));
+        row.appendChild(sledCell);
+
+        const timeCell = div('cell right c-time');
+        if (isPen) {
+            timeCell.appendChild(div('val-time penalty-text', penaltyLabel(d.penalty)));
+        } else {
+            const ms = d.finishtime || 0;
+            timeCell.appendChild(div('val-time', ms > 0 ? formatMs(ms) : '—'));
+        }
+        row.appendChild(timeCell);
+
+        const gapCell = div('cell right c-gap');
+        if (!isPen && leaderMs > 0) {
+            const ms = d.finishtime || 0;
+            gapCell.appendChild(div('val-gap', ms > 0 ? formatGap(ms - leaderMs) : ''));
+        }
+        row.appendChild(gapCell);
+
+        if (VIS_POENG) {
+            const ptsCell = div('cell right c-pts');
+            ptsCell.appendChild(div('val-pts' + (d.points > 0 ? ' lit' : ''), d.points > 0 ? d.points : ''));
+            row.appendChild(ptsCell);
+        }
+
+        return row;
+    }
+
+    // ── Animation ────────────────────────────────────────────────
+    function animateIn() {
+        document.getElementById('page-header').classList.add('show');
+        setTimeout(() => document.getElementById('col-headers').classList.add('show'), 120);
+        document.querySelectorAll('#rows .row-slice')
+            .forEach((el, i) => setTimeout(() => el.classList.add('show'), 200 + i * 38));
+    }
+
+    function animateOut(cb) {
+        document.getElementById('page-header').classList.remove('show');
+        document.getElementById('col-headers').classList.remove('show');
+        document.querySelectorAll('#rows .row-slice').forEach(el => el.classList.remove('show'));
+        setTimeout(cb, 350);
+    }
+
+    // ── Progress bar ─────────────────────────────────────────────
+    function startProgress() {
+        const bar = document.getElementById('progress-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            bar.style.transition = `width ${TIMER_SEC}s linear`;
+            bar.style.width = '100%';
+        }));
+    }
+
+    function resetProgress() {
+        const bar = document.getElementById('progress-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '0%';
+    }
+
+    // ── Render ───────────────────────────────────────────────────
+    function render(data) {
+        const eventName = data.TITLE_2 || data.TITLE_1 || '—';
+        const heat      = data.HEAT ?? '—';
+        const heats     = data.HEATS ?? '—';
+
+        document.getElementById('title').textContent      = eventName;
+        document.getElementById('heat-label').textContent = `Heat ${heat} / ${heats}`;
+
+        buildHeaders();
+
+        const entries = (data.time_info || []).slice().sort((a, b) => {
+            const pa = (a.penalty > 0) ? 1 : 0;
+            const pb = (b.penalty > 0) ? 1 : 0;
+            if (pa !== pb) return pa - pb;
+            const ta = a.finishtime || Infinity;
+            const tb = b.finishtime || Infinity;
+            return ta - tb;
+        });
+
+        const leader = entries.find(e => !e.penalty && e.finishtime > 0);
+        const leaderMs = leader ? leader.finishtime : 0;
+
+        entries.forEach((e, i) => { e.internal_standing = i + 1; });
+
+        const container = document.getElementById('rows');
+        container.innerHTML = '';
+        container.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex:1;';
+
+        const tomMelding = document.getElementById('tom-melding');
+        if (entries.length === 0) {
+            tomMelding.style.display = 'flex';
+        } else {
+            tomMelding.style.display = 'none';
+            entries.forEach(d => container.appendChild(makeRow(d, leaderMs)));
+        }
+
+        requestAnimationFrame(animateIn);
+    }
+
+    // ── Build event program list ──────────────────────────────────
+    function byggProgram(alleHendelser) {
+        let filtrert = alleHendelser;
+
+        // Filtrer på ferdig-status
+        if (FERDIG_PARAM === 'false') {
+            filtrert = filtrert.filter(e => !e.finished);
+        } else if (FERDIG_PARAM === 'true') {
+            filtrert = filtrert.filter(e => !!e.finished);
+        }
+
+        // Filtrer på hendelsesnavn
+        if (FILTER) {
+            filtrert = filtrert.filter(e =>
+                e.event_name.toLowerCase().includes(FILTER)
+            );
+        }
+
+        filtrert.sort((a, b) => a.sort_order - b.sort_order);
+
+        // Each entry in ActiveEvents is already an event+heat combination — use them directly
+        return filtrert.map(e => ({ event_name: e.event_name, heat: e.run }));
+    }
+
+    // ── Loop state ───────────────────────────────────────────────
+    let program    = [];
+    let loopIdx    = 0;
+    let slideTimer = null;
+
+    function updateCounter() {
+        document.getElementById('counter-label').textContent =
+            program.length > 0 ? `${loopIdx + 1} / ${program.length}` : '— / —';
+    }
+
+    function showAndSchedule() {
+        const { event_name, heat } = program[loopIdx];
+        const url = `/api/get_event_data?event=${encodeURIComponent(event_name)}&heat=${heat}`;
+
+        fetch(url)
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(data => {
+                if (data.ERROR) {
+                    console.warn('[resultater-løkke] ingen data for', event_name, heat);
+                    scheduleNext();
+                    return;
+                }
+                render(data);
+                updateCounter();
+                startProgress();
+            })
+            .catch(e => console.error('[resultater-løkke] feil ved lasting:', e));
+
+        clearTimeout(slideTimer);
+        slideTimer = setTimeout(() => {
+            animateOut(() => {
+                resetProgress();
+                loopIdx = (loopIdx + 1) % program.length;
+                showAndSchedule();
+            });
+        }, TIMER_SEC * 1000);
+    }
+
+    function scheduleNext() {
+        clearTimeout(slideTimer);
+        slideTimer = setTimeout(() => {
+            loopIdx = (loopIdx + 1) % program.length;
+            showAndSchedule();
+        }, 2000);
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    function loadEventList() {
+        fetch('/api/get_active_events')
+            .then(r => r.json())
+            .then(data => {
+                program = byggProgram(data);
+
+                if (program.length === 0) {
+                    console.warn('[resultater-løkke] ingen hendelser matcher filtrene');
+                    document.getElementById('tom-melding').style.display = 'flex';
+                    return;
+                }
+
+                loopIdx = 0;
+                showAndSchedule();
+            })
+            .catch(e => console.error('[resultater-løkke] feil ved lasting av hendelser:', e));
+    }
+
+    loadEventList();
+    setInterval(() => {
+        if (program.length > 0) return;
+        loadEventList();
+    }, 30000);
+</script>
+</body>
+</html>

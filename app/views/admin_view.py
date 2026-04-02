@@ -99,10 +99,10 @@ def start_logic():
     g_conf = GetEnv()
     start_data = StartLogic.query.first()
 
-    
     if request.method == "POST":
-        mqtt_mw_state = MicroServices.query.filter(MicroServices.path == "mqtt_middleware.py").first()
-
+        mqtt_mw_state = MicroServices.query.filter(
+            MicroServices.path == "mqtt_middleware.py"
+        ).first()
 
         if "start_light_ip" not in request.form:
             import paho.mqtt.publish as publish
@@ -120,7 +120,7 @@ def start_logic():
 
         def hex_to_rgb_string(hex_color):
             hex_color = hex_color.lstrip("#")
-            rgb = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+            rgb = tuple(int(hex_color[i: i + 2], 16) for i in (0, 2, 4))
             return str(list(rgb))
 
         start_data.start_light_ip = request.form["start_light_ip"]
@@ -132,12 +132,18 @@ def start_logic():
         start_data.sl_stop_color = hex_to_rgb_string(request.form["sl_stop_color"])
         start_data.sl_ready_color = hex_to_rgb_string(request.form["sl_ready_color"])
         start_data.sl_brightness = request.form["sl_brightness"]
-        
+
+        # Warmup durations
+        if request.form.get("sl_warmup_duration_1"):
+            start_data.sl_warmup_duration_1 = float(request.form["sl_warmup_duration_1"])
+        if request.form.get("sl_warmup_duration_2"):
+            start_data.sl_warmup_duration_2 = float(request.form["sl_warmup_duration_2"])
+
         if "use_orbits" in request.form:
             start_data.use_orbits = True
         else:
             start_data.use_orbits = False
-        
+
         if "req_orbits_warmup" in request.form:
             start_data.req_orbits_warmup = True
         else:
@@ -148,22 +154,40 @@ def start_logic():
         else:
             start_data.sl_start_using_relay = False
 
-        if request.form.get("sl_warmup_image_data"):
-            image_data = request.form["sl_warmup_image_data"]
-            image_data = image_data.split(",")[1]
+        # Warmup image 1
+        image_data_raw = request.form.get("sl_warmup_image_data")
+        if image_data_raw:
+            print(f"Received warmup image 1 data, length: {len(image_data_raw)}")
+            image_data = image_data_raw.split(",")[1]
             image_bytes = base64.b64decode(image_data)
-
             img = Image.open(io.BytesIO(image_bytes))
-
             img_io = io.BytesIO()
             img.save(img_io, "PNG")
             start_data.sl_warmup_image = img_io.getvalue()
+            print(f"Saved warmup image 1, size: {len(start_data.sl_warmup_image)} bytes")
+        else:
+            print("No warmup image 1 data received")
+
+        # Warmup image 2 (optional)
+        image_data_2_raw = request.form.get("sl_warmup_image_data_2")
+        if image_data_2_raw:
+            print(f"Received warmup image 2 data, length: {len(image_data_2_raw)}")
+            image_data_2 = image_data_2_raw.split(",")[1]
+            image_bytes_2 = base64.b64decode(image_data_2)
+            img2 = Image.open(io.BytesIO(image_bytes_2))
+            img_io_2 = io.BytesIO()
+            img2.save(img_io_2, "PNG")
+            start_data.sl_warmup_image_2 = img_io_2.getvalue()
+            print(f"Saved warmup image 2, size: {len(start_data.sl_warmup_image_2)} bytes")
+        else:
+            print("No warmup image 2 data received")
 
         start_data.fc_req_ready = "fc_req_ready" in request.form
         start_data.cr_req_ready = "cr_req_ready" in request.form
         start_data.fc_can_start = "fc_can_start" in request.form
         start_data.cr_can_start = "cr_can_start" in request.form
         start_data.sl_use_warmup_image = "sl_use_warmup_image" in request.form
+        start_data.sl_use_warmup_image_2 = "sl_use_warmup_image_2" in request.form
 
         if "sl_start_using_relay" in request.form:
             use_relay = str(True)
@@ -179,7 +203,14 @@ def start_logic():
             data["sl_start_color"] = start_data.sl_start_color
             data["sl_stop_color"] = start_data.sl_stop_color
             data["sl_ready_color"] = start_data.sl_ready_color
-            data["sl_warmup_image_data"] = StartLogic.query.first().get_rgb_values()
+            data["sl_warmup_duration_1"] = str(start_data.sl_warmup_duration_1)
+            data["sl_warmup_duration_2"] = str(start_data.sl_warmup_duration_2)
+            data["sl_use_warmup_image_2"] = str(start_data.sl_use_warmup_image_2)
+
+            fresh = StartLogic.query.first()
+            rgb_values = fresh.get_rgb_values()
+            data["sl_warmup_image_data"] = rgb_values["image_1"]
+            data["sl_warmup_image_data_2"] = rgb_values["image_2"]
 
             requests.post(
                 f"http://{start_data.start_light_ip}/api/set_config",
@@ -203,9 +234,9 @@ def start_logic():
         except:
             return "#000000"
 
-    # Parse matrix size for canvas
     matrix_size = start_data.sl_matric_size or "24x32"
     matrix_width, matrix_height = map(int, matrix_size.split("x"))
+
     try:
         requests.get("http://" + start_data.start_light_ip, timeout=1)
         endpoint_state = True
@@ -213,6 +244,15 @@ def start_logic():
         endpoint_state = False
 
     start_state_field = current_app.config["start_state"]
+
+    # Prepare image data as JSON-safe values
+    warmup_img_1 = None
+    if start_data.sl_warmup_image:
+        warmup_img_1 = base64.b64encode(start_data.sl_warmup_image).decode()
+
+    warmup_img_2 = None
+    if start_data.sl_warmup_image_2:
+        warmup_img_2 = base64.b64encode(start_data.sl_warmup_image_2).decode()
 
     return render_template(
         "admin/start_logic.html",
@@ -222,21 +262,17 @@ def start_logic():
         matrix_width=matrix_width,
         matrix_height=matrix_height,
         halt_color_hex=rgb_to_hex(start_data.sl_halt_color)
-        if start_data.sl_halt_color
-        else "#ff0000",
+            if start_data.sl_halt_color else "#ff0000",
         start_color_hex=rgb_to_hex(start_data.sl_start_color)
-        if start_data.sl_start_color
-        else "#00ff00",
+            if start_data.sl_start_color else "#00ff00",
         stop_color_hex=rgb_to_hex(start_data.sl_stop_color)
-        if start_data.sl_stop_color
-        else "#0000ff",
+            if start_data.sl_stop_color else "#0000ff",
         ready_color_hex=rgb_to_hex(start_data.sl_ready_color)
-        if start_data.sl_ready_color
-        else "#000000",
-        warmup_image_b64=base64.b64encode(start_data.sl_warmup_image).decode()
-        if start_data.sl_warmup_image
-        else None,
+            if start_data.sl_ready_color else "#000000",
+        warmup_image_b64=warmup_img_1,
+        warmup_image_2_b64=warmup_img_2,
     )
+
 
 def home_tab():
     from app.models import (

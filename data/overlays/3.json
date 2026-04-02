@@ -1,8 +1,8 @@
 {
   "id": 3,
   "name": "Bakkecross",
-  "active_view_id": 1,
-  "next_view_id": 2,
+  "active_view_id": 6,
+  "next_view_id": 7,
   "res_w": 1920,
   "res_h": 1080,
   "grid_version": 3,
@@ -38,6 +38,75 @@
           "gs_h": 30.78
         }
       ]
+    },
+    {
+      "id": 2,
+      "name": "Startliste Loop",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkecross/startlist_active_overlay.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": 11.08,
+          "gs_y": 7.23,
+          "gs_w": 79.88,
+          "gs_h": 87.69
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Startlist Active",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkecross/startlist_active_overlay.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": 7.59,
+          "gs_y": 3.54,
+          "gs_w": 85.45,
+          "gs_h": 92.44
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Resultatliste Active",
+      "next_widget_id": 1,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": []
+    },
+    {
+      "id": 5,
+      "name": "Resultatliste Loop",
+      "next_widget_id": 1,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": []
+    },
+    {
+      "id": 6,
+      "name": "asd",
+      "next_widget_id": 1,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": []
     }
   ]
 }

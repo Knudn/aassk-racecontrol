@@ -9,6 +9,8 @@ import requests
 import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
+import time
+
 
 _log_dir = os.path.join(os.getcwd(), 'logs')
 os.makedirs(_log_dir, exist_ok=True)
@@ -38,8 +40,8 @@ use_orbits = bool(starter_config[6])
 req_orbits_warmup = bool(starter_config[5])
 orbits_warmup = False
 
-
-
+cr_time = epoch_time_float = time.time()
+fc_time = epoch_time_float = time.time()
 
 broker = "127.0.0.1"
 port = 1883
@@ -85,7 +87,8 @@ def subscribe(client: mqtt_client):
         global field_can_start
         global mon_can_start
         global orbits_warmup
-
+        global fc_time
+        global cr_time
         topic = msg.topic
         msg = str(msg.payload.decode("utf-8", "ignore"))
         try:
@@ -104,7 +107,7 @@ def subscribe(client: mqtt_client):
 
         if topic == "start/mylaps_inter":
             logger.info("Mylaps inter: %s", msg_dict)
-
+            
             if msg_dict["current_flag"] == "finish":
                 current_state["orbits_finish"] = True
             else:
@@ -158,6 +161,11 @@ def subscribe(client: mqtt_client):
             publish(client, json.dumps(current_state), "start/state")
         
         elif topic == "start/starter_cr":
+            tmp_time = time.time()
+            if not (cr_time + 0.5) < tmp_time and msg_dict["action"] != "halt":
+                return 
+            else:
+                cr_time = time.time()
             if msg_dict["action"] == "halt":
                 if msg_dict["value"] == True:
                     current_state["halt_race"] = True
@@ -177,6 +185,7 @@ def subscribe(client: mqtt_client):
                 
                 current_state["started"]
 
+
             elif msg_dict["action"] == "start":
                 if mon_can_start and current_state["ready"] and current_state["man_ready"] and current_state["started"] != True:
                     current_state["started"] = True
@@ -195,6 +204,7 @@ def subscribe(client: mqtt_client):
                         current_state["warmup"] = False
                 else:
                     current_state["started"] = False
+            
  
             if req_orbits_warmup and current_state["orbits_warmup"] == False:
                 current_state["started"] = False
@@ -203,6 +213,12 @@ def subscribe(client: mqtt_client):
 
             publish(client, json.dumps(current_state), "start/state")
         elif topic == "start/starter_field":
+            tmp_time = time.time()
+            if not (fc_time + 0.5) < tmp_time:
+                return 
+            else:
+                fc_time = time.time()
+            
             if current_state["halt_race"] == True:
                 pass
             elif msg_dict["action"] == "ready" and req_field_ready:

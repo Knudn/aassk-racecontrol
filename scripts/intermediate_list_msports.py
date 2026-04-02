@@ -51,7 +51,7 @@ while True:
                 tracking[entry.path] = mtime
 
                 logger.info("Change detected: %s", entry.name)
-                insert_msports_data(lookup_active=True)
+                #insert_msports_data(lookup_active=True)
 
     except Exception as e:
         logger.error("Error: %s", e)

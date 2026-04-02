@@ -30,6 +30,23 @@ def dash_test():
     return render_template('vmix/cross/basic_overlay.html')
 
 
+@vmix_bp.route('/vmix/bakkecross/startlist_active', methods=['GET'])
+def bakkecross_startlist_active():
+    return render_template('vmix/bakkecross/startlist_active_overlay.html')
+
+@vmix_bp.route('/vmix/bakkecross/race_results', methods=['GET'])
+def bakkecross_race_results():
+    return render_template('vmix/bakkecross/race_results_overlay.html')
+
+@vmix_bp.route('/vmix/bakkecross/startlist_loop', methods=['GET'])
+def bakkecross_startlist_loop():
+    return render_template('vmix/bakkecross/startlist_loop_overlay.html')
+
+@vmix_bp.route('/vmix/bakkecross/results_loop', methods=['GET'])
+def bakkecross_results_loop():
+    return render_template('vmix/bakkecross/results_loop_overlay.html')
+
+
 @vmix_bp.route('/vmix/kvali_results_overlay', methods=['GET'])
 def kvali_results_overlay():
     return render_template('vmix/cross/kvali_results_overlay.html')

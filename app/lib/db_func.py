@@ -379,12 +379,13 @@ def insert_msports_data(active=False, event_number=None, full_sync=False, lookup
         active_event = ActiveDrivers.query.first().Event_id
         paths = [os.path.join(event_dir, f"Event{int(active_event):03d}.scdb")]
     elif full_sync:
+
         paths = sorted([
             os.path.join(event_dir, f)
             for f in os.listdir(event_dir)
             if f.endswith(".scdb") and "ex" not in f.lower() and "online" not in f.lower()
         ])
-    
+        print(paths)
         Session_Race_Records.query.filter(Session_Race_Records.locked == False).delete()
         my_db.session.commit()
     elif event_number is not None:
@@ -476,11 +477,20 @@ def insert_msports_data(active=False, event_number=None, full_sync=False, lookup
                     kvali_event_dict[title2] = max(kvali_event_dict.get(title2, 0), len(startlist))
 
                 try:
+
                     timing = {
-                        r[0]: {"inter_1": r[1], "inter_2": r[2], "inter_3": r[3],
-                               "speed": r[4], "penalty": r[5], "finishtime": r[6], "reaction": r[7]}
+                        r[0]: {
+                            "inter_1":    r[1],
+                            "inter_2":    r[2],
+                            "inter_3":    r[3],
+                            "speed":      r[4],
+                            "status":     r[5],
+                            "penalty":     r[5],
+                            "finishtime": r[6] + r[8] if r[6] and r[8] else r[6],
+                            "data2":      r[7],
+                        }
                         for r in ex_cur.execute(
-                            f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME, C_DATA2"
+                            f"SELECT C_NUM, C_INTER1, C_INTER2, C_INTER3, C_SPEED1, C_STATUS, C_TIME, C_DATA2, C_PENALTY"
                             f" FROM {time_table};"
                         ).fetchall()
                     }

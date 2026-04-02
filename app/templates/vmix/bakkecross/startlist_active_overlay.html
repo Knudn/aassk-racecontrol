@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startliste – Aktiv</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: transparent;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%; height: 100%;
+            position: relative;
+        }
+
+        /* ── Topptekst ── */
+        #page-header {
+            flex-shrink: 0;
+            align-self: center;
+            width: fit-content;
+            min-width: 320px;
+            padding: 10px 32px 8px;
+            text-align: center;
+            background: rgba(14, 16, 28, 0.98);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #page-header.show { opacity: 1; transform: translateY(0); }
+
+        #title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 4px;
+            background: rgba(60, 200, 100, 0.15);
+            color: #3cc864;
+        }
+
+        .mode-badge {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 4px;
+            background: rgba(232, 184, 64, 0.15);
+            color: #e8b840;
+        }
+        .mode-badge.annet {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.55);
+        }
+
+        #title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        #heat-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.55);
+        }
+
+        .sep {
+            font-size: 14px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.30);
+            line-height: 1;
+        }
+
+        /* ── Hovedkort ── */
+        #table-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0 20px 16px;
+            background: rgba(10, 12, 20, 0.97);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        /* ── Kolonneoverskrifter ── */
+        #col-headers {
+            display: flex;
+            align-items: center;
+            margin-top: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease 0.15s;
+        }
+        #col-headers.show { opacity: 1; }
+
+        .ch {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.50);
+            white-space: nowrap;
+            overflow: hidden;
+            flex-shrink: 0;
+            padding: 0 16px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+        }
+        .ch.c-name { padding: 0 14px; text-align: left; }
+        .ch.c-club { padding: 0 14px; text-align: left; }
+        .ch:last-child { border-right: none; }
+
+        /* ── Rader ── */
+        #rows {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            margin-top: 6px;
+        }
+
+        .row-slice {
+            display: flex;
+            align-items: center;
+            height: 58px;
+            background: transparent;
+            border-left: 4px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .row-slice.show { opacity: 1; transform: translateX(0); }
+        .row-slice:nth-child(even) { background: rgba(255,255,255,0.018); }
+
+        /* ── Kolonnebredder ── */
+        .c-pos  { width: 72px;  min-width: 72px;  flex-shrink: 0; }
+        .c-cid  { width: 72px;  min-width: 72px;  flex-shrink: 0; }
+        .c-name { flex: 1;      min-width: 130px; }
+        .c-club { width: 220px; min-width: 120px; flex-shrink: 0; }
+
+        /* ── Celle ── */
+        .cell {
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 1px solid rgba(255,255,255,0.07);
+            height: 100%;
+        }
+        .cell:last-child { border-right: none; }
+        .cell.c-name { padding: 0 14px; justify-content: flex-start; }
+        .cell.c-club { padding: 0 14px; justify-content: flex-start; }
+
+        .pos-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px; height: 42px;
+            border-radius: 7px;
+            font-size: 22px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .val-cid   { font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.80); font-variant-numeric: tabular-nums; }
+        .val-name  { font-size: 22px; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; }
+        .val-club  { font-size: 17px; font-weight: 500; color: rgba(255,255,255,0.50); text-overflow: ellipsis; overflow: hidden; }
+
+        /* ── Tom tilstand ── */
+        #tom-melding {
+            display: none;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.20);
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <div id="page-header">
+        <div id="title-row">
+            <span class="status-badge">Aktiv</span>
+            <span class="sep">·</span>
+            <span id="mode-badge" class="mode-badge">—</span>
+            <span class="sep">·</span>
+            <span id="title">—</span>
+            <span class="sep">·</span>
+            <span id="heat-label">Heat —</span>
+        </div>
+    </div>
+
+    <div id="table-wrap">
+        <div id="col-headers">
+            <div class="ch c-pos">Start</div>
+            <div class="ch c-cid">#</div>
+            <div class="ch c-name">Fører</div>
+            <div class="ch c-club">Klubb</div>
+        </div>
+        <div id="rows"></div>
+        <div id="tom-melding">Ingen aktiv startliste funnet</div>
+    </div>
+
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    (function brukParams() {
+        const app   = document.getElementById('app');
+        const speil = params.get('mirror') === '1' || params.get('mirror') === 'true';
+        const skala = params.get('scale');
+        const b = params.get('w'), h = params.get('h');
+        if (b) app.style.width  = b + 'px';
+        if (h) app.style.height = h + 'px';
+        const opacity = params.get('opacity');
+        if (opacity !== null) {
+            const a = Math.min(1, Math.max(0, parseFloat(opacity)));
+            document.getElementById('table-wrap').style.background = `rgba(10, 12, 20, ${a})`;
+        }
+        if (skala) {
+            document.body.style.transformOrigin = speil ? 'top right' : 'top left';
+            document.body.style.transform = 'scale(' + parseFloat(skala) + ')';
+        }
+    })();
+
+    // ── Hjelpefunksjoner ─────────────────────────────────────────
+    function formaterNavn(f, l) {
+        if (!f && !l) return '—';
+        if (f === l) return l || '—';
+        if (!l) return f;
+        if (!f) return l;
+        return f + ' ' + l;
+    }
+    function div(cls) { const el = document.createElement('div'); el.className = cls; return el; }
+    function span(cls, tekst) { const el = document.createElement('span'); el.className = cls; if (tekst !== undefined) el.textContent = tekst; return el; }
+
+    // ── DOM-bygging ───────────────────────────────────────────────
+    function byggRad(innslag, idx) {
+        const rad = div('row-slice');
+
+        const posCell = div('cell c-pos');
+        const brikke  = div('pos-badge');
+        brikke.textContent = idx + 1;
+        posCell.appendChild(brikke);
+        rad.appendChild(posCell);
+
+        const cidCell = div('cell c-cid');
+        cidCell.appendChild(span('val-cid', innslag.cid ?? ''));
+        rad.appendChild(cidCell);
+
+        const navnCell = div('cell c-name');
+        navnCell.appendChild(span('val-name', formaterNavn(innslag.first_name, innslag.last_name)));
+        rad.appendChild(navnCell);
+
+        const klubbCell = div('cell c-club');
+        klubbCell.appendChild(span('val-club', innslag.club || ''));
+        rad.appendChild(klubbCell);
+
+        return rad;
+    }
+
+    // ── Animasjon ─────────────────────────────────────────────────
+    function animerInn() {
+        document.getElementById('page-header').classList.add('show');
+        setTimeout(() => document.getElementById('col-headers').classList.add('show'), 120);
+        document.querySelectorAll('#rows .row-slice')
+            .forEach((el, i) => setTimeout(() => el.classList.add('show'), 200 + i * 45));
+    }
+
+    function animerUt(cb) {
+        document.getElementById('page-header').classList.remove('show');
+        document.getElementById('col-headers').classList.remove('show');
+        document.querySelectorAll('#rows .row-slice').forEach(el => el.classList.remove('show'));
+        setTimeout(cb, 320);
+    }
+
+    // ── Vis innhold ───────────────────────────────────────────────
+    function render(data) {
+        const innslag       = data.entries || [];
+        const modus         = (data.mode || 'other').toLowerCase();
+        const hendelsesNavn = data.event || '—';
+        const heat          = data.heat;
+
+        const modeBadge = document.getElementById('mode-badge');
+        modeBadge.className = 'mode-badge';
+        if (modus === 'finale') {
+            modeBadge.textContent = 'Finale';
+        } else {
+            modeBadge.classList.add('annet');
+            modeBadge.textContent = modus.charAt(0).toUpperCase() + modus.slice(1);
+        }
+
+        document.getElementById('title').textContent      = hendelsesNavn;
+        document.getElementById('heat-label').textContent = 'Heat ' + heat;
+
+        const container  = document.getElementById('rows');
+        container.innerHTML = '';
+        const tomMelding = document.getElementById('tom-melding');
+        if (innslag.length === 0) {
+            tomMelding.style.display = 'flex';
+        } else {
+            tomMelding.style.display = 'none';
+            innslag.forEach((entry, i) => container.appendChild(byggRad(entry, i)));
+        }
+        requestAnimationFrame(animerInn);
+    }
+
+    // ── Last aktiv startliste ─────────────────────────────────────
+    let visestNå = null;
+
+    function last() {
+        fetch('/api/get_active_events')
+            .then(r => r.json())
+            .then(hendelser => {
+                hendelser.sort((a, b) => a.sort_order - b.sort_order);
+                const aktiv = hendelser.find(e => e.active);
+                if (!aktiv) {
+                    document.getElementById('tom-melding').style.display = 'flex';
+                    return;
+                }
+                const nøkkel = `${aktiv.event_name}|${aktiv.run}`;
+                if (nøkkel === visestNå) return;
+                visestNå = nøkkel;
+                return fetch(`/api/get_startlist?event_name=${encodeURIComponent(aktiv.event_name)}&heat=${aktiv.run}`)
+                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+            })
+            .then(data => { if (data) { animerUt(() => render(data)); } })
+            .catch(e => console.error('[aktiv-startliste] feil:', e));
+    }
+
+    last();
+    setInterval(last, 15000);
+</script>
+</body>
+</html>

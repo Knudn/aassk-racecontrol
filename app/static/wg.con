@@ -1,0 +1,9 @@
+[Interface]
+PrivateKey = mPoIS/T3C74RIFYIIFPv7kKYJS4EC8ClCL+4y24zRUU=
+Address = 10.10.55.8/32
+
+[Peer]
+PublicKey = enHqMR0psWoZdUZm0WLT4yWVGkAiq1aFMG1q9dpygxY=
+Endpoint = golf.kroland.no:51820
+AllowedIPs = 10.10.55.0/24
+PersistentKeepalive = 25

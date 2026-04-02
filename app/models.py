@@ -132,41 +132,41 @@ class GlobalConfig(db.Model):
         "other": ""
     })
 
-
 class StartLogic(db.Model):
-    #fc = FieldController
-    #cr = control room
-    #sl = start light
+    # fc = FieldController
+    # cr = control room
+    # sl = start light
     id = db.Column(db.Integer, primary_key=True, default=1)
-
     start_light_ip = db.Column(db.String(100), nullable=True, default="192.168.1.32:5000")
-
-    sl_start_delay = db.Column(db.String(16), nullable=True, default="1.2-2.5") 
-    sl_active_timer = db.Column(db.Integer, nullable=True, default="3")     
-
+    sl_start_delay = db.Column(db.String(16), nullable=True, default="1.2-2.5")
+    sl_active_timer = db.Column(db.Integer, nullable=True, default="3")
     sl_halt_color = db.Column(db.String(16), nullable=True, default="[255,0,0]")
     sl_start_color = db.Column(db.String(16), nullable=True, default="[0,255,0]")
     sl_stop_color = db.Column(db.String(16), nullable=True, default="[0,0,255]")
     sl_ready_color = db.Column(db.String(16), nullable=True, default="[0,0,0]")
     sl_warmup_image = db.Column(db.LargeBinary, nullable=True)
+    sl_warmup_duration_1 = db.Column(db.Float, nullable=True, default=3.0)   # NEW
+    sl_warmup_image_2 = db.Column(db.LargeBinary, nullable=True)              # NEW
+    sl_warmup_duration_2 = db.Column(db.Float, nullable=True, default=5.0)   # NEW
+    sl_use_warmup_image_2 = db.Column(db.Boolean, default=False)              # NEW - Enable second warmup image
     sl_start_using_relay = db.Column(db.Boolean, default=False)
     sl_brightness = db.Column(db.Integer, nullable=True, default=150)
-    
-    #widthXheight
+    # widthXheight
     sl_matric_size = db.Column(db.String(16), nullable=True, default="24x32")
-
     fc_req_ready = db.Column(db.Boolean, default=False)
     req_orbits_warmup = db.Column(db.Boolean, default=True)
     use_orbits = db.Column(db.Boolean, default=False)
     cr_req_ready = db.Column(db.Boolean, default=False)
-    
     fc_can_start = db.Column(db.Boolean, default=False)
     cr_can_start = db.Column(db.Boolean, default=False)
-
     sl_use_warmup_image = db.Column(db.Boolean, default=False)
-    
+
     def get_rgb_values(self):
-        return list(self.sl_warmup_image)
+        """Return pixel data for both warmup images as lists."""
+        return {
+            "image_1": list(self.sl_warmup_image) if self.sl_warmup_image else [],
+            "image_2": list(self.sl_warmup_image_2) if self.sl_warmup_image_2 else [],
+        }
 
 class ActiveEvents(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

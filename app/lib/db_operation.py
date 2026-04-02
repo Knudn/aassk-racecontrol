@@ -219,7 +219,8 @@ def get_active_startlist():
 def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=None, heat=None, event=None):
     from app.lib.utils import get_event_data
     from app.models import ActiveDrivers, Session_Race_Records, ActiveEvents
-
+    
+    g_config = GetEnv()
     if event == None:
         active_drivers_row = ActiveDrivers.query.get(1)
         d1 = active_drivers_row.D1 if active_drivers_row else None
@@ -263,6 +264,7 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
             heat = int(heat)
         except (TypeError, ValueError):
             pass
+
         records = (
             Session_Race_Records.query
             .filter(Session_Race_Records.title_2 == event, Session_Race_Records.heat == heat)
@@ -288,19 +290,36 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
     }]
 
     step = 2 if module in ("2", "3") else 1
+    
+    if g_config["msport_tm"]:
+        inter_1 = "inter_1"
+        inter_2 = "inter_2"
+        speed = "speed"
+        penalty = "penalty"
+        finishtime = "finishtime"
+        reaction = "reaction"
+    else:
+        inter_1 = "inter_1"
+        inter_2 = "points"
+        speed = "speed"
+        penalty = "penalty"
+        finishtime = "totaltime"
+        reaction = "reaction"
+
     for i in range(0, len(records), step):
         group = records[i:i + step]
         drivers = []
         for rec in group:
             d = rec.data or {}
             cid = rec.cid
+            
             ti = {
-                "INTER_1":    d.get("inter_1", 0),
-                "INTER_2":    d.get("inter_2", 0),
-                "SPEED":      d.get("speed", 0),
-                "PENELTY":    d.get("penalty", 0),
-                "FINISHTIME": d.get("finishtime", 0),
-                "REACTION":   d.get("reaction", 0),
+                "INTER_1":    d.get(inter_1, 0),
+                "INTER_2":    d.get(inter_2, 0),
+                "SPEED":      d.get(speed, 0),
+                "PENELTY":    d.get(penalty, 0),
+                "FINISHTIME": d.get(finishtime, 0),
+                "REACTION":   d.get(reaction, 0),
             }
             drivers.append({
                 "id":         cid,
@@ -311,7 +330,6 @@ def get_active_startlist_w_timedate(upcoming=False, event_wl=None, event_comb=No
                 "active":     cid in (d1, d2),
                 "time_info":  ti,
             })
-
         if len(drivers) == 2:
             a, b = drivers[0], drivers[1]
             ft_a = a["time_info"]["FINISHTIME"]

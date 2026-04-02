@@ -37,7 +37,7 @@ with sqlite3.connect("site.db") as _con:
 logging.info("Race type: %s", RACE_TYPE)
 
 # ── Orbits 5 source ──────────────────────────────────────────────────────────
-ORBITS_HOST = "192.168.20.23"
+ORBITS_HOST = "192.168.1.163"
 ORBITS_PORT = 50000
 
 # ── WebSocket server port (same as msport_display_proxy) ────────────────────

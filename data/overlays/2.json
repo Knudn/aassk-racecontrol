@@ -1,8 +1,8 @@
 {
   "id": 2,
   "name": "Bakkel\u00f8p",
-  "active_view_id": 2,
-  "next_view_id": 8,
+  "active_view_id": 9,
+  "next_view_id": 12,
   "res_w": 1920,
   "res_h": 1080,
   "grid_version": 3,
@@ -10,27 +10,16 @@
     {
       "id": 1,
       "name": "base_overlay",
-      "next_widget_id": 6,
+      "next_widget_id": 7,
       "bg_color": "",
       "bg_image": "",
       "bg_opacity": 1.0,
       "widgets": [
         {
-          "id": 3,
-          "file": "bakkedrag/active_driver_dash.html",
-          "url": "",
-          "params": "w=700,pos=bottom",
-          "fullscreen": false,
-          "gs_x": 6.25,
-          "gs_y": 5.5556,
-          "gs_w": 91.6667,
-          "gs_h": 94.4444
-        },
-        {
           "id": 4,
           "file": "bakkedrag/event_title.html",
           "url": "",
-          "params": "",
+          "params": "scale=1.5",
           "fullscreen": false,
           "gs_x": 2.0833,
           "gs_y": 5.5556,
@@ -41,12 +30,23 @@
           "id": 5,
           "file": "bakkedrag/heat_results_widget.html",
           "url": "",
-          "params": "scale=1.2",
+          "params": "scale=1.8",
           "fullscreen": false,
-          "gs_x": 0.0,
-          "gs_y": 8.3333,
+          "gs_x": -1.03,
+          "gs_y": 7.07,
           "gs_w": 100.0,
           "gs_h": 100.0
+        },
+        {
+          "id": 6,
+          "file": "active_driver_dash.html",
+          "url": "",
+          "params": "",
+          "fullscreen": false,
+          "gs_x": -41.56,
+          "gs_y": 5.27,
+          "gs_w": 166.56,
+          "gs_h": 182.86
         }
       ]
     },
@@ -83,19 +83,19 @@
           "id": 1,
           "file": "bakkedrag/kvali_loop_overlay.html",
           "url": "",
-          "params": "finished=false,timer=3,w=1000",
+          "params": "finished=false,timer=10,w=1000",
           "fullscreen": false,
-          "gs_x": 33.3333,
-          "gs_y": 13.8889,
-          "gs_w": 60.4167,
-          "gs_h": 122.2222
+          "gs_x": 6.73,
+          "gs_y": 3.1,
+          "gs_w": 135.36,
+          "gs_h": 152.76
         }
       ]
     },
     {
       "id": 4,
       "name": "startliste_active_kvali",
-      "next_widget_id": 2,
+      "next_widget_id": 3,
       "bg_color": "",
       "bg_image": "",
       "bg_opacity": 1.0,
@@ -106,8 +106,8 @@
           "url": "",
           "params": "w=1100,scale=1.4",
           "fullscreen": false,
-          "gs_x": 16.6667,
-          "gs_y": 8.3333,
+          "gs_x": 16.67,
+          "gs_y": 5.24,
           "gs_w": 79.1667,
           "gs_h": 105.5556
         }
@@ -127,17 +127,17 @@
           "url": "",
           "params": "w=1400",
           "fullscreen": false,
-          "gs_x": 16.6667,
-          "gs_y": 11.1111,
-          "gs_w": 83.3333,
-          "gs_h": 77.7778
+          "gs_x": 12.1,
+          "gs_y": 10.21,
+          "gs_w": 103.76,
+          "gs_h": 112.47
         }
       ]
     },
     {
       "id": 7,
       "name": "base_overlay_finale",
-      "next_widget_id": 3,
+      "next_widget_id": 4,
       "bg_color": "",
       "bg_image": "",
       "bg_opacity": 1.0,
@@ -149,7 +149,7 @@
           "params": "",
           "fullscreen": false,
           "gs_x": 8.3333,
-          "gs_y": 50.0,
+          "gs_y": 50,
           "gs_w": 85.4167,
           "gs_h": 88.8889
         },
@@ -159,10 +159,93 @@
           "url": "",
           "params": "scale=1.3",
           "fullscreen": false,
-          "gs_x": 2.0833,
-          "gs_y": 2.7778,
+          "gs_x": 3.3,
+          "gs_y": 4.58,
           "gs_w": 79.1667,
           "gs_h": 80.5556
+        },
+        {
+          "id": 3,
+          "file": "bakkedrag/heat_results_widget.html",
+          "url": "",
+          "params": "scale=3",
+          "fullscreen": false,
+          "gs_x": 56.5,
+          "gs_y": 6.09,
+          "gs_w": 40.68,
+          "gs_h": 58.6
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "bg",
+      "next_widget_id": 4,
+      "bg_color": "#000000",
+      "bg_image": "",
+      "bg_opacity": 1,
+      "widgets": [
+        {
+          "id": 3,
+          "file": "display_test.html",
+          "url": "",
+          "params": "text=BANEPREPP, size=200, font=monospace, color=white",
+          "fullscreen": false,
+          "gs_x": 71.64,
+          "gs_y": 76.78,
+          "gs_w": 51.01,
+          "gs_h": 33.34
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "sponsor",
+      "next_widget_id": 1,
+      "bg_color": "#000000",
+      "bg_image": "http://192.168.1.50:7777/static/takk_sponsor.png",
+      "bg_opacity": 1,
+      "widgets": []
+    },
+    {
+      "id": 10,
+      "name": "finale_active_results",
+      "next_widget_id": 4,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 3,
+          "file": "bakkedrag/finale_results.html",
+          "url": "",
+          "params": "scale=1.5,w=1000",
+          "fullscreen": false,
+          "gs_x": 11.69,
+          "gs_y": 1.82,
+          "gs_w": 101.83,
+          "gs_h": 96.57
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "finale_loop_results",
+      "next_widget_id": 2,
+      "bg_color": "",
+      "bg_image": "",
+      "bg_opacity": 1.0,
+      "widgets": [
+        {
+          "id": 1,
+          "file": "bakkedrag/finale_loop_overlay.html",
+          "url": "",
+          "params": "w=1000, scale=1.5",
+          "fullscreen": false,
+          "gs_x": 15.17,
+          "gs_y": 14.78,
+          "gs_w": 91.65,
+          "gs_h": 88.74
         }
       ]
     }
